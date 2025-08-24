@@ -3,11 +3,19 @@
 import { Request, Response, NextFunction } from 'express';
 import { container } from '../config/container';
 import { IJwtService } from '../application/services/IJwtService';
+import { UserRole } from '../models/FirestoreTypes';
 
 // Extend Express Request type to add user property
 declare module 'express-serve-static-core' {
     interface Request {
-        user?: any;
+        user?: {
+            sub: string;
+            id: string;
+            email?: string;
+            roles: UserRole[];
+            name?: string;
+            orgId?: string;
+        };
     }
 }
 
@@ -15,7 +23,7 @@ declare module 'express-serve-static-core' {
  * Middleware to require a valid JWT access token for protected routes.
  * Optionally, you can pass requiredRoles for RBAC.
  */
-export function requireAuth(requiredRoles?: string[]) {
+export function requireAuth(requiredRoles?: UserRole[]) {
     return (req: Request, res: Response, next: NextFunction) => {
         try {
             // Get token from Authorization header
@@ -29,12 +37,24 @@ export function requireAuth(requiredRoles?: string[]) {
             const jwtService = container.resolve<IJwtService>('IJwtService');
             const decoded = jwtService.verify(token);
 
+            if (!decoded) {
+                return res.status(401).json({ message: 'Invalid token' });
+            }
+
             // Optionally, check roles
             if (requiredRoles && Array.isArray(requiredRoles) && requiredRoles.length > 0) {
                 const userRoles = decoded.roles || [];
-                const hasRole = requiredRoles.some(role => userRoles.includes(role));
-                if (!hasRole) {
-                    return res.status(403).json({ message: 'Forbidden: insufficient privileges' });
+                
+                // Owner can access everything
+                if (!userRoles.includes(UserRole.OWNER)) {
+                    const hasRole = requiredRoles.some(role => userRoles.includes(role));
+                    if (!hasRole) {
+                        return res.status(403).json({ 
+                            message: 'Access denied: insufficient privileges',
+                            required: requiredRoles,
+                            userRoles: userRoles
+                        });
+                    }
                 }
             }
 

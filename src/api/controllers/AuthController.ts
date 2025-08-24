@@ -1,32 +1,66 @@
 import { Request, Response } from 'express';
 import { container } from '../../config/container';
-import { RegisterUser } from '../../application/RegisterUser';
-import { LoginUser } from '../../application/LoginUser';
+import { GoogleLogin } from '../../application/GoogleLogin';
+import { LogoutUser } from '../../application/LogoutUser';
 import { IJwtService } from '../../application/services/IJwtService';
 import { IRefreshTokenRepository } from '../../application/Repositories/IRefreshTokenRepository';
 import { IUserRepository } from '../../application/Repositories/IUserRepository';
 
 export class AuthController {
-    async register(req: Request, res: Response) {
-        const useCase = container.resolve(RegisterUser);
-        await useCase.execute(req.body);
-        res.status(200).json({ message: 'OTP sent' });
+    async googleLogin(req: Request, res: Response) {
+        try {
+            const useCase = container.resolve(GoogleLogin);
+            const { idToken, orgId } = req.body;
+            
+            if (!idToken) {
+                return res.status(400).json({ message: 'Google ID token is required' });
+            }
+
+            const result = await useCase.execute(
+                { idToken, orgId },
+                req.ip,
+                req.get('User-Agent')
+            );
+
+            // Set refresh token as HTTP-only cookie
+            res.cookie('refreshToken', result.refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+            });
+
+            res.json({
+                accessToken: result.accessToken,
+                user: result.user,
+            });
+        } catch (error: any) {
+            res.status(401).json({ message: error.message });
+        }
     }
 
-    async verifyOtp(req: Request, res: Response) {
-        // ...
-    }
+    async logout(req: Request, res: Response) {
+        try {
+            const useCase = container.resolve(LogoutUser);
+            const refreshToken = req.cookies?.refreshToken;
+            
+            await useCase.execute(
+                { userId: req.user!.sub, refreshToken },
+                req.ip,
+                req.get('User-Agent')
+            );
 
-    async login(req: Request, res: Response) {
-        const useCase = container.resolve(LoginUser);
-        const tokens = await useCase.execute(req.body);
-        res.json(tokens);
+            // Clear refresh token cookie
+            res.clearCookie('refreshToken');
+            res.json({ message: 'Logged out successfully' });
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
     }
 
     async refreshToken(req: Request, res: Response) {
         try {
-            // 1. Get refresh token from cookie or body (choose your pattern)
-            // Here, we check both cookie and body for flexibility
+            // 1. Get refresh token from cookie or body
             const refreshToken =
                 req.cookies?.refreshToken || req.body?.refreshToken || req.headers['x-refresh-token'];
             if (!refreshToken || typeof refreshToken !== 'string') {
@@ -55,7 +89,7 @@ export class AuthController {
                 return res.status(401).json({ message: 'Refresh token revoked or not found' });
             }
 
-            // 5. Fetch user (optional: ensure user still exists and is active)
+            // 5. Fetch user (ensure user still exists and is active)
             const user = await userRepo.findById(decoded.sub);
             if (!user || !user.isActive) {
                 return res.status(401).json({ message: 'User not found or inactive' });
@@ -70,6 +104,7 @@ export class AuthController {
                 email: user.email,
                 roles: user.roles,
                 name: user.name,
+                orgId: user.orgId,
             });
             const newRefreshToken = jwtService.signRefreshToken({
                 sub: user.id,
@@ -81,7 +116,7 @@ export class AuthController {
                 expiresAt: jwtService.getRefreshTokenExpiryDate(),
             });
 
-            // 8. Set new refresh token as cookie (recommended, secure, httpOnly)
+            // 8. Set new refresh token as cookie
             res.cookie('refreshToken', newRefreshToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
@@ -92,8 +127,6 @@ export class AuthController {
             // 9. Return new access token
             return res.json({
                 accessToken: newAccessToken,
-                // Optionally, send refresh token in body for non-browser clients:
-                // refreshToken: newRefreshToken,
             });
         } catch (err: any) {
             return res.status(500).json({ message: 'Token refresh failed', detail: err.message });

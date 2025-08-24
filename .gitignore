@@ -1,1 +1,7 @@
 node_modules
+dist
+.env
+firestore-creds.json
+docs
+postman
+*test-fe

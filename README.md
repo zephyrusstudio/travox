@@ -43,12 +43,12 @@ It follows **Clean/Hexagonal Architecture**, best practices for Node.js and Type
 ### `/application`
 
 - **Responsibility:**  
-  Contains application/business use cases (e.g., RegisterUser, LoginUser, RefreshToken), orchestrating the flow between domain logic and infrastructure.
+  Contains application/business use cases (e.g., GoogleLogin, LogoutUser, RefreshToken), orchestrating the flow between domain logic and infrastructure.
 - **Best Practice:**  
   No framework/infra dependencies; interacts via interfaces.
 - **Example:**  
-  - `RegisterUser.ts`
-  - `LoginUser.ts`
+  - `GoogleLogin.ts`
+  - `LogoutUser.ts`
 
 ---
 
@@ -72,9 +72,9 @@ It follows **Clean/Hexagonal Architecture**, best practices for Node.js and Type
 - **Best Practice:**  
   Swappable implementations, easily mockable for tests, no business logic here.
 - **Example:**  
-  - `repositories/UserRepositoryPg.ts`
+  - `repositories/UserRepositoryFirestore.ts`
   - `services/JwtService.ts`
-  - `services/OtpServiceRedis.ts`
+  - `services/GoogleOidcService.ts`
 
 ---
 
@@ -120,7 +120,7 @@ It follows **Clean/Hexagonal Architecture**, best practices for Node.js and Type
 - **Responsibility:**  
   Reusable utility functions, type guards, constants, data mappers, etc.
 - **Example:**  
-  - `hashPassword.ts`
+  - `googleAuth.ts`
   - `validateEmail.ts`
 
 ---
@@ -169,8 +169,8 @@ src/
 │   │   └── AuthController.ts
 │   └── routes.ts
 ├── application/
-│   ├── RegisterUser.ts
-│   └── LoginUser.ts
+│   ├── GoogleLogin.ts
+│   └── LogoutUser.ts
 ├── domain/
 │   ├── User.ts
 │   ├── IUserRepository.ts
@@ -178,7 +178,7 @@ src/
 │   └── ...
 ├── infrastructure/
 │   ├── repositories/
-│   │   └── UserRepositoryPg.ts
+│   │   └── UserRepositoryFirestore.ts
 │   ├── services/
 │   │   └── JwtService.ts
 │   └── ...

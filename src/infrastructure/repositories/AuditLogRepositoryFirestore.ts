@@ -69,43 +69,49 @@ export class AuditLogRepositoryFirestore implements IAuditLogRepository {
     limit?: number;
     offset?: number;
   }, orgId: string): Promise<{ logs: AuditLog[]; total: number; }> {
-    let query = this.collection.where('org_id', '==', orgId);
+    // Use a simple approach: only filter by org_id at the database level
+    // and apply all other filters in memory to avoid composite index requirements
+    
+    const querySnapshot = await this.collection
+      .where('org_id', '==', orgId)
+      .get();
+    
+    let logs = querySnapshot.docs.map(doc => 
+      this.mapFirestoreToAuditLog(doc.data() as AuditLogDocument, doc.id)
+    );
 
+    // Apply all filters in memory
     if (filters.entity) {
-      query = query.where('entity', '==', filters.entity);
+      logs = logs.filter(log => log.entity === filters.entity);
     }
     if (filters.entityId) {
-      query = query.where('entity_id', '==', filters.entityId);
+      logs = logs.filter(log => log.entityId === filters.entityId);
     }
     if (filters.actorId) {
-      query = query.where('actor_id', '==', filters.actorId);
+      logs = logs.filter(log => log.actorId === filters.actorId);
     }
     if (filters.action) {
-      query = query.where('action', '==', filters.action);
+      logs = logs.filter(log => log.action === filters.action);
     }
     if (filters.startDate) {
-      query = query.where('created_at', '>=', Timestamp.fromDate(filters.startDate));
+      logs = logs.filter(log => log.createdAt >= filters.startDate!);
     }
     if (filters.endDate) {
-      query = query.where('created_at', '<=', Timestamp.fromDate(filters.endDate));
+      logs = logs.filter(log => log.createdAt <= filters.endDate!);
     }
 
-    query = query.orderBy('created_at', 'desc');
+    // Sort by created_at descending (most recent first)
+    logs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-    // Get total count
-    const countSnapshot = await query.get();
-    const total = countSnapshot.size;
-
+    const total = logs.length;
+    
     // Apply pagination
     if (filters.offset) {
-      query = query.offset(filters.offset);
+      logs = logs.slice(filters.offset);
     }
     if (filters.limit) {
-      query = query.limit(filters.limit);
+      logs = logs.slice(0, filters.limit);
     }
-
-    const querySnapshot = await query.get();
-    const logs = querySnapshot.docs.map(doc => this.mapFirestoreToAuditLog(doc.data() as AuditLogDocument, doc.id));
 
     return { logs, total };
   }

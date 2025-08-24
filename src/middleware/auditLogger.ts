@@ -16,18 +16,13 @@ declare module 'express-serve-static-core' {
 
 /**
  * Middleware to capture audit logs for all CRUD operations
- * Should be applied after authentication middleware so we have req.user
+ * Can work with or without authentication
  */
 export function auditLogger(entity?: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     // Skip audit logging for GET requests (unless explicitly specified)
     const isReadOperation = req.method === 'GET';
     
-    // Only audit if user is authenticated
-    if (!req.user) {
-      return next();
-    }
-
     const originalSend = res.send;
     const originalJson = res.json;
     
@@ -63,7 +58,7 @@ export async function logAuditEntry(
   responseData?: any
 ): Promise<void> {
   try {
-    if (!req.user || !req.auditContext?.entity) {
+    if (!req.auditContext?.entity) {
       return;
     }
 
@@ -72,6 +67,10 @@ export async function logAuditEntry(
     const action = getActionFromMethod(req.method, res.statusCode);
     const clientIp = getClientIp(req);
     const userAgent = req.get('User-Agent') || '';
+    
+    // Use authenticated user info if available, otherwise use system/anonymous
+    const actorId = req.user?.sub || req.user?.id || 'system';
+    const orgId = req.user?.orgId || 'default-org';
     
     // Create diff based on operation type
     let diff: Record<string, any> = {};
@@ -87,8 +86,8 @@ export async function logAuditEntry(
     }
 
     const auditLog = AuditLog.create(
-      req.user.orgId || 'unknown',
-      req.user.sub || req.user.id,
+      orgId,
+      actorId,
       req.auditContext.entity,
       req.auditContext.entityId || extractIdFromResponse(responseData) || 'unknown',
       action,
@@ -97,7 +96,7 @@ export async function logAuditEntry(
       userAgent
     );
 
-    await auditRepo.create(auditLog, req.user.orgId || 'unknown');
+    await auditRepo.create(auditLog, orgId);
   } catch (error) {
     // Don't fail the request if audit logging fails
     console.error('Audit logging failed:', error);

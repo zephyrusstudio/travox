@@ -6,6 +6,7 @@ import { BookingController } from '../controllers/BookingController';
 import { AuditLogController } from '../controllers/AuditLogController';
 import { UserController } from '../controllers/UserController';
 import { requireAuth } from '../../middleware/requireAuth';
+import { auditLogger } from '../../middleware/auditLogger';
 import { UserRole } from '../../models/FirestoreTypes';
 
 export function registerRoutes(app: Express) {
@@ -21,36 +22,36 @@ export function registerRoutes(app: Express) {
     app.post('/auth/logout', requireAuth(), authCtrl.logout);
     app.post('/auth/refresh', authCtrl.refreshToken);
 
-    // Customer routes (no auth for testing)
-    app.post('/customers', customerCtrl.create);
-    app.get('/customers', customerCtrl.getAll);
-    app.get('/customers/search', customerCtrl.search);
-    app.get('/customers/:id', customerCtrl.getById);
-    app.get('/customers/:id/stats', customerCtrl.getStats);
+    // Customer routes (protected)
+    app.post('/customers', requireAuth(), auditLogger('customers'), customerCtrl.create);
+    app.get('/customers', requireAuth(), customerCtrl.getAll);
+    app.get('/customers/search', requireAuth(), customerCtrl.search);
+    app.get('/customers/:id', requireAuth(), auditLogger('customers'), customerCtrl.getById);
+    app.get('/customers/:id/stats', requireAuth(), customerCtrl.getStats);
 
-    // Vendor routes (no auth for testing)
-    app.post('/vendors', vendorCtrl.create);
-    app.get('/vendors', vendorCtrl.getAll);
-    app.get('/vendors/search', vendorCtrl.search);
-    app.get('/vendors/:id', vendorCtrl.getById);
-    app.get('/vendors/:id/stats', vendorCtrl.getStats);
+    // Vendor routes (protected)
+    app.post('/vendors', requireAuth(), auditLogger('vendors'), vendorCtrl.create);
+    app.get('/vendors', requireAuth(), vendorCtrl.getAll);
+    app.get('/vendors/search', requireAuth(), vendorCtrl.search);
+    app.get('/vendors/:id', requireAuth(), auditLogger('vendors'), vendorCtrl.getById);
+    app.get('/vendors/:id/stats', requireAuth(), vendorCtrl.getStats);
 
     // Booking routes (protected)
-    app.post('/bookings', requireAuth(), bookingCtrl.create);
+    app.post('/bookings', requireAuth(), auditLogger('bookings'), bookingCtrl.create);
     app.get('/bookings', requireAuth(), bookingCtrl.getAll);
     app.get('/bookings/upcoming', requireAuth(), bookingCtrl.getUpcoming);
     app.get('/bookings/overdue', requireAuth(), bookingCtrl.getOverdue);
     app.get('/bookings/revenue-stats', requireAuth(), bookingCtrl.getRevenueStats);
     app.get('/bookings/travel-dates', requireAuth(), bookingCtrl.getByTravelDates);
-    app.get('/bookings/:id', requireAuth(), bookingCtrl.getById);
-    app.put('/bookings/:id', requireAuth(), bookingCtrl.update);
-    app.patch('/bookings/:id/payment', requireAuth(), bookingCtrl.updatePayment);
-    app.patch('/bookings/:id/status', requireAuth(), bookingCtrl.updateStatus);
-    app.patch('/bookings/:id/cancel', requireAuth(), bookingCtrl.cancel);
-    app.patch('/bookings/:id/confirm', requireAuth(), bookingCtrl.confirm);
-    app.patch('/bookings/:id/complete', requireAuth(), bookingCtrl.complete);
-    app.delete('/bookings/:id', requireAuth(), bookingCtrl.delete);
-    app.patch('/bookings/:id/archive', requireAuth(), bookingCtrl.archive);
+    app.get('/bookings/:id', requireAuth(), auditLogger('bookings'), bookingCtrl.getById);
+    app.put('/bookings/:id', requireAuth(), auditLogger('bookings'), bookingCtrl.update);
+    app.patch('/bookings/:id/payment', requireAuth(), auditLogger('bookings'), bookingCtrl.updatePayment);
+    app.patch('/bookings/:id/status', requireAuth(), auditLogger('bookings'), bookingCtrl.updateStatus);
+    app.patch('/bookings/:id/cancel', requireAuth(), auditLogger('bookings'), bookingCtrl.cancel);
+    app.patch('/bookings/:id/confirm', requireAuth(), auditLogger('bookings'), bookingCtrl.confirm);
+    app.patch('/bookings/:id/complete', requireAuth(), auditLogger('bookings'), bookingCtrl.complete);
+    app.delete('/bookings/:id', requireAuth(), auditLogger('bookings'), bookingCtrl.delete);
+    app.patch('/bookings/:id/archive', requireAuth(), auditLogger('bookings'), bookingCtrl.archive);
 
     // Audit Log routes (protected - admin/owner only)
     app.post('/audit-logs', requireAuth([UserRole.ADMIN, UserRole.OWNER]), auditLogCtrl.create);

@@ -59,7 +59,11 @@ export function requireAuth(requiredRoles?: UserRole[]) {
             }
 
             // Attach decoded user info to request
-            req.user = decoded;
+            // Normalize the JWT payload to ensure 'id' field exists
+            req.user = {
+                ...decoded,
+                id: decoded.sub || decoded.id
+            };
             next();
         } catch (err) {
             return res.status(401).json({ message: 'Invalid or expired token' });

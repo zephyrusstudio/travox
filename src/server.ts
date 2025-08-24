@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { json } from 'body-parser';
+import path from 'path';
 import { errorHandler } from './middleware/errorHandler';
 import { registerRoutes } from './api/routes/routes';
 import { loggerMiddleware } from './middleware/loggerMiddleware';
@@ -35,6 +36,9 @@ export async function startServer() {
     app.get('/ping', (req, res) => {
         res.status(200).json({ message: 'pong' });
     });
+
+    // Serve auth test frontend
+    app.use('/auth-test-fe', express.static(path.join(__dirname, '../auth-test-fe')));
 
     // API routes
     registerRoutes(app);

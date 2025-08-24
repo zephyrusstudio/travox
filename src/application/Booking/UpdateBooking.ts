@@ -1,7 +1,7 @@
 import { injectable, inject } from 'tsyringe';
-import { IBookingRepository } from './Repositories/IBookingRepository';
-import { Booking } from '../domain/Booking';
-import { BookingStatus } from '../models/FirestoreTypes';
+import { IBookingRepository } from '../Repositories/IBookingRepository';
+import { Booking } from '../../domain/Booking';
+import { BookingStatus } from '../../models/FirestoreTypes';
 
 interface UpdateBookingDTO {
   paxCount?: number;
@@ -118,10 +118,47 @@ export class UpdateBooking {
   }
 
   async confirm(bookingId: string, orgId: string, updatedBy: string): Promise<Booking> {
-    return await this.updateStatus(bookingId, BookingStatus.CONFIRMED, orgId, updatedBy);
+    const booking = await this.bookingRepo.findById(bookingId, orgId);
+    if (!booking) {
+      throw new Error('Booking not found');
+    }
+
+    if (booking.isDeleted) {
+      throw new Error('Cannot confirm deleted booking');
+    }
+
+    // Use domain method which enforces business rules
+    booking.confirm(updatedBy);
+    return await this.bookingRepo.update(booking, orgId);
   }
 
-  async complete(bookingId: string, orgId: string, updatedBy: string): Promise<Booking> {
-    return await this.updateStatus(bookingId, BookingStatus.COMPLETED, orgId, updatedBy);
+  async ticket(bookingId: string, orgId: string, updatedBy: string): Promise<Booking> {
+    const booking = await this.bookingRepo.findById(bookingId, orgId);
+    if (!booking) {
+      throw new Error('Booking not found');
+    }
+
+    if (booking.isDeleted) {
+      throw new Error('Cannot ticket deleted booking');
+    }
+
+    // Use domain method which enforces business rules
+    booking.ticket(updatedBy);
+    return await this.bookingRepo.update(booking, orgId);
+  }
+
+  async complete(bookingId: string, orgId: string, updatedBy: string, adminOverride: boolean = false): Promise<Booking> {
+    const booking = await this.bookingRepo.findById(bookingId, orgId);
+    if (!booking) {
+      throw new Error('Booking not found');
+    }
+
+    if (booking.isDeleted) {
+      throw new Error('Cannot complete deleted booking');
+    }
+
+    // Use domain method which enforces business rules
+    booking.complete(updatedBy, adminOverride);
+    return await this.bookingRepo.update(booking, orgId);
   }
 }

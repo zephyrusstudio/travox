@@ -1,3 +1,6 @@
+
+import { Timestamp } from 'firebase-admin/firestore';
+
 export class AuditLog {
   constructor(
     public id: string,
@@ -5,11 +8,11 @@ export class AuditLog {
     public actorId: string,
     public entity: string,
     public entityId: string,
-    public action: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW',
+    public action: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW' | 'STATUS_CHANGE' | 'LOGIN' | 'LOGOUT',
     public diff: Record<string, any>,
     public ip: string,
     public userAgent: string,
-    public createdAt: Date = new Date()
+    public createdAt: Timestamp = Timestamp.now()
   ) {}
 
   static create(
@@ -17,7 +20,7 @@ export class AuditLog {
     actorId: string,
     entity: string,
     entityId: string,
-    action: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW',
+    action: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW' | 'STATUS_CHANGE' | 'LOGIN' | 'LOGOUT',
     diff: Record<string, any>,
     ip: string,
     userAgent: string
@@ -32,7 +35,7 @@ export class AuditLog {
       diff,
       ip,
       userAgent,
-      new Date()
+      Timestamp.now()
     );
   }
 

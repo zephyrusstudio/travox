@@ -16,7 +16,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
     const docData: any = {
       org_id: orgId,
       customer_id: booking.customerId,
-      booking_date: Timestamp.fromDate(booking.bookingDate),
+      booking_date: booking.bookingDate,
       pax_count: booking.paxCount,
       currency: booking.currency,
       total_amount: booking.totalAmount,
@@ -91,8 +91,8 @@ export class BookingRepositoryFirestore implements IBookingRepository {
   async findByDateRange(startDate: Date, endDate: Date, orgId: string): Promise<Booking[]> {
     const snapshot = await this.collection
       .where('org_id', '==', orgId)
-      .where('booking_date', '>=', Timestamp.fromDate(startDate))
-      .where('booking_date', '<=', Timestamp.fromDate(endDate))
+      .where('booking_date', '>=', startDate)
+      .where('booking_date', '<=', endDate)
       .where('is_deleted', '==', false)
       .get();
 
@@ -116,7 +116,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
     booking.updatedAt = new Date();
     const updateData: any = {
       customer_id: booking.customerId,
-      booking_date: Timestamp.fromDate(booking.bookingDate),
+      booking_date: booking.bookingDate,
       pax_count: booking.paxCount,
       currency: booking.currency,
       total_amount: booking.totalAmount,
@@ -194,10 +194,10 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       .where('status', '!=', BookingStatus.CANCELLED);
 
     if (startDate) {
-      query = query.where('booking_date', '>=', Timestamp.fromDate(startDate));
+      query = query.where('booking_date', '>=', startDate);
     }
     if (endDate) {
-      query = query.where('booking_date', '<=', Timestamp.fromDate(endDate));
+      query = query.where('booking_date', '<=', endDate);
     }
 
     const snapshot = await query.get();
@@ -243,7 +243,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       id,
       data.org_id,
       data.customer_id,
-      data.booking_date?.toDate?.() || new Date(data.booking_date),
+      data.booking_date,
       data.pax_count,
       data.currency,
       data.total_amount,
@@ -252,16 +252,16 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       data.primary_pax_name,
       data.pnr_no,
       data.mode_of_journey,
-      data.travel_start_at?.toDate?.() || (data.travel_start_at ? new Date(data.travel_start_at) : undefined),
-      data.travel_end_at?.toDate?.() || (data.travel_end_at ? new Date(data.travel_end_at) : undefined),
+      data.travel_start_at?.toDate?.(),
+      data.travel_end_at?.toDate?.(),
       data.advance_amount,
       data.status || BookingStatus.DRAFT,
       data.created_by || '',
       data.updated_by || '',
       data.is_deleted || false,
-      data.archived_at?.toDate?.() || (data.archived_at ? new Date(data.archived_at) : undefined),
-      data.created_at?.toDate?.() || new Date(data.created_at),
-      data.updated_at?.toDate?.() || new Date(data.updated_at)
+      data.archived_at?.toDate?.(),
+      data.created_at.toDate(),
+      data.updated_at.toDate()
     );
   }
 }

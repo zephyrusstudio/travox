@@ -16,7 +16,7 @@ export class User {
         public phone?: string,
         public googleId?: string,
         public avatar?: string,
-        public roles: UserRole[] = [],
+        public role: UserRole = UserRole.VIEWER,
         public isActive: boolean = false,
         public preferences: UserPreferences = {},
         public lastLoginAt?: Date,
@@ -26,7 +26,7 @@ export class User {
 
     static createFromGoogle(orgId: string, email: string, name: string, googleId: string, avatar?: string): User {
         const now = new Date();
-        return new User('', orgId, name, email, undefined, googleId, avatar, [], true, {}, undefined, now, now);
+        return new User('', orgId, name, email, undefined, googleId, avatar, UserRole.VIEWER, true, {}, undefined, now, now);
     }
 
     updateProfile(name?: string, phone?: string): void {
@@ -50,29 +50,17 @@ export class User {
         this.updatedAt = new Date();
     }
 
-    addRole(role: UserRole): void {
-        if (!this.roles.includes(role)) {
-            this.roles.push(role);
-            this.updatedAt = new Date();
-        }
-    }
-
-    removeRole(role: UserRole): void {
-        this.roles = this.roles.filter(r => r !== role);
+    setRole(role: UserRole): void {
+        this.role = role;
         this.updatedAt = new Date();
     }
 
     hasRole(role: UserRole): boolean {
-        return this.roles.includes(role);
+        return this.role === role;
     }
 
     hasAnyRole(roles: UserRole[]): boolean {
-        return roles.some(role => this.hasRole(role));
-    }
-
-    setRoles(roles: UserRole[]): void {
-        this.roles = [...roles];
-        this.updatedAt = new Date();
+        return roles.includes(this.role);
     }
 
     recordLogin(): void {
@@ -114,13 +102,11 @@ export class User {
             [UserRole.VIEWER]: ['*.read']
         };
 
-        for (const role of this.roles) {
-            const permissions = accessMatrix[role] || [];
-            if (permissions.includes('*') || 
-                permissions.includes(`${resource}.*`) || 
-                permissions.includes(`${resource}.${action}`)) {
-                return true;
-            }
+        const permissions = accessMatrix[this.role] || [];
+        if (permissions.includes('*') || 
+            permissions.includes(`${resource}.*`) || 
+            permissions.includes(`${resource}.${action}`)) {
+            return true;
         }
 
         return false;

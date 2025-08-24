@@ -1,6 +1,6 @@
 import { injectable, inject } from 'tsyringe';
-import { IAuditLogRepository } from './Repositories/IAuditLogRepository';
-import { AuditLog } from '../domain/AuditLog';
+import { IAuditLogRepository } from '../Repositories/IAuditLogRepository';
+import { AuditLog } from '../../domain/AuditLog';
 
 interface CreateAuditLogDTO {
   entity: string;

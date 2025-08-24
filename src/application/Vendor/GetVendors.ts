@@ -1,7 +1,7 @@
 import { injectable, inject } from 'tsyringe';
-import { IVendorRepository } from './Repositories/IVendorRepository';
-import { Vendor } from '../domain/Vendor';
-import { ServiceType } from '../models/FirestoreTypes';
+import { IVendorRepository } from '../Repositories/IVendorRepository';
+import { Vendor } from '../../domain/Vendor';
+import { ServiceType } from '../../models/FirestoreTypes';
 
 interface GetVendorsOptions {
   limit?: number;

@@ -1,18 +1,19 @@
 import { injectable, inject } from 'tsyringe';
-import { IUserRepository } from './Repositories/IUserRepository';
-import { IOrganizationRepository } from './Repositories/IOrganizationRepository';
-import { IAuditLogRepository } from './Repositories/IAuditLogRepository';
-import { IJwtService } from './services/IJwtService';
-import { IGoogleOidcService } from './services/IGoogleOidcService';
-import { IRefreshTokenRepository } from './Repositories/IRefreshTokenRepository';
-import { User } from '../domain/User';
-import { Organization } from '../domain/Organization';
-import { UserRole } from '../models/FirestoreTypes';
-import { AuditLog } from '../domain/AuditLog';
+import { IUserRepository } from '../Repositories/IUserRepository';
+import { IOrganizationRepository } from '../Repositories/IOrganizationRepository';
+import { IAuditLogRepository } from '../Repositories/IAuditLogRepository';
+import { IJwtService } from '../services/IJwtService';
+import { IGoogleOidcService } from '../services/IGoogleOidcService';
+import { IRefreshTokenRepository } from '../Repositories/IRefreshTokenRepository';
+import { User } from '../../domain/User';
+import { Organization } from '../../domain/Organization';
+import { UserRole } from '../../models/FirestoreTypes';
+import { AuditLog } from '../../domain/AuditLog';
 
 interface GoogleLoginDTO {
     idToken: string;
     orgId?: string; // Optional for auto-organization creation
+    allowedDomains?: string[]; // Optional domain allowlist
 }
 
 @injectable()
@@ -26,7 +27,7 @@ export class GoogleLogin {
         @inject('IRefreshTokenRepository') private refreshTokens: IRefreshTokenRepository
     ) { }
 
-    async execute({ idToken, orgId }: GoogleLoginDTO, ip?: string, userAgent?: string) {
+    async execute({ idToken, orgId, allowedDomains }: GoogleLoginDTO, ip?: string, userAgent?: string) {
         // 1. Verify Google ID token
         const googleUser = await this.googleOidc.verifyIdToken(idToken);
         if (!googleUser) {
@@ -39,7 +40,15 @@ export class GoogleLogin {
             throw new Error('Email not verified with Google');
         }
 
-        // 2. Check if user exists by Google ID first, then by email
+        // 2. Check domain allowlist if provided
+        if (allowedDomains && allowedDomains.length > 0) {
+            const emailDomain = email.split('@')[1];
+            if (!allowedDomains.includes(emailDomain)) {
+                throw new Error(`Email domain ${emailDomain} is not allowed`);
+            }
+        }
+
+        // 3. Check if user exists by Google ID first, then by email
         let user = await this.users.findByGoogleId(googleId);
         
         if (!user) {
@@ -58,12 +67,21 @@ export class GoogleLogin {
         let isNewUser = false;
         
         if (!user) {
-            // 3. Auto-create user on first login
+            // 4. Auto-create user on first login
             isNewUser = true;
             
             // Determine organization
             let organization: Organization | null = null;
-            
+
+            // New behavior: assign every new user to the first organization present in the DB
+            organization = await this.organizations.findFirst();
+            if (!organization) {
+                throw new Error('No organization found in the database');
+            }
+
+            /*
+            // Original logic (commented out for now):
+            // if orgId provided, use it; otherwise auto-create based on email domain
             if (orgId) {
                 organization = await this.organizations.findById(orgId);
                 if (!organization) {
@@ -77,6 +95,7 @@ export class GoogleLogin {
                 organization = Organization.create(orgName);
                 organization = await this.organizations.create(organization);
             }
+            */
 
             // Create user with default role
             user = User.createFromGoogle(
@@ -90,9 +109,9 @@ export class GoogleLogin {
             // Set default role - first user in org becomes OWNER, others get VIEWER role
             const existingUsers = await this.users.findByOrganizationId(organization.id);
             if (existingUsers.length === 0) {
-                user.roles = [UserRole.OWNER];
+                user.setRole(UserRole.OWNER);
             } else {
-                user.roles = [UserRole.VIEWER];
+                user.setRole(UserRole.VIEWER);
             }
 
             user = await this.users.create(user);
@@ -102,15 +121,15 @@ export class GoogleLogin {
             throw new Error('Account is deactivated');
         }
 
-        // 4. Record login
+        // 5. Record login
         user.recordLogin();
         await this.users.update(user);
 
-        // 5. Generate JWT tokens
+        // 6. Generate JWT tokens
         const accessToken = this.jwt.signAccessToken({
             sub: user.id,
             email: user.email,
-            roles: user.roles,
+            role: user.role,
             name: user.name,
             orgId: user.orgId,
         });
@@ -120,20 +139,20 @@ export class GoogleLogin {
             type: 'refresh',
         });
 
-        // 6. Store refresh token
+        // 7. Store refresh token
         await this.refreshTokens.store({
             userId: user.id,
             token: refreshToken,
             expiresAt: this.jwt.getRefreshTokenExpiryDate(),
         });
 
-        // 7. Log authentication event
+        // 8. Log authentication event
         const auditLog = AuditLog.create(
             user.orgId!,
             user.id,
             'authentication',
             user.id,
-            isNewUser ? 'CREATE' : 'VIEW',
+            isNewUser ? 'CREATE' : 'LOGIN',
             {
                 isNewUser,
                 email,
@@ -153,7 +172,7 @@ export class GoogleLogin {
                 id: user.id,
                 email: user.email,
                 name: user.name,
-                roles: user.roles,
+                role: user.role,
                 avatar: user.avatar,
                 orgId: user.orgId,
                 isNewUser,

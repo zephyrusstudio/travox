@@ -1,8 +1,8 @@
-// Firestore collection types and interfaces for TMS database schema
+
 
 import { Timestamp } from 'firebase-admin/firestore';
 
-// Base interface for all documents with org_id for multi-tenancy
+
 export interface BaseDocument {
   id?: string;
   org_id: string;
@@ -10,7 +10,7 @@ export interface BaseDocument {
   updated_at: Timestamp;
 }
 
-// Enums based on your schema
+
 export enum UserRole {
   OWNER = 'Owner',
   ADMIN = 'Admin',
@@ -43,9 +43,9 @@ export enum BookingStatus {
 }
 
 export enum PAXType {
-  ADT = 'ADT', // Adult
-  CHD = 'CHD', // Child
-  INF = 'INF'  // Infant
+  ADT = 'ADT', 
+  CHD = 'CHD', 
+  INF = 'INF'  
 }
 
 export enum ModeOfJourney {
@@ -89,30 +89,30 @@ export enum OCRStatus {
   FAILED = 'FAILED'
 }
 
-// Organizations
-export interface OrganizationDocument extends BaseDocument {
+
+export interface OrganizationDocument {
+  id: string;
   name: string;
+  created_at: Timestamp;
 }
 
-// Users (extending your existing User domain model)
+
 export interface UserDocument extends BaseDocument {
   email: string;
   name: string;
   role: UserRole;
   is_active: boolean;
   timezone: string;
-  phone?: string;
-  roles?: string[]; // For backward compatibility with existing code
 }
 
-// Auth Identities
+
 export interface AuthIdentityDocument extends BaseDocument {
   user_id: string;
   provider: string;
   provider_sub: string;
 }
 
-// Auth Tokens
+
 export interface AuthTokenDocument extends BaseDocument {
   user_id: string;
   token_hash: string;
@@ -120,7 +120,7 @@ export interface AuthTokenDocument extends BaseDocument {
   revoked_at?: Timestamp;
 }
 
-// Audit Logs
+
 export interface AuditLogDocument {
   id?: string;
   org_id: string;
@@ -134,12 +134,12 @@ export interface AuditLogDocument {
   created_at: Timestamp;
 }
 
-// Accounts
+
 export interface AccountDocument extends BaseDocument {
   bank_name?: string;
   ifsc_code?: string;
   branch_name?: string;
-  account_no?: string; // Sensitive
+  account_no?: string; 
   upi_id?: string;
   is_active: boolean;
   created_by: string;
@@ -147,13 +147,13 @@ export interface AccountDocument extends BaseDocument {
   archived_at?: Timestamp;
 }
 
-// Customers
+
 export interface CustomerDocument extends BaseDocument {
   name: string;
   phone?: string;
   email?: string;
-  passport_no?: string; // Sensitive
-  aadhaar_no?: string;  // Sensitive
+  passport_no?: string; 
+  aadhaar_no?: string;  
   visa_no?: string;
   gstin?: string;
   account_id?: string;
@@ -164,7 +164,7 @@ export interface CustomerDocument extends BaseDocument {
   archived_at?: Timestamp;
 }
 
-// Vendors
+
 export interface VendorDocument extends BaseDocument {
   name: string;
   poc_name?: string;
@@ -181,11 +181,11 @@ export interface VendorDocument extends BaseDocument {
   archived_at?: Timestamp;
 }
 
-// Bookings
+
 export interface BookingDocument extends BaseDocument {
   customer_id: string;
   package_name?: string;
-  booking_date: Timestamp;
+  booking_date: Date;
   pax_count: number;
   primary_pax_name?: string;
   pnr_no?: string;
@@ -204,23 +204,23 @@ export interface BookingDocument extends BaseDocument {
   archived_at?: Timestamp;
 }
 
-// Booking PAX
+
 export interface BookingPAXDocument extends BaseDocument {
   booking_id: string;
   pax_name: string;
   pax_type: PAXType;
-  passport_no?: string; // Sensitive
-  dob?: Timestamp;
+  passport_no?: string; 
+  dob?: Date; 
 }
 
-// Booking Itineraries
+
 export interface BookingItineraryDocument extends BaseDocument {
   booking_id: string;
   name: string;
   seq_no: number;
 }
 
-// Booking Segments
+
 export interface BookingSegmentDocument extends BaseDocument {
   itinerary_id: string;
   seq_no: number;
@@ -245,7 +245,7 @@ export interface BookingSegmentDocument extends BaseDocument {
   misc?: Record<string, any>;
 }
 
-// Files
+
 export interface FileDocument extends BaseDocument {
   booking_id?: string;
   customer_id?: string;
@@ -257,7 +257,7 @@ export interface FileDocument extends BaseDocument {
   is_deleted: boolean;
 }
 
-// OCR Jobs
+
 export interface OCRJobDocument extends BaseDocument {
   file_id: string;
   booking_id?: string;
@@ -266,13 +266,13 @@ export interface OCRJobDocument extends BaseDocument {
   extracted_json?: Record<string, any>;
 }
 
-// Invoices
+
 export interface InvoiceDocument extends BaseDocument {
   booking_id?: string;
   customer_id?: string;
   vendor_id?: string;
   invoice_no: string;
-  invoice_date: Timestamp;
+  invoice_date: Date;
   currency: string;
   place_of_supply?: string;
   buyer_gstin?: string;
@@ -286,7 +286,7 @@ export interface InvoiceDocument extends BaseDocument {
   created_by: string;
 }
 
-// Invoice Items
+
 export interface InvoiceItemDocument extends BaseDocument {
   invoice_id: string;
   description: string;
@@ -300,7 +300,7 @@ export interface InvoiceItemDocument extends BaseDocument {
   igst_amount?: number;
 }
 
-// Payments
+
 export interface PaymentDocument extends BaseDocument {
   booking_id?: string;
   customer_id?: string;

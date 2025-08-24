@@ -14,18 +14,12 @@ export class UserRepositoryFirestore implements IUserRepository {
             org_id: user.orgId || '',
             email: user.email || '',
             name: user.name || '',
-            role: (user.roles[0] as UserRole) || UserRole.VIEWER,
+            role: user.role as UserRole || UserRole.VIEWER,
             is_active: user.isActive,
             timezone: user.preferences?.timezone || 'UTC',
-            roles: user.roles as string[],
             created_at: user.createdAt ? Timestamp.fromDate(user.createdAt) : now,
             updated_at: now
         };
-
-        // Only include phone if it's not undefined
-        if (user.phone !== undefined) {
-            firestoreData.phone = user.phone;
-        }
 
         return firestoreData;
     }
@@ -36,13 +30,13 @@ export class UserRepositoryFirestore implements IUserRepository {
             data.org_id,
             data.name,
             data.email,
-            data.phone,
-            undefined, // googleId - not in old schema
-            undefined, // avatar - not in old schema  
-            (data.roles || [data.role]) as UserRole[],
+            undefined, // phone - not in schema
+            undefined, // googleId - not in schema
+            undefined, // avatar - not in schema  
+            data.role as UserRole || UserRole.VIEWER, // Single role
             data.is_active,
             { timezone: data.timezone },
-            undefined, // lastLoginAt - not in old schema
+            undefined, // lastLoginAt - not in schema
             data.created_at?.toDate(),
             data.updated_at?.toDate()
         );
@@ -91,26 +85,6 @@ export class UserRepositoryFirestore implements IUserRepository {
             return this.fromFirestore(data);
         } catch (error) {
             console.error('Error finding user by email:', error);
-            throw error;
-        }
-    }
-
-    async findByPhone(phone: string): Promise<User | null> {
-        try {
-            const snapshot = await this.collection
-                .where('phone', '==', phone)
-                .limit(1)
-                .get();
-
-            if (snapshot.empty) {
-                return null;
-            }
-
-            const doc = snapshot.docs[0];
-            const data = { id: doc.id, ...doc.data() } as UserDocument;
-            return this.fromFirestore(data);
-        } catch (error) {
-            console.error('Error finding user by phone:', error);
             throw error;
         }
     }

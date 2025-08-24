@@ -1,69 +1,45 @@
 import { Request, Response } from 'express';
 import { container } from '../../config/container';
-import { ManageUserRoles } from '../../application/ManageUserRoles';
+import { ManageUserRoles } from '../../application/User/ManageUserRoles';
 import { IUserRepository } from '../../application/Repositories/IUserRepository';
 import { UserRole } from '../../models/FirestoreTypes';
 
 export class UserController {
-  async assignRoles(req: Request, res: Response) {
+  async changeRole(req: Request, res: Response) {
     try {
       const useCase = container.resolve(ManageUserRoles);
-      const { userId, roles } = req.body;
+      const { userId, role } = req.body;
       
-      if (!userId || !roles || !Array.isArray(roles)) {
-        return res.status(400).json({ message: 'userId and roles array are required' });
+      if (!userId || !role) {
+        return res.status(400).json({
+          status: 'error',
+          data: { message: 'userId and role are required' }
+        });
       }
 
-      // Validate roles
-      for (const role of roles) {
-        if (!Object.values(UserRole).includes(role)) {
-          return res.status(400).json({ message: `Invalid role: ${role}` });
-        }
+      // Validate role
+      if (!Object.values(UserRole).includes(role)) {
+        return res.status(400).json({
+          status: 'error',
+          data: { message: `Invalid role: ${role}` }
+        });
       }
 
-      const user = await useCase.assignRoles(
-        { userId, roles },
+      const user = await useCase.changeRole(
+        { userId, role },
         req.user?.orgId!,
         req.user?.id!
       );
       
-      res.json(user);
+      res.json({
+        status: 'success',
+        data: user
+      });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
-  }
-
-  async addRole(req: Request, res: Response) {
-    try {
-      const useCase = container.resolve(ManageUserRoles);
-      const { userId } = req.params;
-      const { role } = req.body;
-      
-      if (!role || !Object.values(UserRole).includes(role)) {
-        return res.status(400).json({ message: 'Valid role is required' });
-      }
-
-      const user = await useCase.addRole(userId, role, req.user?.orgId!, req.user?.id!);
-      res.json(user);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
-  }
-
-  async removeRole(req: Request, res: Response) {
-    try {
-      const useCase = container.resolve(ManageUserRoles);
-      const { userId } = req.params;
-      const { role } = req.body;
-      
-      if (!role || !Object.values(UserRole).includes(role)) {
-        return res.status(400).json({ message: 'Valid role is required' });
-      }
-
-      const user = await useCase.removeRole(userId, role, req.user?.orgId!, req.user?.id!);
-      res.json(user);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -78,65 +54,21 @@ export class UserController {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        roles: user.roles,
+        role: user.role,
         isActive: user.isActive,
-        lastLoginAt: user.lastLoginAt,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       }));
       
-      res.json(sanitizedUsers);
+      res.json({
+        status: 'success',
+        data: sanitizedUsers
+      });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  }
-
-  async getById(req: Request, res: Response) {
-    try {
-      const userRepo = container.resolve<IUserRepository>('IUserRepository');
-      const user = await userRepo.findById(req.params.id);
-      
-      if (!user || user.orgId !== req.user?.orgId) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-
-      // Remove sensitive information
-      const sanitizedUser = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        roles: user.roles,
-        isActive: user.isActive,
-        preferences: user.preferences,
-        lastLoginAt: user.lastLoginAt,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      };
-      
-      res.json(sanitizedUser);
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  }
-
-  async activate(req: Request, res: Response) {
-    try {
-      const useCase = container.resolve(ManageUserRoles);
-      const user = await useCase.activateUser(req.params.id, req.user?.orgId!, req.user?.id!);
-      res.json({ message: 'User activated successfully', user });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
-    }
-  }
-
-  async deactivate(req: Request, res: Response) {
-    try {
-      const useCase = container.resolve(ManageUserRoles);
-      const user = await useCase.deactivateUser(req.params.id, req.user?.orgId!, req.user?.id!);
-      res.json({ message: 'User deactivated successfully', user });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -146,16 +78,19 @@ export class UserController {
       const user = await userRepo.findById(req.user?.id!);
       
       if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({
+          status: 'error',
+          data: { message: 'User not found' }
+        });
       }
-
+      
       // Remove sensitive information
       const sanitizedUser = {
         id: user.id,
         name: user.name,
         email: user.email,
         phone: user.phone,
-        roles: user.roles,
+        role: user.role,
         isActive: user.isActive,
         preferences: user.preferences,
         lastLoginAt: user.lastLoginAt,
@@ -163,9 +98,93 @@ export class UserController {
         updatedAt: user.updatedAt
       };
       
-      res.json(sanitizedUser);
+      res.json({
+        status: 'success',
+        data: sanitizedUser
+      });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  async activate(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(ManageUserRoles);
+      const user = await useCase.activateUser(req.params.id, req.user?.orgId!, req.user?.id!);
+      res.json({
+        status: 'success',
+        data: { message: 'User activated successfully', user }
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  async deactivate(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(ManageUserRoles);
+      const user = await useCase.deactivateUser(req.params.id, req.user?.orgId!, req.user?.id!);
+      res.json({
+        status: 'success',
+        data: { message: 'User deactivated successfully', user }
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  async getById(req: Request, res: Response) {
+    try {
+      const userRepo = container.resolve<IUserRepository>('IUserRepository');
+      const user = await userRepo.findById(req.params.id);
+      
+      if (!user) {
+        return res.status(404).json({
+          status: 'error',
+          data: { message: 'User not found' }
+        });
+      }
+
+      // Check if user belongs to the same organization
+      if (user.orgId !== req.user?.orgId) {
+        return res.status(403).json({
+          status: 'error',
+          data: { message: 'Access denied: User does not belong to your organization' }
+        });
+      }
+      
+      // Remove sensitive information
+      const sanitizedUser = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        isActive: user.isActive,
+        preferences: user.preferences,
+        lastLoginAt: user.lastLoginAt,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      };
+      
+      res.json({
+        status: 'success',
+        data: sanitizedUser
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -175,33 +194,42 @@ export class UserController {
       const user = await userRepo.findById(req.user?.id!);
       
       if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({
+          status: 'error',
+          data: { message: 'User not found' }
+        });
       }
 
       const { name, phone, preferences } = req.body;
       
-      if (name) user.updateProfile(name, phone);
-      if (preferences) user.updatePreferences(preferences);
+      if (name !== undefined) user.updateProfile(name, phone);
+      if (preferences !== undefined) user.updatePreferences(preferences);
 
-      await userRepo.update(user);
+      const updatedUser = await userRepo.update(user);
       
       // Remove sensitive information
       const sanitizedUser = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        roles: user.roles,
-        isActive: user.isActive,
-        preferences: user.preferences,
-        lastLoginAt: user.lastLoginAt,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        role: updatedUser.role,
+        isActive: updatedUser.isActive,
+        preferences: updatedUser.preferences,
+        lastLoginAt: updatedUser.lastLoginAt,
+        createdAt: updatedUser.createdAt,
+        updatedAt: updatedUser.updatedAt
       };
       
-      res.json(sanitizedUser);
+      res.json({
+        status: 'success',
+        data: sanitizedUser
+      });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 }

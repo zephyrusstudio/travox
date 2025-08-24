@@ -66,9 +66,7 @@ export function registerRoutes(app: Express) {
     app.get('/users/me', requireAuth(), userCtrl.getCurrentUser);
     app.put('/users/me', requireAuth(), userCtrl.updateProfile);
     app.get('/users/:id', requireAuth([UserRole.ADMIN, UserRole.OWNER]), userCtrl.getById);
-    app.post('/users/assign-roles', requireAuth([UserRole.ADMIN, UserRole.OWNER]), userCtrl.assignRoles);
-    app.post('/users/:id/add-role', requireAuth([UserRole.ADMIN, UserRole.OWNER]), userCtrl.addRole);
-    app.post('/users/:id/remove-role', requireAuth([UserRole.ADMIN, UserRole.OWNER]), userCtrl.removeRole);
+    app.post('/users/change-role', requireAuth([UserRole.ADMIN, UserRole.OWNER]), userCtrl.changeRole);
     app.post('/users/:id/activate', requireAuth([UserRole.ADMIN, UserRole.OWNER]), userCtrl.activate);
     app.post('/users/:id/deactivate', requireAuth([UserRole.ADMIN, UserRole.OWNER]), userCtrl.deactivate);
 }

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { container } from '../../config/container';
-import { CreateAuditLog } from '../../application/CreateAuditLog';
-import { GetAuditLogs } from '../../application/GetAuditLogs';
+import { CreateAuditLog } from '../../application/AuditLog/CreateAuditLog';
+import { GetAuditLogs } from '../../application/AuditLog/GetAuditLogs';
 
 export class AuditLogController {
   async create(req: Request, res: Response) {
@@ -16,9 +16,15 @@ export class AuditLogController {
         userAgent
       }, req.user?.orgId!, req.user?.id!);
       
-      res.status(201).json(auditLog);
+      res.status(201).json({
+        status: 'success',
+        data: auditLog
+      });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -38,9 +44,15 @@ export class AuditLogController {
       };
 
       const result = await useCase.execute(filters, req.user?.orgId!);
-      res.json(result);
+      res.json({
+        status: 'success',
+        data: result
+      });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -50,9 +62,15 @@ export class AuditLogController {
       const { entity, entityId } = req.params;
       
       const auditLogs = await useCase.getByEntity(entity, entityId, req.user?.orgId!);
-      res.json(auditLogs);
+      res.json({
+        status: 'success',
+        data: auditLogs
+      });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -62,9 +80,15 @@ export class AuditLogController {
       const { actorId } = req.params;
       
       const auditLogs = await useCase.getByActor(actorId, req.user?.orgId!);
-      res.json(auditLogs);
+      res.json({
+        status: 'success',
+        data: auditLogs
+      });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -74,7 +98,10 @@ export class AuditLogController {
       const { startDate, endDate } = req.query;
       
       if (!startDate || !endDate) {
-        return res.status(400).json({ message: 'startDate and endDate are required' });
+        return res.status(400).json({
+          status: 'error',
+          data: { message: 'startDate and endDate are required' }
+        });
       }
 
       const auditLogs = await useCase.getByDateRange(
@@ -82,9 +109,15 @@ export class AuditLogController {
         new Date(endDate as string),
         req.user?.orgId!
       );
-      res.json(auditLogs);
+      res.json({
+        status: 'success',
+        data: auditLogs
+      });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -107,7 +140,10 @@ export class AuditLogController {
       res.setHeader('Content-Disposition', 'attachment; filename=audit-logs.csv');
       res.send(csv);
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 }

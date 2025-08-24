@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { container } from '../../config/container';
-import { GoogleLogin } from '../../application/GoogleLogin';
-import { LogoutUser } from '../../application/LogoutUser';
+import { GoogleLogin } from '../../application/Auth/GoogleLogin';
+import { LogoutUser } from '../../application/Auth/LogoutUser';
 import { IJwtService } from '../../application/services/IJwtService';
 import { IRefreshTokenRepository } from '../../application/Repositories/IRefreshTokenRepository';
 import { IUserRepository } from '../../application/Repositories/IUserRepository';
@@ -13,7 +13,10 @@ export class AuthController {
             const { idToken, orgId } = req.body;
             
             if (!idToken) {
-                return res.status(400).json({ message: 'Google ID token is required' });
+                return res.status(400).json({
+                    status: 'error',
+                    data: { message: 'Google ID token is required' }
+                });
             }
 
             const result = await useCase.execute(
@@ -31,11 +34,17 @@ export class AuthController {
             });
 
             res.json({
-                accessToken: result.accessToken,
-                user: result.user,
+                status: 'success',
+                data: {
+                    accessToken: result.accessToken,
+                    user: result.user,
+                }
             });
         } catch (error: any) {
-            res.status(401).json({ message: error.message });
+            res.status(401).json({
+                status: 'error',
+                data: { message: error.message }
+            });
         }
     }
 
@@ -52,9 +61,15 @@ export class AuthController {
 
             // Clear refresh token cookie
             res.clearCookie('refreshToken');
-            res.json({ message: 'Logged out successfully' });
+            res.json({
+                status: 'success',
+                data: { message: 'Logged out successfully' }
+            });
         } catch (error: any) {
-            res.status(500).json({ message: error.message });
+            res.status(500).json({
+                status: 'error',
+                data: { message: error.message }
+            });
         }
     }
 
@@ -64,7 +79,10 @@ export class AuthController {
             const refreshToken =
                 req.cookies?.refreshToken || req.body?.refreshToken || req.headers['x-refresh-token'];
             if (!refreshToken || typeof refreshToken !== 'string') {
-                return res.status(400).json({ message: 'Refresh token missing' });
+                return res.status(400).json({
+                    status: 'error',
+                    data: { message: 'Refresh token missing' }
+                });
             }
 
             // 2. Resolve dependencies
@@ -77,22 +95,34 @@ export class AuthController {
             try {
                 decoded = jwtService.verify(refreshToken);
                 if (!decoded || decoded.type !== 'refresh') {
-                    return res.status(401).json({ message: 'Invalid refresh token' });
+                    return res.status(401).json({
+                        status: 'error',
+                        data: { message: 'Invalid refresh token' }
+                    });
                 }
             } catch (e) {
-                return res.status(401).json({ message: 'Invalid or expired refresh token' });
+                return res.status(401).json({
+                    status: 'error',
+                    data: { message: 'Invalid or expired refresh token' }
+                });
             }
 
             // 4. Check revocation
             const isRevoked = await refreshRepo.isRevoked(refreshToken);
             if (isRevoked) {
-                return res.status(401).json({ message: 'Refresh token revoked or not found' });
+                return res.status(401).json({
+                    status: 'error',
+                    data: { message: 'Refresh token revoked or not found' }
+                });
             }
 
             // 5. Fetch user (ensure user still exists and is active)
             const user = await userRepo.findById(decoded.sub);
             if (!user || !user.isActive) {
-                return res.status(401).json({ message: 'User not found or inactive' });
+                return res.status(401).json({
+                    status: 'error',
+                    data: { message: 'User not found or inactive' }
+                });
             }
 
             // 6. Revoke old refresh token (for rotation)
@@ -102,7 +132,7 @@ export class AuthController {
             const newAccessToken = jwtService.signAccessToken({
                 sub: user.id,
                 email: user.email,
-                roles: user.roles,
+                role: user.role,
                 name: user.name,
                 orgId: user.orgId,
             });
@@ -126,10 +156,16 @@ export class AuthController {
 
             // 9. Return new access token
             return res.json({
-                accessToken: newAccessToken,
+                status: 'success',
+                data: {
+                    accessToken: newAccessToken,
+                }
             });
         } catch (err: any) {
-            return res.status(500).json({ message: 'Token refresh failed', detail: err.message });
+            return res.status(500).json({
+                status: 'error',
+                data: { message: 'Token refresh failed', detail: err.message }
+            });
         }
     }
 }

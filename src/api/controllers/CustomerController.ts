@@ -1,25 +1,25 @@
 import { Request, Response } from 'express';
 import { container } from '../../config/container';
-import { CreateCustomer } from '../../application/CreateCustomer';
-import { GetCustomers } from '../../application/GetCustomers';
+import { CreateCustomer } from '../../application/Customer/CreateCustomer';
+import { GetCustomers } from '../../application/Customer/GetCustomers';
 
 export class CustomerController {
   async create(req: Request, res: Response) {
     try {
       const useCase = container.resolve(CreateCustomer);
-      const orgId = req.headers['x-org-id'] as string || 'default-org'; // Default for testing
-      const createdBy = 'system'; // Default for testing
+      const orgId = req.user?.orgId!;
+      const createdBy = req.user?.id!;
       
       const customer = await useCase.execute(req.body, orgId, createdBy);
       
       res.status(201).json({
-        success: true,
-        data: customer
+        status: 'success',
+        data: customer.toApiResponse() // Use masked data
       });
     } catch (error: any) {
       res.status(400).json({
-        success: false,
-        message: error.message
+        status: 'error',
+        data: { message: error.message }
       });
     }
   }
@@ -27,26 +27,26 @@ export class CustomerController {
   async getById(req: Request, res: Response) {
     try {
       const useCase = container.resolve(GetCustomers);
-      const orgId = req.headers['x-org-id'] as string || 'default-org';
+      const orgId = req.user?.orgId!;
       const { id } = req.params;
       
       const customer = await useCase.findById(id, orgId);
       
       if (!customer) {
         return res.status(404).json({
-          success: false,
-          message: 'Customer not found'
+          status: 'error',
+          data: { message: 'Customer not found' }
         });
       }
       
       res.json({
-        success: true,
-        data: customer
+        status: 'success',
+        data: customer.toApiResponse() // Use masked data
       });
     } catch (error: any) {
       res.status(500).json({
-        success: false,
-        message: error.message
+        status: 'error',
+        data: { message: error.message }
       });
     }
   }
@@ -54,18 +54,18 @@ export class CustomerController {
   async getAll(req: Request, res: Response) {
     try {
       const useCase = container.resolve(GetCustomers);
-      const orgId = req.headers['x-org-id'] as string || 'default-org';
+      const orgId = req.user?.orgId!;
       
       const customers = await useCase.getAllActive(orgId);
       
       res.json({
-        success: true,
-        data: customers
+        status: 'success',
+        data: customers.map(c => c.toApiResponse()) // Use masked data
       });
     } catch (error: any) {
       res.status(500).json({
-        success: false,
-        message: error.message
+        status: 'error',
+        data: { message: error.message }
       });
     }
   }
@@ -73,26 +73,26 @@ export class CustomerController {
   async search(req: Request, res: Response) {
     try {
       const useCase = container.resolve(GetCustomers);
-      const orgId = req.headers['x-org-id'] as string || 'default-org';
+      const orgId = req.user?.orgId!;
       const { q, limit } = req.query;
       
       if (!q || typeof q !== 'string') {
         return res.status(400).json({
-          success: false,
-          message: 'Search query is required'
+          status: 'error',
+          data: { message: 'Search query is required' }
         });
       }
       
       const customers = await useCase.search(q, orgId, limit ? parseInt(limit as string) : undefined);
       
       res.json({
-        success: true,
-        data: customers
+        status: 'success',
+        data: customers.map(c => c.toApiResponse()) // Use masked data
       });
     } catch (error: any) {
       res.status(500).json({
-        success: false,
-        message: error.message
+        status: 'error',
+        data: { message: error.message }
       });
     }
   }
@@ -100,19 +100,19 @@ export class CustomerController {
   async getStats(req: Request, res: Response) {
     try {
       const useCase = container.resolve(GetCustomers);
-      const orgId = req.headers['x-org-id'] as string || 'default-org';
+      const orgId = req.user?.orgId!;
       const { id } = req.params;
       
       const stats = await useCase.getStats(id, orgId);
       
       res.json({
-        success: true,
+        status: 'success',
         data: stats
       });
     } catch (error: any) {
       res.status(500).json({
-        success: false,
-        message: error.message
+        status: 'error',
+        data: { message: error.message }
       });
     }
   }

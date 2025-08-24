@@ -100,19 +100,48 @@ export class Booking {
   }
 
   confirm(updatedBy: string = ''): void {
+    // Business rule: At least 1 PAX before CONFIRMED
+    if (this.paxCount < 1) {
+      throw new Error('Cannot confirm booking: at least 1 PAX is required');
+    }
+
     this.status = BookingStatus.CONFIRMED;
+    this.updatedBy = updatedBy;
+    this.updatedAt = new Date();
+  }
+
+  ticket(updatedBy: string = ''): void {
+    // Business rule: TICKETED requires at least 1 valid segment or hotel stay
+    if (!this.pnrNo && !this.travelStartAt) {
+      throw new Error('Cannot ticket booking: requires PNR or travel start date (valid segment/hotel stay)');
+    }
+
+    this.status = BookingStatus.TICKETED;
+    this.updatedBy = updatedBy;
+    this.updatedAt = new Date();
+  }
+
+  complete(updatedBy: string = '', adminOverride: boolean = false): void {
+    // Business rule: COMPLETED requires travel_end_at < now and due_amount=0 (or admin override)
+    const now = new Date();
+    
+    if (!adminOverride) {
+      if (this.travelEndAt && this.travelEndAt >= now) {
+        throw new Error('Cannot complete booking: travel has not ended yet');
+      }
+      
+      if (this.dueAmount > 0) {
+        throw new Error('Cannot complete booking: outstanding due amount must be 0');
+      }
+    }
+
+    this.status = BookingStatus.COMPLETED;
     this.updatedBy = updatedBy;
     this.updatedAt = new Date();
   }
 
   cancel(updatedBy: string = ''): void {
     this.status = BookingStatus.CANCELLED;
-    this.updatedBy = updatedBy;
-    this.updatedAt = new Date();
-  }
-
-  complete(updatedBy: string = ''): void {
-    this.status = BookingStatus.COMPLETED;
     this.updatedBy = updatedBy;
     this.updatedAt = new Date();
   }

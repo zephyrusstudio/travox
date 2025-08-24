@@ -26,6 +26,68 @@ It follows **Clean/Hexagonal Architecture**, best practices for Node.js and Type
 
 ---
 
+## Quick Start & API Testing
+
+### Running the Server
+
+```bash
+# Install dependencies
+bun install
+
+# Start development server
+bun run dev
+
+# Server will be available at http://localhost:3000
+```
+
+### API Testing Options
+
+#### 1. Postman Collection (Recommended)
+Complete Postman collection with authentication flow and all endpoints:
+
+```bash
+# Import these files into Postman:
+- postman/TMS_Complete_API_Collection.json
+- postman/TMS_Local_Environment.json
+```
+
+See [`postman/README.md`](./postman/README.md) for detailed setup instructions.
+
+#### 2. Auth Test Frontend
+Simple frontend for Google authentication and endpoint testing:
+
+```bash
+cd auth-test-fe
+python3 -m http.server 8080
+# Open http://localhost:8080
+```
+
+#### 3. Direct API Testing
+All endpoints require authentication except `/health` and `/ping`:
+
+```bash
+# Test health endpoint
+curl http://localhost:3000/health
+
+# Authenticate with Google (requires valid idToken)
+curl -X POST http://localhost:3000/auth/google \
+  -H "Content-Type: application/json" \
+  -d '{"idToken": "your_google_id_token"}'
+
+# Use returned accessToken for authenticated requests
+curl -X GET http://localhost:3000/users/me \
+  -H "Authorization: Bearer your_access_token"
+```
+
+### Key Features
+- **Org-Scoped Operations**: All operations automatically scoped to user's organization
+- **Google OIDC Authentication**: Secure authentication with Google
+- **Role-Based Access Control**: Owner, Admin, OPS, Finance, Agent, Viewer roles
+- **Audit Logging**: Automatic tracking of all important operations
+- **Cross-Org Protection**: Users cannot access other organizations' data
+
+---
+
 ## Folder Responsibilities
 
 ### `/api`

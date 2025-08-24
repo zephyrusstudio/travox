@@ -1,8 +1,8 @@
 import { injectable, inject } from 'tsyringe';
-import { IRefreshTokenRepository } from './Repositories/IRefreshTokenRepository';
-import { IAuditLogRepository } from './Repositories/IAuditLogRepository';
-import { IUserRepository } from './Repositories/IUserRepository';
-import { AuditLog } from '../domain/AuditLog';
+import { IRefreshTokenRepository } from '../Repositories/IRefreshTokenRepository';
+import { IAuditLogRepository } from '../Repositories/IAuditLogRepository';
+import { IUserRepository } from '../Repositories/IUserRepository';
+import { AuditLog } from '../../domain/AuditLog';
 
 interface LogoutDTO {
     userId: string;
@@ -38,7 +38,7 @@ export class LogoutUser {
             userId,
             'authentication',
             userId,
-            'VIEW',
+            'LOGOUT',
             {
                 action: 'logout',
                 logoutMethod: 'explicit',

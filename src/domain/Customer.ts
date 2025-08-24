@@ -85,4 +85,39 @@ export class Customer {
     this.updatedBy = updatedBy;
     this.updatedAt = new Date();
   }
+
+  // Data masking methods for sensitive information
+  getMaskedAadhaar(): string | undefined {
+    if (!this.aadhaarNo) return undefined;
+    return `XXXX-XXXX-${this.aadhaarNo.slice(-4)}`;
+  }
+
+  getMaskedPassport(): string | undefined {
+    if (!this.passportNo) return undefined;
+    if (this.passportNo.length <= 4) return 'XXXX';
+    return `${this.passportNo.slice(0, 2)}XXXX${this.passportNo.slice(-2)}`;
+  }
+
+  // Get customer data for API response with masked sensitive fields
+  toApiResponse(): any {
+    return {
+      id: this.id,
+      orgId: this.orgId,
+      name: this.name,
+      phone: this.phone,
+      email: this.email,
+      passportNo: this.getMaskedPassport(),
+      aadhaarNo: this.getMaskedAadhaar(),
+      visaNo: this.visaNo,
+      gstin: this.gstin,
+      accountId: this.accountId,
+      totalBookings: this.totalBookings,
+      createdBy: this.createdBy,
+      updatedBy: this.updatedBy,
+      isDeleted: this.isDeleted,
+      archivedAt: this.archivedAt,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt
+    };
+  }
 }

@@ -13,11 +13,9 @@ export class OrganizationRepositoryFirestore implements IOrganizationRepository 
 
   async create(organization: Organization): Promise<Organization> {
     const now = Timestamp.now();
-    const docData: Omit<OrganizationDocument, 'id'> = {
-      org_id: '', // Organizations don't have org_id since they are the org
+    const docData = {
       name: organization.name,
       created_at: now,
-      updated_at: now,
     };
 
     const docRef = await this.collection.add(docData);
@@ -29,13 +27,9 @@ export class OrganizationRepositoryFirestore implements IOrganizationRepository 
     const doc = await this.collection.doc(id).get();
     if (!doc.exists) return null;
 
-    const data = doc.data() as OrganizationDocument;
-    return new Organization(
-      doc.id,
-      data.name,
-      data.created_at.toDate(),
-      data.updated_at.toDate()
-    );
+  const data = doc.data() as OrganizationDocument;
+  const createdAt = data.created_at.toDate();
+  return new Organization(doc.id, data.name, createdAt, createdAt);
   }
 
   async findByName(name: string): Promise<Organization | null> {
@@ -43,22 +37,28 @@ export class OrganizationRepositoryFirestore implements IOrganizationRepository 
     if (query.empty) return null;
 
     const doc = query.docs[0];
-    const data = doc.data() as OrganizationDocument;
-    return new Organization(
-      doc.id,
-      data.name,
-      data.created_at.toDate(),
-      data.updated_at.toDate()
-    );
+  const data = doc.data() as OrganizationDocument;
+  const createdAt = data.created_at.toDate();
+  return new Organization(doc.id, data.name, createdAt, createdAt);
+  }
+
+  async findFirst(): Promise<Organization | null> {
+    const query = await this.collection.orderBy('created_at', 'asc').limit(1).get();
+    if (query.empty) return null;
+
+    const doc = query.docs[0];
+  const data = doc.data() as OrganizationDocument;
+  const createdAt = data.created_at.toDate();
+  return new Organization(doc.id, data.name, createdAt, createdAt);
   }
 
   async update(organization: Organization): Promise<Organization> {
     const updateData = {
       name: organization.name,
-      updated_at: Timestamp.now(),
     };
 
     await this.collection.doc(organization.id).set(updateData, { merge: true });
+    // update domain timestamp but do not persist updated_at (removed from schema)
     organization.updatedAt = new Date();
     return organization;
   }

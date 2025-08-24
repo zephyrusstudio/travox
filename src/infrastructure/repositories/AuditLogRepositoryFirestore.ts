@@ -19,7 +19,7 @@ export class AuditLogRepositoryFirestore implements IAuditLogRepository {
       diff: auditLog.diff,
       ip: auditLog.ip,
       user_agent: auditLog.userAgent,
-      created_at: Timestamp.fromDate(auditLog.createdAt)
+      created_at: auditLog.createdAt
     };
 
     const docRef = await this.collection.add(doc);
@@ -94,14 +94,14 @@ export class AuditLogRepositoryFirestore implements IAuditLogRepository {
       logs = logs.filter(log => log.action === filters.action);
     }
     if (filters.startDate) {
-      logs = logs.filter(log => log.createdAt >= filters.startDate!);
+      logs = logs.filter(log => log.createdAt.toDate() >= filters.startDate!);
     }
     if (filters.endDate) {
-      logs = logs.filter(log => log.createdAt <= filters.endDate!);
+      logs = logs.filter(log => log.createdAt.toDate() <= filters.endDate!);
     }
 
     // Sort by created_at descending (most recent first)
-    logs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    logs.sort((a, b) => b.createdAt.toDate().getTime() - a.createdAt.toDate().getTime());
 
     const total = logs.length;
     
@@ -127,7 +127,7 @@ export class AuditLogRepositoryFirestore implements IAuditLogRepository {
     const csvHeaders = 'ID,OrgID,ActorID,Entity,EntityID,Action,IP,UserAgent,CreatedAt,Diff\n';
     const csvRows = logs.map(log => {
       const escapedDiff = JSON.stringify(log.diff).replace(/"/g, '""');
-      return `"${log.id}","${log.orgId}","${log.actorId}","${log.entity}","${log.entityId}","${log.action}","${log.ip}","${log.userAgent}","${log.createdAt.toISOString()}","${escapedDiff}"`;
+      return `"${log.id}","${log.orgId}","${log.actorId}","${log.entity}","${log.entityId}","${log.action}","${log.ip}","${log.userAgent}","${log.createdAt}","${escapedDiff}"`;
     }).join('\n');
 
     return csvHeaders + csvRows;
@@ -144,7 +144,7 @@ export class AuditLogRepositoryFirestore implements IAuditLogRepository {
       doc.diff,
       doc.ip,
       doc.user_agent,
-      doc.created_at.toDate()
+      doc.created_at
     );
   }
 }

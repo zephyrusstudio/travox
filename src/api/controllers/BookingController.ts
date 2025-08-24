@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { container } from '../../config/container';
-import { CreateBooking } from '../../application/CreateBooking';
-import { GetBookings } from '../../application/GetBookings';
-import { UpdateBooking } from '../../application/UpdateBooking';
-import { DeleteBooking } from '../../application/DeleteBooking';
+import { CreateBooking } from '../../application/Booking/CreateBooking';
+import { GetBookings } from '../../application/Booking/GetBookings';
+import { UpdateBooking } from '../../application/Booking/UpdateBooking';
+import { DeleteBooking } from '../../application/Booking/DeleteBooking';
 import { BookingStatus } from '../../models/FirestoreTypes';
 
 export class BookingController {
@@ -11,9 +11,15 @@ export class BookingController {
     try {
       const useCase = container.resolve(CreateBooking);
       const booking = await useCase.execute(req.body, req.user?.orgId!, req.user?.id!);
-      res.status(201).json(booking);
+      res.status(201).json({
+        status: 'success',
+        data: booking
+      });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -31,9 +37,15 @@ export class BookingController {
       };
 
       const bookings = await useCase.execute(filters, req.user?.orgId!);
-      res.json(bookings);
+      res.json({
+        status: 'success',
+        data: bookings
+      });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -43,12 +55,21 @@ export class BookingController {
       const booking = await useCase.getById(req.params.id, req.user?.orgId!);
       
       if (!booking) {
-        return res.status(404).json({ message: 'Booking not found' });
+        return res.status(404).json({
+          status: 'error',
+          data: { message: 'Booking not found' }
+        });
       }
 
-      res.json(booking);
+      res.json({
+        status: 'success',
+        data: booking
+      });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -56,9 +77,15 @@ export class BookingController {
     try {
       const useCase = container.resolve(UpdateBooking);
       const booking = await useCase.execute(req.params.id, req.body, req.user?.orgId!, req.user?.id!);
-      res.json(booking);
+      res.json({
+        status: 'success',
+        data: booking
+      });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -68,13 +95,22 @@ export class BookingController {
       const { paidAmount } = req.body;
       
       if (typeof paidAmount !== 'number') {
-        return res.status(400).json({ message: 'paidAmount must be a number' });
+        return res.status(400).json({
+          status: 'error',
+          data: { message: 'paidAmount must be a number' }
+        });
       }
 
       const success = await useCase.updatePayment(req.params.id, paidAmount, req.user?.orgId!, req.user?.id!);
-      res.json({ success });
+      res.json({
+        status: 'success',
+        data: { success }
+      });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -84,13 +120,22 @@ export class BookingController {
       const { status } = req.body;
       
       if (!Object.values(BookingStatus).includes(status)) {
-        return res.status(400).json({ message: 'Invalid status' });
+        return res.status(400).json({
+          status: 'error',
+          data: { message: 'Invalid status' }
+        });
       }
 
       const booking = await useCase.updateStatus(req.params.id, status, req.user?.orgId!, req.user?.id!);
-      res.json(booking);
+      res.json({
+        status: 'success',
+        data: booking
+      });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -98,9 +143,15 @@ export class BookingController {
     try {
       const useCase = container.resolve(UpdateBooking);
       const booking = await useCase.cancel(req.params.id, req.user?.orgId!, req.user?.id!);
-      res.json(booking);
+      res.json({
+        status: 'success',
+        data: booking
+      });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -108,19 +159,48 @@ export class BookingController {
     try {
       const useCase = container.resolve(UpdateBooking);
       const booking = await useCase.confirm(req.params.id, req.user?.orgId!, req.user?.id!);
-      res.json(booking);
+      res.json({
+        status: 'success',
+        data: booking
+      });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
   async complete(req: Request, res: Response) {
     try {
       const useCase = container.resolve(UpdateBooking);
-      const booking = await useCase.complete(req.params.id, req.user?.orgId!, req.user?.id!);
-      res.json(booking);
+      const adminOverride = req.body?.adminOverride === true;
+      const booking = await useCase.complete(req.params.id, req.user?.orgId!, req.user?.id!, adminOverride);
+      res.json({
+        status: 'success',
+        data: booking
+      });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  async ticket(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(UpdateBooking);
+      const booking = await useCase.ticket(req.params.id, req.user?.orgId!, req.user?.id!);
+      res.json({
+        status: 'success',
+        data: booking
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -128,9 +208,15 @@ export class BookingController {
     try {
       const useCase = container.resolve(DeleteBooking);
       const success = await useCase.execute(req.params.id, req.user?.orgId!, req.user?.id!);
-      res.json({ success });
+      res.json({
+        status: 'success',
+        data: { success }
+      });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -138,9 +224,15 @@ export class BookingController {
     try {
       const useCase = container.resolve(DeleteBooking);
       const success = await useCase.archive(req.params.id, req.user?.orgId!, req.user?.id!);
-      res.json({ success });
+      res.json({
+        status: 'success',
+        data: { success }
+      });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -149,9 +241,15 @@ export class BookingController {
       const useCase = container.resolve(GetBookings);
       const days = req.query.days ? parseInt(req.query.days as string) : 30;
       const bookings = await useCase.getUpcoming(req.user?.orgId!, days);
-      res.json(bookings);
+      res.json({
+        status: 'success',
+        data: bookings
+      });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -161,7 +259,10 @@ export class BookingController {
       const { startDate, endDate } = req.query;
       
       if (!startDate || !endDate) {
-        return res.status(400).json({ message: 'startDate and endDate are required' });
+        return res.status(400).json({
+          status: 'error',
+          data: { message: 'startDate and endDate are required' }
+        });
       }
 
       const bookings = await useCase.getByTravelDates(
@@ -169,9 +270,15 @@ export class BookingController {
         new Date(endDate as string),
         req.user?.orgId!
       );
-      res.json(bookings);
+      res.json({
+        status: 'success',
+        data: bookings
+      });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -179,9 +286,15 @@ export class BookingController {
     try {
       const useCase = container.resolve(GetBookings);
       const bookings = await useCase.getOverdue(req.user?.orgId!);
-      res.json(bookings);
+      res.json({
+        status: 'success',
+        data: bookings
+      });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 
@@ -195,9 +308,15 @@ export class BookingController {
         startDate ? new Date(startDate as string) : undefined,
         endDate ? new Date(endDate as string) : undefined
       );
-      res.json(stats);
+      res.json({
+        status: 'success',
+        data: stats
+      });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
   }
 }

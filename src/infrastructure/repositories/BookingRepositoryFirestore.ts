@@ -16,7 +16,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
     const docData: any = {
       org_id: orgId,
       customer_id: booking.customerId,
-      booking_date: booking.bookingDate,
+      booking_date: Timestamp.fromDate(booking.bookingDate),
       pax_count: booking.paxCount,
       currency: booking.currency,
       total_amount: booking.totalAmount,
@@ -91,8 +91,8 @@ export class BookingRepositoryFirestore implements IBookingRepository {
   async findByDateRange(startDate: Date, endDate: Date, orgId: string): Promise<Booking[]> {
     const snapshot = await this.collection
       .where('org_id', '==', orgId)
-      .where('booking_date', '>=', startDate)
-      .where('booking_date', '<=', endDate)
+      .where('booking_date', '>=', Timestamp.fromDate(startDate))
+      .where('booking_date', '<=', Timestamp.fromDate(endDate))
       .where('is_deleted', '==', false)
       .get();
 
@@ -116,7 +116,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
     booking.updatedAt = new Date();
     const updateData: any = {
       customer_id: booking.customerId,
-      booking_date: booking.bookingDate,
+      booking_date: Timestamp.fromDate(booking.bookingDate),
       pax_count: booking.paxCount,
       currency: booking.currency,
       total_amount: booking.totalAmount,
@@ -194,10 +194,10 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       .where('status', '!=', BookingStatus.CANCELLED);
 
     if (startDate) {
-      query = query.where('booking_date', '>=', startDate);
+      query = query.where('booking_date', '>=', Timestamp.fromDate(startDate));
     }
     if (endDate) {
-      query = query.where('booking_date', '<=', endDate);
+      query = query.where('booking_date', '<=', Timestamp.fromDate(endDate));
     }
 
     const snapshot = await query.get();
@@ -243,7 +243,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       id,
       data.org_id,
       data.customer_id,
-      data.booking_date,
+      data.booking_date.toDate(),
       data.pax_count,
       data.currency,
       data.total_amount,

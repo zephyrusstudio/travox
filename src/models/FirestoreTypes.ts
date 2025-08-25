@@ -4,7 +4,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 
 export interface BaseDocument {
-  id?: string;
+  id: string;
   org_id: string;
   created_at: Timestamp;
   updated_at: Timestamp;
@@ -185,7 +185,7 @@ export interface VendorDocument extends BaseDocument {
 export interface BookingDocument extends BaseDocument {
   customer_id: string;
   package_name?: string;
-  booking_date: Date;
+  booking_date: Timestamp;
   pax_count: number;
   primary_pax_name?: string;
   pnr_no?: string;
@@ -210,7 +210,7 @@ export interface BookingPAXDocument extends BaseDocument {
   pax_name: string;
   pax_type: PAXType;
   passport_no?: string; 
-  dob?: Date; 
+  dob?: Timestamp; 
 }
 
 
@@ -272,7 +272,7 @@ export interface InvoiceDocument extends BaseDocument {
   customer_id?: string;
   vendor_id?: string;
   invoice_no: string;
-  invoice_date: Date;
+  invoice_date: Timestamp;
   currency: string;
   place_of_supply?: string;
   buyer_gstin?: string;

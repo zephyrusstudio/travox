@@ -67,37 +67,24 @@ export class GoogleLogin {
         let isNewUser = false;
         
         if (!user) {
-            // 4. Auto-create user on first login
             isNewUser = true;
             
-            // Determine organization
             let organization: Organization | null = null;
 
-            // New behavior: assign every new user to the first organization present in the DB
-            organization = await this.organizations.findFirst();
-            if (!organization) {
-                throw new Error('No organization found in the database');
-            }
-
-            /*
-            // Original logic (commented out for now):
-            // if orgId provided, use it; otherwise auto-create based on email domain
             if (orgId) {
                 organization = await this.organizations.findById(orgId);
                 if (!organization) {
-                    throw new Error('Invalid organization');
+                    const org = Organization.create(orgId);
+                    organization = await this.organizations.create(org);
                 }
             } else {
-                // Auto-create organization based on email domain if none specified
-                const emailDomain = email.split('@')[1];
-                const orgName = `${emailDomain} Organization`;
-                
-                organization = Organization.create(orgName);
-                organization = await this.organizations.create(organization);
+                organization = await this.organizations.findByName('default');
+                if (!organization) {
+                    const defaultOrg = Organization.create('default');
+                    organization = await this.organizations.create(defaultOrg);
+                }
             }
-            */
 
-            // Create user with default role
             user = User.createFromGoogle(
                 organization.id, 
                 email, 
@@ -106,7 +93,6 @@ export class GoogleLogin {
                 picture
             );
             
-            // Set default role - first user in org becomes OWNER, others get VIEWER role
             const existingUsers = await this.users.findByOrganizationId(organization.id);
             if (existingUsers.length === 0) {
                 user.setRole(UserRole.OWNER);

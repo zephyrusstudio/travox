@@ -4,4 +4,4 @@ dist
 firestore-creds.json
 docs
 postman
-*test-fe
+tests

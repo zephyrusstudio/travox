@@ -1,14 +1,14 @@
 import { injectable, inject } from 'tsyringe';
-import { IUserRepository } from '../Repositories/IUserRepository';
-import { IOrganizationRepository } from '../Repositories/IOrganizationRepository';
-import { IAuditLogRepository } from '../Repositories/IAuditLogRepository';
-import { IJwtService } from '../services/IJwtService';
-import { IGoogleOidcService } from '../services/IGoogleOidcService';
-import { IRefreshTokenRepository } from '../Repositories/IRefreshTokenRepository';
-import { User } from '../../domain/User';
-import { Organization } from '../../domain/Organization';
-import { UserRole } from '../../models/FirestoreTypes';
-import { AuditLog } from '../../domain/AuditLog';
+import { IUserRepository } from '../../repositories/IUserRepository';
+import { IOrganizationRepository } from '../../repositories/IOrganizationRepository';
+import { IAuditLogRepository } from '../../repositories/IAuditLogRepository';
+import { IJwtService } from '../../services/IJwtService';
+import { IGoogleOidcService } from '../../services/IGoogleOidcService';
+import { IRefreshTokenRepository } from '../../repositories/IRefreshTokenRepository';
+import { User } from '../../../domain/User';
+import { Organization } from '../../../domain/Organization';
+import { UserRole } from '../../../models/FirestoreTypes';
+import { AuditLog } from '../../../domain/AuditLog';
 
 interface GoogleLoginDTO {
     idToken: string;
@@ -103,7 +103,7 @@ export class GoogleLogin {
             user = await this.users.create(user);
         }
 
-        if (!user.isActive) {
+        if (!user || !user.isActive) {
             throw new Error('Account is deactivated');
         }
 

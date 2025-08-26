@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { container } from '../../config/container';
-import { CreateBooking } from '../../application/Booking/CreateBooking';
-import { GetBookings } from '../../application/Booking/GetBookings';
-import { UpdateBooking } from '../../application/Booking/UpdateBooking';
-import { DeleteBooking } from '../../application/Booking/DeleteBooking';
+import { CreateBooking } from '../../application/useCases/booking/CreateBooking';
+import { GetBookings } from '../../application/useCases/booking/GetBookings';
+import { UpdateBooking } from '../../application/useCases/booking/UpdateBooking';
+import { DeleteBooking } from '../../application/useCases/booking/DeleteBooking';
 import { BookingStatus } from '../../models/FirestoreTypes';
 
 export class BookingController {

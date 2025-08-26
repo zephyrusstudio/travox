@@ -1,6 +1,6 @@
 import { injectable } from 'tsyringe';
 import { firestore } from '../../config/firestore';
-import { IVendorRepository } from '../../application/Repositories/IVendorRepository';
+import { IVendorRepository } from '../../application/repositories/IVendorRepository';
 import { Vendor } from '../../domain/Vendor';
 import { VendorDocument, ServiceType } from '../../models/FirestoreTypes';
 import { Timestamp } from 'firebase-admin/firestore';

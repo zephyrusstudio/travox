@@ -1,6 +1,6 @@
 import { injectable, inject } from 'tsyringe';
-import { IVendorRepository } from '../Repositories/IVendorRepository';
-import { IPaymentRepository } from '../Repositories/IPaymentRepository';
+import { IVendorRepository } from '../../repositories/IVendorRepository';
+import { IPaymentRepository } from '../../repositories/IPaymentRepository';
 
 @injectable()
 export class UpdateVendorTotalExpense {

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { container } from '../config/container';
-import { IAuditLogRepository } from '../application/Repositories/IAuditLogRepository';
+import { IAuditLogRepository } from '../application/repositories/IAuditLogRepository';
 import { AuditLog } from '../domain/AuditLog';
 
 // Extend Request type to include audit context

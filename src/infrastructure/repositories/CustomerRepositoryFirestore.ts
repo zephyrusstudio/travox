@@ -1,5 +1,5 @@
 import { injectable } from 'tsyringe';
-import { ICustomerRepository } from '../../application/Repositories/ICustomerRepository';
+import { ICustomerRepository } from '../../application/repositories/ICustomerRepository';
 import { Customer } from '../../domain/Customer';
 import { CustomerDocument } from '../../models/FirestoreTypes';
 import { firestore } from '../../config/firestore';

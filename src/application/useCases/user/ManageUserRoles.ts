@@ -1,7 +1,7 @@
 import { injectable, inject } from 'tsyringe';
-import { IUserRepository } from '../Repositories/IUserRepository';
-import { User } from '../../domain/User';
-import { UserRole } from '../../models/FirestoreTypes';
+import { IUserRepository } from '../../repositories/IUserRepository';
+import { User } from '../../../domain/User';
+import { UserRole } from '../../../models/FirestoreTypes';
 
 interface ChangeRoleDTO {
   userId: string;
@@ -63,8 +63,8 @@ export class ManageUserRoles {
   }
 
   async getUsersByRole(role: UserRole, orgId: string): Promise<User[]> {
-    const allUsers = await this.userRepo.findByOrganizationId(orgId);
-    return allUsers.filter(user => user.hasRole(role));
+    const allUsers: User[] = await this.userRepo.findByOrganizationId(orgId);
+    return allUsers.filter((user: User) => user.hasRole(role));
   }
 
   async getOrganizationRoleStats(orgId: string): Promise<Record<UserRole, number>> {
@@ -78,7 +78,7 @@ export class ManageUserRoles {
       [UserRole.VIEWER]: 0
     };
 
-    allUsers.forEach(user => {
+    allUsers.forEach((user: User) => {
       if (stats[user.role] !== undefined) {
         stats[user.role]++;
       }

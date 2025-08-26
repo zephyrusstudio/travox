@@ -1,5 +1,5 @@
 import { injectable } from 'tsyringe';
-import { IOrganizationRepository } from '../../application/Repositories/IOrganizationRepository';
+import { IOrganizationRepository } from '../../application/repositories/IOrganizationRepository';
 import { Organization } from '../../domain/Organization';
 import { OrganizationDocument } from '../../models/FirestoreTypes';
 import { firestore } from '../../config/firestore';

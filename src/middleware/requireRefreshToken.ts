@@ -3,7 +3,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { container } from '../config/container';
 import { IJwtService } from '../application/services/IJwtService';
-import { IRefreshTokenRepository } from '../application/Repositories/IRefreshTokenRepository';
+import { IRefreshTokenRepository } from '../application/repositories/IRefreshTokenRepository';
 
 export function requireRefreshToken() {
     return async (req: Request, res: Response, next: NextFunction) => {

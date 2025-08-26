@@ -1,8 +1,8 @@
 import { injectable, inject } from 'tsyringe';
-import { IPaymentRepository } from './Repositories/IPaymentRepository';
-import { IVendorRepository } from './Repositories/IVendorRepository';
-import { Payment } from '../domain/Payment';
-import { PaymentMode } from '../models/FirestoreTypes';
+import { IPaymentRepository } from '../../repositories/IPaymentRepository';
+import { IVendorRepository } from '../../repositories/IVendorRepository';
+import { Payment } from '../../../domain/Payment';
+import { PaymentMode } from '../../../models/FirestoreTypes';
 
 interface CreateOutboundRefundDTO {
   vendorId: string;

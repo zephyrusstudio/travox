@@ -1,5 +1,5 @@
 import { injectable, inject } from 'tsyringe';
-import { IBookingRepository } from '../Repositories/IBookingRepository';
+import { IBookingRepository } from '../../repositories/IBookingRepository';
 
 @injectable()
 export class DeleteBooking {

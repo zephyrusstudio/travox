@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { container } from '../../config/container';
-import { ManageUserRoles } from '../../application/User/ManageUserRoles';
-import { IUserRepository } from '../../application/Repositories/IUserRepository';
+import { ManageUserRoles } from '../../application/useCases/user/ManageUserRoles';
+import { IUserRepository } from '../../application/repositories/IUserRepository';
 import { UserRole } from '../../models/FirestoreTypes';
 
 export class UserController {

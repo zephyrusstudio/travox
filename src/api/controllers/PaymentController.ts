@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { container } from '../../config/container';
-import { CreateReceivable } from '../../application/CreateReceivable';
-import { CreateExpense } from '../../application/CreateExpense';
-import { CreateInboundRefund } from '../../application/CreateInboundRefund';
-import { CreateOutboundRefund } from '../../application/CreateOutboundRefund';
+import { CreateReceivable } from '../../application/useCases/payment/CreateReceivable';
+import { CreateExpense } from '../../application/useCases/payment/CreateExpense';
+import { CreateInboundRefund } from '../../application/useCases/payment/CreateInboundRefund';
+import { CreateOutboundRefund } from '../../application/useCases/payment/CreateOutboundRefund';
 
 export class PaymentController {
   async createReceivable(req: Request, res: Response) {

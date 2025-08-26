@@ -1,7 +1,7 @@
 import { injectable, inject } from 'tsyringe';
-import { IBookingRepository } from '../Repositories/IBookingRepository';
-import { Booking } from '../../domain/Booking';
-import { BookingStatus } from '../../models/FirestoreTypes';
+import { IBookingRepository } from '../../repositories/IBookingRepository';
+import { Booking } from '../../../domain/Booking';
+import { BookingStatus } from '../../../models/FirestoreTypes';
 
 interface CreateBookingDTO {
   customerId: string;

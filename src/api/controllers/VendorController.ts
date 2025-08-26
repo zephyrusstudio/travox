@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { container } from '../../config/container';
-import { CreateVendor } from '../../application/Vendor/CreateVendor';
-import { GetVendors } from '../../application/Vendor/GetVendors';
+import { CreateVendor } from '../../application/useCases/vendor/CreateVendor';
+import { GetVendors } from '../../application/useCases/vendor/GetVendors';
 import { ServiceType } from '../../models/FirestoreTypes';
 
 export class VendorController {

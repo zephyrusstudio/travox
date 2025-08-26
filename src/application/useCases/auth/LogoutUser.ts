@@ -1,8 +1,8 @@
 import { injectable, inject } from 'tsyringe';
-import { IRefreshTokenRepository } from '../Repositories/IRefreshTokenRepository';
-import { IAuditLogRepository } from '../Repositories/IAuditLogRepository';
-import { IUserRepository } from '../Repositories/IUserRepository';
-import { AuditLog } from '../../domain/AuditLog';
+import { IRefreshTokenRepository } from '../../repositories/IRefreshTokenRepository';
+import { IAuditLogRepository } from '../../repositories/IAuditLogRepository';
+import { IUserRepository } from '../../repositories/IUserRepository';
+import { AuditLog } from '../../../domain/AuditLog';
 
 interface LogoutDTO {
     userId: string;

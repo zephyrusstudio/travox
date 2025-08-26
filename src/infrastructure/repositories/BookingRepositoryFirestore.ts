@@ -1,5 +1,5 @@
 import { injectable } from 'tsyringe';
-import { IBookingRepository } from '../../application/Repositories/IBookingRepository';
+import { IBookingRepository } from '../../application/repositories/IBookingRepository';
 import { Booking } from '../../domain/Booking';
 import { BookingStatus } from '../../models/FirestoreTypes';
 import { firestore } from '../../config/firestore';

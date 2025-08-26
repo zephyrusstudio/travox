@@ -1,4 +1,4 @@
-import { IUserRepository } from '../../application/Repositories/IUserRepository';
+import { IUserRepository } from '../../application/repositories/IUserRepository';
 import { User } from '../../domain/User';
 import { firestore } from '../../config/firestore';
 import { UserDocument, UserRole } from '../../models/FirestoreTypes';

@@ -1,5 +1,5 @@
 import { injectable } from 'tsyringe';
-import { IRefreshTokenRepository } from '../../application/Repositories/IRefreshTokenRepository';
+import { IRefreshTokenRepository } from '../../application/repositories/IRefreshTokenRepository';
 import { firestore } from '../../config/firestore';
 import crypto from 'crypto';
 

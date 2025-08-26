@@ -1,6 +1,6 @@
 import { injectable, inject } from 'tsyringe';
-import { ICustomerRepository } from '../Repositories/ICustomerRepository';
-import { Customer } from '../../domain/Customer';
+import { ICustomerRepository } from '../../repositories/ICustomerRepository';
+import { Customer } from '../../../domain/Customer';
 
 interface CreateCustomerDTO {
   name: string;

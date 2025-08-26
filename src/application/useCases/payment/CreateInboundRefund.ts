@@ -1,8 +1,8 @@
 import { injectable, inject } from 'tsyringe';
-import { IPaymentRepository } from './Repositories/IPaymentRepository';
-import { IBookingRepository } from './Repositories/IBookingRepository';
-import { Payment } from '../domain/Payment';
-import { PaymentMode } from '../models/FirestoreTypes';
+import { IPaymentRepository } from '../../repositories/IPaymentRepository';
+import { IBookingRepository } from '../../repositories/IBookingRepository';
+import { Payment } from '../../../domain/Payment';
+import { PaymentMode } from '../../../models/FirestoreTypes';
 
 interface CreateInboundRefundDTO {
   bookingId: string;

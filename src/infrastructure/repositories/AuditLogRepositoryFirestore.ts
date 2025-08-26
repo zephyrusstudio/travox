@@ -1,6 +1,6 @@
 import { injectable } from 'tsyringe';
 import { firestore } from '../../config/firestore';
-import { IAuditLogRepository } from '../../application/Repositories/IAuditLogRepository';
+import { IAuditLogRepository } from '../../application/repositories/IAuditLogRepository';
 import { AuditLog } from '../../domain/AuditLog';
 import { AuditLogDocument } from '../../models/FirestoreTypes';
 import { Timestamp } from 'firebase-admin/firestore';

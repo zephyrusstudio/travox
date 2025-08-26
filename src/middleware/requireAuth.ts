@@ -3,7 +3,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { container } from '../config/container';
 import { IJwtService } from '../application/services/IJwtService';
-import { IUserRepository } from '../application/Repositories/IUserRepository';
+import { IUserRepository } from '../application/repositories/IUserRepository';
 import { UserRole } from '../models/FirestoreTypes';
 
 // Extend Express Request type to add user property

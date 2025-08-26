@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { container } from '../../config/container';
-import { GoogleLogin } from '../../application/Auth/GoogleLogin';
-import { LogoutUser } from '../../application/Auth/LogoutUser';
+import { GoogleLogin } from '../../application/useCases/auth/GoogleLogin';
+import { LogoutUser } from '../../application/useCases/auth/LogoutUser';
 import { IJwtService } from '../../application/services/IJwtService';
-import { IRefreshTokenRepository } from '../../application/Repositories/IRefreshTokenRepository';
-import { IUserRepository } from '../../application/Repositories/IUserRepository';
+import { IRefreshTokenRepository } from '../../application/repositories/IRefreshTokenRepository';
+import { IUserRepository } from '../../application/repositories/IUserRepository';
 
 export class AuthController {
     async googleLogin(req: Request, res: Response) {

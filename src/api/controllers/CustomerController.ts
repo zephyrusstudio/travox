@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { container } from '../../config/container';
-import { CreateCustomer } from '../../application/Customer/CreateCustomer';
-import { GetCustomers } from '../../application/Customer/GetCustomers';
+import { CreateCustomer } from '../../application/useCases/customer/CreateCustomer';
+import { GetCustomers } from '../../application/useCases/customer/GetCustomers';
 
 export class CustomerController {
   async create(req: Request, res: Response) {

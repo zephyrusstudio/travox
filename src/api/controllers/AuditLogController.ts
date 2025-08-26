@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { container } from '../../config/container';
-import { CreateAuditLog } from '../../application/AuditLog/CreateAuditLog';
-import { GetAuditLogs } from '../../application/AuditLog/GetAuditLogs';
+import { CreateAuditLog } from '../../application/useCases/auditLog/CreateAuditLog';
+import { GetAuditLogs } from '../../application/useCases/auditLog/GetAuditLogs';
 
 export class AuditLogController {
   async create(req: Request, res: Response) {

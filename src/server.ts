@@ -48,8 +48,8 @@ export async function startServer() {
 
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
-        console.log(`🚀 TMS API running on http://localhost:${PORT}`);
-        console.log(`📋 Health check available at http://localhost:${PORT}/health`);
-        console.log(`🏓 Ping endpoint available at http://localhost:${PORT}/ping`);
+        console.log(`TMS API running on http://localhost:${PORT}`);
+        console.log(`Health check available at http://localhost:${PORT}/health`);
+        console.log(`Ping endpoint available at http://localhost:${PORT}/ping`);
     });
 }

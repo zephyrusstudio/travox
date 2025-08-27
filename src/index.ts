@@ -15,29 +15,29 @@ const requiredEnvVars = [
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 
 if (missingEnvVars.length > 0) {
-    console.error('❌ Missing required environment variables:', missingEnvVars);
+    console.error('Missing required environment variables:', missingEnvVars);
     process.exit(1);
 }
 
 // Start the server
 async function main() {
     try {
-        console.log('🔧 Initializing TMS API...');
+    console.log('Initializing TMS API...');
         await startServer();
     } catch (error) {
-        console.error('❌ Failed to start server:', error);
+        console.error('Failed to start server:', error);
         process.exit(1);
     }
 }
 
 // Handle graceful shutdown
 process.on('SIGTERM', () => {
-    console.log('📴 Received SIGTERM, shutting down gracefully...');
+    console.log('Received SIGTERM, shutting down gracefully...');
     process.exit(0);
 });
 
 process.on('SIGINT', () => {
-    console.log('📴 Received SIGINT, shutting down gracefully...');
+    console.log('Received SIGINT, shutting down gracefully...');
     process.exit(0);
 });
 

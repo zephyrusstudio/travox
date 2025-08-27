@@ -2,6 +2,5 @@ node_modules
 dist
 .env
 firestore-creds.json
-docs
-postman
-tests
+doc
+test

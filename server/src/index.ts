@@ -1,10 +1,14 @@
 import 'reflect-metadata'; // Needed for tsyringe dependency injection
 import dotenv from 'dotenv';
-import './config/container'; // Initialize dependency injection container
-import { startServer } from './server';
 
-// Load environment variables
+// Load environment variables as early as possible so any imported module
+// (for example the DI container or Firebase initialization) can read them.
 dotenv.config();
+
+// Initialize dependency injection container AFTER dotenv so imports inside
+// the container that rely on env vars (like Firebase config) will see them.
+import './config/container';
+import { startServer } from './server';
 
 // Validate required environment variables
 const requiredEnvVars = [

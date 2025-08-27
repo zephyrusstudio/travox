@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMS Auth Test</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .auth-section, .api-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .auth-section h2, .api-section h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .logout-btn {
+            background-color: #dc3545;
+        }
+        
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .user-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .endpoint-group {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .endpoint-group h4 {
+            margin-top: 0;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .response-area {
+            background-color: #f1f3f4;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 13px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .config-section {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .org-section {
+            background-color: #e8f5e8;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+        
+        .endpoint-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .endpoint-button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: left;
+        }
+        
+        .endpoint-button:hover {
+            background-color: #5a6268;
+        }
+        
+        .endpoint-button.get { background-color: #28a745; }
+        .endpoint-button.get:hover { background-color: #218838; }
+        
+        .endpoint-button.post { background-color: #007bff; }
+        .endpoint-button.post:hover { background-color: #0056b3; }
+        
+        .endpoint-button.put { background-color: #ffc107; color: #212529; }
+        .endpoint-button.put:hover { background-color: #e0a800; }
+        
+        .endpoint-button.patch { background-color: #fd7e14; }
+        .endpoint-button.patch:hover { background-color: #e8690b; }
+        
+        .endpoint-button.delete { background-color: #dc3545; }
+        .endpoint-button.delete:hover { background-color: #c82333; }
+        
+        .method-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background-color: rgba(255,255,255,0.2);
+            margin-right: 8px;
+        }
+        
+        .clear-btn {
+            background-color: #6c757d;
+            margin-left: 10px;
+        }
+        
+        .clear-btn:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 TMS Authentication Test</h1>
+        
+        <!-- Configuration Section -->
+        <div class="config-section">
+            <h3>⚙️ Configuration</h3>
+            <label for="apiBase">API Base URL:</label>
+            <input type="text" id="apiBase" value="http://localhost:3000" placeholder="http://localhost:3000">
+            
+            <label for="clientId">Google Client ID:</label>
+            <input type="text" id="clientId" value="1051736670580-js75do52hu715meq3nip5b1l0mqguicf.apps.googleusercontent.com" placeholder="Your Google Client ID (e.g., 123456789-xxx.apps.googleusercontent.com)">
+            <button onclick="updateConfig()">Update Config</button>
+        </div>
+
+        <!-- Organization Section -->
+    <!-- Organization setup removed: frontend will not provide orgId -->
+
+        <!-- Authentication Section -->
+        <div class="auth-section">
+            <h2>🔐 Authentication</h2>
+            
+            <div id="loginSection">
+                <p>Sign in with your Google account to test the TMS API:</p>
+                <div id="g_id_onload"
+                     data-client_id=""
+                     data-context="signin"
+                     data-ux_mode="popup"
+                     data-callback="handleCredentialResponse"
+                     data-auto_prompt="false">
+                </div>
+                
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="rectangular"
+                     data-theme="outline"
+                     data-text="signin_with"
+                     data-size="large"
+                     data-logo_alignment="left">
+                </div>
+            </div>
+            
+            <div id="loggedInSection" class="hidden">
+                <div class="user-info">
+                    <h4>👤 Logged in as:</h4>
+                    <div id="userInfo"></div>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                    <button onclick="refreshToken()">Refresh Token</button>
+                </div>
+            </div>
+            
+            <div id="authStatus"></div>
+        </div>
+
+        <!-- API Testing Section -->
+        <div class="api-section">
+            <h2>🧪 API Testing</h2>
+            <p>Test various TMS endpoints with your authentication token:</p>
+            
+            <!-- Public Endpoints -->
+            <div class="endpoint-group">
+                <h4>🌐 Public Endpoints</h4>
+                <div class="endpoint-buttons">
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/health')">
+                        <span class="method-badge">GET</span>Health Check
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/ping')">
+                        <span class="method-badge">GET</span>Ping
+                    </button>
+                </div>
+            </div>
+            
+            <!-- User Endpoints -->
+            <div class="endpoint-group">
+                <h4>👥 User Management</h4>
+                <div class="endpoint-buttons">
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/users/me')">
+                        <span class="method-badge">GET</span>Get My Profile
+                    </button>
+                    <button class="endpoint-button put" onclick="testEndpoint('PUT', '/users/me', { name: 'Updated Name', email: 'updated@example.com' })">
+                        <span class="method-badge">PUT</span>Update My Profile
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/users')">
+                        <span class="method-badge">GET</span>List Users (Admin)
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/users/test-user-id')">
+                        <span class="method-badge">GET</span>Get User by ID (Admin)
+                    </button>
+                    <button class="endpoint-button post" onclick="testEndpoint('POST', '/users/change-role', { userId: 'test-user-id', newRole: 'USER' })">
+                        <span class="method-badge">POST</span>Change User Role (Admin)
+                    </button>
+                    <button class="endpoint-button post" onclick="testEndpoint('POST', '/users/test-user-id/activate')">
+                        <span class="method-badge">POST</span>Activate User (Admin)
+                    </button>
+                    <button class="endpoint-button post" onclick="testEndpoint('POST', '/users/test-user-id/deactivate')">
+                        <span class="method-badge">POST</span>Deactivate User (Admin)
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Customer Endpoints -->
+            <div class="endpoint-group">
+                <h4>🏢 Customer Management</h4>
+                <div class="endpoint-buttons">
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/customers')">
+                        <span class="method-badge">GET</span>List Customers
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/customers/search?q=test')">
+                        <span class="method-badge">GET</span>Search Customers
+                    </button>
+                    <button class="endpoint-button post" onclick="testEndpoint('POST', '/customers', { name: 'Test Customer', email: 'customer@example.com', phone: '+1234567890' })">
+                        <span class="method-badge">POST</span>Create Customer
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/customers/test-customer-id')">
+                        <span class="method-badge">GET</span>Get Customer by ID
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/customers/test-customer-id/stats')">
+                        <span class="method-badge">GET</span>Get Customer Stats
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Vendor Endpoints -->
+            <div class="endpoint-group">
+                <h4>🏪 Vendor Management</h4>
+                <div class="endpoint-buttons">
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/vendors')">
+                        <span class="method-badge">GET</span>List Vendors
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/vendors/search?q=hotel')">
+                        <span class="method-badge">GET</span>Search Vendors
+                    </button>
+                    <button class="endpoint-button post" onclick="testEndpoint('POST', '/vendors', { name: 'Test Hotel', email: 'hotel@example.com', serviceType: 'Hotel' })">
+                        <span class="method-badge">POST</span>Create Vendor
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/vendors/test-vendor-id')">
+                        <span class="method-badge">GET</span>Get Vendor by ID
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/vendors/test-vendor-id/stats')">
+                        <span class="method-badge">GET</span>Get Vendor Stats
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Booking Endpoints -->
+            <div class="endpoint-group">
+                <h4>📅 Booking Management</h4>
+                <p style="font-size: 12px; color: #666; margin: 5px 0 10px 0;">
+                    <strong>Required fields:</strong> customerId, paxCount, currency, totalAmount<br>
+                    <strong>Optional fields:</strong> packageName, primaryPaxName, pnrNo, modeOfJourney, travelStartAt, travelEndAt, advanceAmount
+                </p>
+                <div class="endpoint-buttons">
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/bookings')">
+                        <span class="method-badge">GET</span>List Bookings
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/bookings/upcoming')">
+                        <span class="method-badge">GET</span>Get Upcoming Bookings
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/bookings/overdue')">
+                        <span class="method-badge">GET</span>Get Overdue Bookings
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/bookings/revenue-stats')">
+                        <span class="method-badge">GET</span>Get Revenue Stats
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/bookings/travel-dates?start=2024-01-01&end=2024-12-31')">
+                        <span class="method-badge">GET</span>Get Bookings by Travel Dates
+                    </button>
+                    <button class="endpoint-button post" onclick="testEndpoint('POST', '/bookings', { customerId: 'test-customer-id', paxCount: 1, currency: 'USD', totalAmount: 100 })">
+                        <span class="method-badge">POST</span>Create Minimal Booking
+                    </button>
+                    <button class="endpoint-button post" onclick="testEndpoint('POST', '/bookings', { customerId: 'test-customer-id', paxCount: 2, currency: 'USD', totalAmount: 1500, packageName: 'Test Package', primaryPaxName: 'John Doe', modeOfJourney: 'Flight', travelStartAt: '2024-06-15', travelEndAt: '2024-06-20' })">
+                        <span class="method-badge">POST</span>Create Flight Booking
+                    </button>
+                    <button class="endpoint-button post" onclick="testEndpoint('POST', '/bookings', { customerId: 'test-customer-id', paxCount: 1, currency: 'EUR', totalAmount: 800, packageName: 'Hotel Stay', primaryPaxName: 'Jane Smith', modeOfJourney: 'Hotel', travelStartAt: '2024-07-01', travelEndAt: '2024-07-05' })">
+                        <span class="method-badge">POST</span>Create Hotel Booking
+                    </button>
+                    <button class="endpoint-button post" onclick="testEndpoint('POST', '/bookings', { customerId: 'test-customer-id', paxCount: 4, currency: 'USD', totalAmount: 2500, packageName: 'Package Tour', primaryPaxName: 'Family Group', modeOfJourney: 'Package', advanceAmount: 500 })">
+                        <span class="method-badge">POST</span>Create Package Tour
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/bookings/test-booking-id')">
+                        <span class="method-badge">GET</span>Get Booking by ID
+                    </button>
+                    <button class="endpoint-button put" onclick="testEndpoint('PUT', '/bookings/test-booking-id', { serviceType: 'Flight', travelDate: '2024-07-01' })">
+                        <span class="method-badge">PUT</span>Update Booking
+                    </button>
+                    <button class="endpoint-button patch" onclick="testEndpoint('PATCH', '/bookings/test-booking-id/payment', { amount: 500, status: 'paid' })">
+                        <span class="method-badge">PATCH</span>Update Payment
+                    </button>
+                    <button class="endpoint-button patch" onclick="testEndpoint('PATCH', '/bookings/test-booking-id/status', { status: 'confirmed' })">
+                        <span class="method-badge">PATCH</span>Update Status
+                    </button>
+                    <button class="endpoint-button patch" onclick="testEndpoint('PATCH', '/bookings/test-booking-id/cancel')">
+                        <span class="method-badge">PATCH</span>Cancel Booking
+                    </button>
+                    <button class="endpoint-button patch" onclick="testEndpoint('PATCH', '/bookings/test-booking-id/confirm')">
+                        <span class="method-badge">PATCH</span>Confirm Booking
+                    </button>
+                    <button class="endpoint-button patch" onclick="testEndpoint('PATCH', '/bookings/test-booking-id/complete')">
+                        <span class="method-badge">PATCH</span>Complete Booking
+                    </button>
+                    <button class="endpoint-button delete" onclick="testEndpoint('DELETE', '/bookings/test-booking-id')">
+                        <span class="method-badge">DELETE</span>Delete Booking
+                    </button>
+                    <button class="endpoint-button patch" onclick="testEndpoint('PATCH', '/bookings/test-booking-id/archive')">
+                        <span class="method-badge">PATCH</span>Archive Booking
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Audit Logs -->
+            <div class="endpoint-group">
+                <h4>📋 Audit Logs (Admin/Owner Only)</h4>
+                <div class="endpoint-buttons">
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/audit-logs')">
+                        <span class="method-badge">GET</span>List Audit Logs
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/audit-logs/export')">
+                        <span class="method-badge">GET</span>Export to CSV
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/audit-logs/entity/customers/test-customer-id')">
+                        <span class="method-badge">GET</span>Get by Entity
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/audit-logs/actor/test-user-id')">
+                        <span class="method-badge">GET</span>Get by Actor
+                    </button>
+                    <button class="endpoint-button get" onclick="testEndpoint('GET', '/audit-logs/date-range?start=2024-01-01&end=2024-12-31')">
+                        <span class="method-badge">GET</span>Get by Date Range
+                    </button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button onclick="clearResponse()" class="clear-btn">Clear Response</button>
+            </div>
+            
+            <div id="responseArea" class="response-area">
+                Response will appear here...
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let accessToken = null;
+    let currentUser = null;
+    let apiBaseUrl = 'http://localhost:3000';
+    let googleClientId = '';
+
+    // Organization ID removed from test frontend; backend should infer org from token or other context
+
+        function updateConfig() {
+            apiBaseUrl = document.getElementById('apiBase').value;
+            googleClientId = document.getElementById('clientId').value;
+            
+            if (googleClientId) {
+                document.getElementById('g_id_onload').setAttribute('data-client_id', googleClientId);
+                showStatus('Configuration updated. You can now sign in with Google.', 'success');
+                
+                // Reinitialize Google Sign-In
+                if (window.google) {
+                    google.accounts.id.initialize({
+                        client_id: googleClientId,
+                        callback: handleCredentialResponse
+                    });
+                    google.accounts.id.renderButton(
+                        document.querySelector('.g_id_signin'),
+                        { 
+                            type: 'standard',
+                            shape: 'rectangular',
+                            theme: 'outline',
+                            text: 'signin_with',
+                            size: 'large',
+                            logo_alignment: 'left'
+                        }
+                    );
+                }
+            } else {
+                showStatus('Please enter a valid Google Client ID.', 'error');
+            }
+        }
+
+        function handleCredentialResponse(response) {
+        showStatus('Google sign-in successful. Authenticating with TMS API...', 'info');
+        fetch(`${apiBaseUrl}/auth/google`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+            idToken: response.credential
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success' && data.data && data.data.accessToken) {
+                    accessToken = data.data.accessToken;
+                    currentUser = data.data.user;
+                    showLoggedIn(currentUser);
+                    showStatus('Successfully authenticated with TMS API!', 'success');
+                } else {
+                    throw new Error(data.data?.message || 'Authentication failed');
+                }
+            })
+            .catch(error => {
+                showStatus(`Authentication failed: ${error.message}`, 'error');
+                console.error('Auth error:', error);
+            });
+        }
+
+        function showLoggedIn(user) {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('loggedInSection').classList.remove('hidden');
+            
+                document.getElementById('userInfo').innerHTML = `
+                <strong>Name:</strong> ${user.name || 'N/A'}<br>
+                <strong>Email:</strong> ${user.email || 'N/A'}<br>
+                <strong>Role:</strong> ${user.role || 'N/A'}<br>
+            `;
+        }
+
+        function logout() {
+            fetch(`${apiBaseUrl}/auth/logout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    accessToken = null;
+                    currentUser = null;
+                    document.getElementById('loginSection').classList.remove('hidden');
+                    document.getElementById('loggedInSection').classList.add('hidden');
+                    showStatus(data.data?.message || 'Logged out successfully', 'success');
+                    if (window.google) google.accounts.id.disableAutoSelect();
+                } else {
+                    throw new Error(data.data?.message || 'Logout failed');
+                }
+            })
+            .catch(error => {
+                showStatus(`Logout failed: ${error.message}`, 'error');
+            });
+        }
+
+        function refreshToken() {
+            fetch(`${apiBaseUrl}/auth/refresh`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success' && data.data && data.data.accessToken) {
+                    accessToken = data.data.accessToken;
+                    showStatus('Token refreshed successfully', 'success');
+                } else {
+                    throw new Error(data.data?.message || 'Token refresh failed');
+                }
+            })
+            .catch(error => {
+                showStatus(`Token refresh failed: ${error.message}`, 'error');
+            });
+        }
+
+        function testEndpoint(method, endpoint, body = null) {
+            if (!accessToken && !endpoint.includes('/health') && !endpoint.includes('/ping')) {
+                showStatus('Please sign in first to test protected endpoints.', 'error');
+                return;
+            }
+            
+            const url = `${apiBaseUrl}${endpoint}`;
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            };
+            if (accessToken) {
+                options.headers['Authorization'] = `Bearer ${accessToken}`;
+            }
+            if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+                options.body = JSON.stringify(body);
+            }
+            showResponse(`🚀 ${method} ${endpoint}\nSending request...`);
+            fetch(url, options)
+                .then(async response => {
+                    const responseText = await response.text();
+                    let responseData;
+                    try {
+                        responseData = JSON.parse(responseText);
+                    } catch {
+                        responseData = responseText;
+                    }
+                    let displayData = responseData;
+                    if (responseData && typeof responseData === 'object' && 'status' in responseData && 'data' in responseData) {
+                        displayData = responseData;
+                    }
+                    showResponse(`🚀 ${method} ${endpoint}\n\nStatus: ${response.status} ${response.statusText}\n\nResponse:\n${JSON.stringify(displayData, null, 2)}`);
+                    if (!response.ok && response.status === 401) {
+                        showStatus('Authentication required or token expired', 'error');
+                    }
+                })
+                .catch(error => {
+                    showResponse(`🚀 ${method} ${endpoint}\n\nError: ${error.message}`);
+                    showStatus(`Request failed: ${error.message}`, 'error');
+                });
+        }
+
+        function clearResponse() {
+            document.getElementById('responseArea').textContent = 'Response cleared...';
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('authStatus');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+
+        function showResponse(response) {
+            document.getElementById('responseArea').textContent = response;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            showStatus('Set your Google Client ID to get started', 'info');
+            showResponse('Click any endpoint button to test the API...\n\nNote: Most endpoints require authentication. Sign in first to test protected endpoints.');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "tms-auth-test-frontend",
+  "version": "1.0.0",
+  "description": "Simple frontend to test TMS Google OIDC authentication and API endpoints",
+  "main": "index.html",
+  "scripts": {
+    "serve": "python3 -m http.server 8080",
+    "serve-alt": "npx http-server -p 8080 -c-1",
+    "open": "open http://localhost:8080"
+  },
+  "keywords": ["tms", "auth", "google", "oidc", "testing"],
+  "author": "TMS Team",
+  "license": "MIT"
+}

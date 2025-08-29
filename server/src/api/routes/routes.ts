@@ -27,7 +27,9 @@ export function registerRoutes(app: Express) {
     app.get('/customers', requireAuth(), customerCtrl.getAll);
     app.get('/customers/search', requireAuth(), customerCtrl.search);
     app.get('/customers/:id', requireAuth(), auditLogger('customers'), customerCtrl.getById);
+    app.put('/customers/:id', requireAuth(), auditLogger('customers'), customerCtrl.update);
     app.get('/customers/:id/stats', requireAuth(), customerCtrl.getStats);
+    app.delete('/customers/:id', requireAuth(), auditLogger('customers'), customerCtrl.softDelete);
 
     // Vendor routes (protected)
     app.post('/vendors', requireAuth(), auditLogger('vendors'), vendorCtrl.create);

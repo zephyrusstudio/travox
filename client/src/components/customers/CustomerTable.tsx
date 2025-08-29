@@ -1,6 +1,7 @@
 import { Edit, FileText, Search, Trash2 } from "lucide-react";
 import React from "react";
-import { Customer } from "../../types";
+import { CustomerTableProps } from "../../types";
+import { formatDate } from "../../utils/misc";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
@@ -10,17 +11,6 @@ import Table, {
   TableHeader,
   TableRow,
 } from "../ui/Table";
-
-export type CustomerTableProps = {
-  customers: Customer[];
-  onEdit: (c: Customer) => void;
-  onDelete: (id: string) => void;
-  onViewTickets: (c: Customer) => void;
-  getBookingsByCustomer: (id: string) => any[];
-};
-
-export const formatDate = (d: string) =>
-  new Date(d).toLocaleDateString("en-IN");
 
 const CustomerTable: React.FC<CustomerTableProps> & {
   SearchBox: React.FC<SearchBoxProps>;
@@ -47,17 +37,17 @@ const CustomerTable: React.FC<CustomerTableProps> & {
           </TableHeader>
           <TableBody>
             {customers.map((customer) => {
-              const bookings = getBookingsByCustomer(customer.customer_id);
+              const bookings = getBookingsByCustomer(customer.id);
               return (
-                <TableRow key={customer.customer_id}>
+                <TableRow key={customer.id}>
                   <TableCell>
                     <div>
                       <p className="font-medium text-gray-900">
-                        {customer.full_name}
+                        {customer.name}
                       </p>
-                      {customer.passport_number && (
+                      {customer.passport_no && (
                         <p className="text-sm text-gray-500">
-                          Passport: {customer.passport_number}
+                          Passport: {customer.passport_no}
                         </p>
                       )}
                     </div>
@@ -93,7 +83,7 @@ const CustomerTable: React.FC<CustomerTableProps> & {
                   </TableCell>
                   <TableCell>
                     <span className="text-sm text-gray-600">
-                      {formatDate(customer.created_at)}
+                      {formatDate(customer.createdAt)}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -115,7 +105,7 @@ const CustomerTable: React.FC<CustomerTableProps> & {
                         variant="danger"
                         size="sm"
                         icon={Trash2}
-                        onClick={() => onDelete(customer.customer_id)}
+                        onClick={() => onDelete(customer.id)}
                       />
                     </div>
                   </TableCell>

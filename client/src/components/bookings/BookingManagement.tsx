@@ -104,7 +104,7 @@ const BookingManagement: React.FC = () => {
     email: "",
     phone: "",
     address: "",
-    passport_number: "",
+    passport_no: "",
     gstin: "",
   });
 
@@ -222,7 +222,7 @@ const BookingManagement: React.FC = () => {
       email: "",
       phone: "",
       address: "",
-      passport_number: "",
+      passport_no: "",
       gstin: "",
     });
     setShowAddCustomer(false);
@@ -1080,11 +1080,11 @@ const BookingManagement: React.FC = () => {
                           </label>
                           <input
                             type="text"
-                            value={newCustomerData.passport_number}
+                            value={newCustomerData.passport_no}
                             onChange={(e) =>
                               setNewCustomerData({
                                 ...newCustomerData,
-                                passport_number: e.target.value,
+                                passport_no: e.target.value,
                               })
                             }
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"

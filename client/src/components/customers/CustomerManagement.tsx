@@ -1,20 +1,19 @@
 import axios from "axios";
 import { Plus, Upload } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Customer } from "../../types";
 import Button from "../ui/Button";
 import Card, { CardContent } from "../ui/Card";
-import CustomerFormModal, { CustomerFormState } from "./CustomerFormModal";
+import CustomerFormModal from "./CustomerFormModal";
 import CustomerTable from "./CustomerTable";
 import TicketHistoryModal from "./TicketHistoryModal";
 import useCustomerSearch from "./useCustomerSearch";
 
-// Customer ID, Org ID, Customer Name, Phone, Email, Passport, Aadhaar, Visa No., GSTIN, Linked Account, Total Bookings, Created By, Updated By, Deleted?, Archived At, Created At, Updated At
+const token =
+  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyN2Y1cEJEblRVYlNtQXN6Y29CaiIsImVtYWlsIjoidGFtYWxjb2Rlc0BnbWFpbC5jb20iLCJyb2xlIjoiT3duZXIiLCJuYW1lIjoiVGFtYWwgRGFzIiwib3JnSWQiOiJ2M1h0WE81QTdOVzh3cTJBcFZDMCIsImlhdCI6MTc1NjUwMTQ5MywiZXhwIjoxNzU3NDAxNDkzLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.AUJHcPzx2ijx-9DT9bHnt3_o7qJIQmFuCzZMoC8Pyg4tnJZ5AE62YrGRfat7hBVdaTodI1dXCWG5sKdhfuPbfPndqa8bGoyov9YidDbsP8tnp91xHZsjJdE2nyamrx2XAaNf9NRnrzPoXWtwf-0wGxncSlTM_bAfBFqgu1peMhACyRHSZoqXXRgWRyFJ0VqHKj2uzQ3X09rQ23tf3q38xCGIt0e57iNPhGBNw49pXmc_blgIA-tWp4gIypUE6QGvSVVNR3_bxWRRw87CoQQLe0xaKVb40grk7csDYD7pG7JnlL_efwWCZjsb_AL5vFKpyuoedCYkHJ-Vc_HN6fsMrw";
 
 const CustomerManagement: React.FC = () => {
-  // const { customers, addCustomer, updateCustomer, deleteCustomer, getBookingsByCustomer } = useApp();
-  const customers: Customer[] = [];
-
+  const [customers, setCustomers] = useState<Customer[]>([]);
   // Local state
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -22,14 +21,6 @@ const CustomerManagement: React.FC = () => {
     null
   );
   const [historyTickets, setHistoryTickets] = useState<any[]>([]);
-  const [formData, setFormData] = useState<CustomerFormState>({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    passport_number: "",
-    gstin: "",
-  });
 
   // Search
   const { searchTerm, setSearchTerm, filtered } = useCustomerSearch(customers);
@@ -47,82 +38,10 @@ const CustomerManagement: React.FC = () => {
   const openForm = (customer?: Customer) => {
     if (customer) {
       setSelectedCustomer(customer);
-      setFormData({
-        name: customer.name,
-        email: customer.email || "",
-        phone: customer.phone || "",
-        address: customer.address || "",
-        passport_number: customer.passport_number || "",
-        gstin: customer.gstin || "",
-      });
     } else {
       setSelectedCustomer(null);
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        address: "",
-        passport_number: "",
-        gstin: "",
-      });
     }
     setIsFormOpen(true);
-  };
-
-  const closeForm = () => {
-    setIsFormOpen(false);
-    setSelectedCustomer(null);
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-      passport_number: "",
-      gstin: "",
-    });
-  };
-
-  async function createCustomer() {
-    const url = "http://localhost:3000/customers";
-
-    const data = {
-      name: formData?.name,
-      email: formData?.email,
-      phone: formData?.phone,
-      address: formData?.address,
-      passport_number: formData?.passport_number,
-      gstin: formData?.gstin,
-    };
-
-    try {
-      const response = await axios.post(url, data, {
-        headers: {
-          Accept: "*/*",
-          "Content-Type": "application/json",
-          Authorization:
-            "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyN2Y1cEJEblRVYlNtQXN6Y29CaiIsImVtYWlsIjoidGFtYWxjb2Rlc0BnbWFpbC5jb20iLCJyb2xlIjoiT3duZXIiLCJuYW1lIjoiVGFtYWwgRGFzIiwib3JnSWQiOiJ2M1h0WE81QTdOVzh3cTJBcFZDMCIsImlhdCI6MTc1NjUwMTQ5MywiZXhwIjoxNzU3NDAxNDkzLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.AUJHcPzx2ijx-9DT9bHnt3_o7qJIQmFuCzZMoC8Pyg4tnJZ5AE62YrGRfat7hBVdaTodI1dXCWG5sKdhfuPbfPndqa8bGoyov9YidDbsP8tnp91xHZsjJdE2nyamrx2XAaNf9NRnrzPoXWtwf-0wGxncSlTM_bAfBFqgu1peMhACyRHSZoqXXRgWRyFJ0VqHKj2uzQ3X09rQ23tf3q38xCGIt0e57iNPhGBNw49pXmc_blgIA-tWp4gIypUE6QGvSVVNR3_bxWRRw87CoQQLe0xaKVb40grk7csDYD7pG7JnlL_efwWCZjsb_AL5vFKpyuoedCYkHJ-Vc_HN6fsMrw", // replace with real token
-        },
-        withCredentials: true, // sends cookies like refreshToken if backend uses them
-      });
-
-      console.log("Customer created:", response.data);
-      return response.data;
-    } catch (error) {
-      console.error("Error creating customer:", error);
-      throw error;
-    }
-  }
-
-  const submitForm: React.FormEventHandler = async (e) => {
-    e.preventDefault();
-    // if (selectedCustomer) {
-    //   updateCustomer(selectedCustomer.customer_id, formData);
-    // } else {
-    //   addCustomer(formData);
-    // }
-    console.log(formData);
-    await createCustomer();
-    closeForm();
   };
 
   const confirmDelete = (customerId: string) => {
@@ -163,6 +82,26 @@ const CustomerManagement: React.FC = () => {
 
   // placeholder until wired from context/store
   const getBookingsByCustomer = (id: string) => [] as any[];
+
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/customers", {
+          headers: {
+            Accept: "*/*",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true, // needed for refreshToken cookie
+        });
+        setCustomers(response.data?.data);
+      } catch (err) {
+        console.error("Error fetching customers:", err);
+      }
+    };
+
+    fetchCustomers();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -237,12 +176,11 @@ const CustomerManagement: React.FC = () => {
       {/* Add/Edit Customer Modal */}
       <CustomerFormModal
         isOpen={isFormOpen}
-        onClose={closeForm}
+        setIsFormOpen={setIsFormOpen}
         title={selectedCustomer ? "Edit Customer" : "Add New Customer"}
-        formData={formData}
-        setFormData={setFormData}
-        onSubmit={submitForm}
         isEditing={Boolean(selectedCustomer)}
+        selectedCustomer={selectedCustomer}
+        setSelectedCustomer={setSelectedCustomer}
       />
     </div>
   );

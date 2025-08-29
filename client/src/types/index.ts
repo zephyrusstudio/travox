@@ -1,13 +1,29 @@
 export interface Customer {
-  customer_id: string;
+  id: string;
+  orgId: string;
   name: string;
   email?: string;
   phone?: string;
   address?: string;
-  passport_number?: string;
+  passport_no?: string;
+  aadhaar_no?: string;
+  visa_no?: string;
   gstin?: string;
-  created_at: string;
+  totalBookings?: number;
+  createdBy?: string;
+  updatedBy?: string;
+  isDeleted?: boolean;
+  createdAt: string; // ISO string
+  updatedAt?: string; // ISO string
 }
+
+export type CustomerTableProps = {
+  customers: Customer[];
+  onEdit: (c: Customer) => void;
+  onDelete: (id: string) => void;
+  onViewTickets: (c: Customer) => void;
+  getBookingsByCustomer: (id: string) => any[];
+};
 
 export interface Vendor {
   vendor_id: string;

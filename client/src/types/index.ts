@@ -1,6 +1,6 @@
 export interface Customer {
   customer_id: string;
-  full_name: string;
+  name: string;
   email?: string;
   phone?: string;
   address?: string;
@@ -38,7 +38,7 @@ export interface Booking {
   total_amount: number;
   advance_received: number;
   balance_amount: number;
-  status: 'confirmed' | 'pending' | 'cancelled';
+  status: "confirmed" | "pending" | "cancelled";
 }
 
 export interface Payment {
@@ -46,7 +46,7 @@ export interface Payment {
   booking_id: string;
   payment_date: string;
   amount: number;
-  payment_mode: 'cash' | 'upi' | 'credit_card' | 'bank_transfer';
+  payment_mode: "cash" | "upi" | "credit_card" | "bank_transfer";
   receipt_number: string;
   notes?: string;
 }
@@ -78,7 +78,7 @@ export interface User {
   user_id: string;
   username: string;
   email: string;
-  role: 'admin' | 'manager' | 'accountant';
+  role: "admin" | "manager" | "accountant";
   password_hash?: string;
 }
 
@@ -95,7 +95,7 @@ export interface TicketData {
   ticket_id: string;
   file_name: string;
   upload_date: string;
-  status: 'processing' | 'extracted' | 'draft' | 'finalized' | 'error';
+  status: "processing" | "extracted" | "draft" | "finalized" | "error";
   extracted_data?: {
     pax_list: Array<{
       name: string;
@@ -109,7 +109,7 @@ export interface TicketData {
     return_date?: string;
     pnr: string;
     booking_amount: number;
-    travel_category: 'Domestic' | 'International' | 'Corporate';
+    travel_category: "Domestic" | "International" | "Corporate";
     airline?: string;
     flight_number?: string;
     route?: string;
@@ -122,7 +122,7 @@ export interface TicketData {
     discount: number;
     advance_received: number;
     receivable_amount: number;
-    booking_status: 'Generated' | 'Under Review' | 'Confirmed';
+    booking_status: "Generated" | "Under Review" | "Confirmed";
   };
   pdf_url?: string;
   linked_booking_id?: string;
@@ -137,7 +137,7 @@ export interface DashboardStats {
 
 export interface ReminderItem {
   id: string;
-  type: 'booking_start' | 'booking_end' | 'payment_due';
+  type: "booking_start" | "booking_end" | "payment_due";
   title: string;
   date: string;
   amount?: number;

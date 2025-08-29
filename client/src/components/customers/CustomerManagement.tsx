@@ -1,39 +1,29 @@
-import {
-  Edit,
-  Eye,
-  FileText,
-  Plus,
-  Search,
-  Trash2,
-  Upload,
-} from "lucide-react";
-import React, { useState } from "react";
+import axios from "axios";
+import { Plus, Upload } from "lucide-react";
+import React, { useMemo, useState } from "react";
 import { Customer } from "../../types";
-import Badge from "../ui/Badge";
 import Button from "../ui/Button";
-import Card, { CardContent, CardHeader } from "../ui/Card";
-import Modal from "../ui/Modal";
-import Table, {
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "../ui/Table";
+import Card, { CardContent } from "../ui/Card";
+import CustomerFormModal, { CustomerFormState } from "./CustomerFormModal";
+import CustomerTable from "./CustomerTable";
+import TicketHistoryModal from "./TicketHistoryModal";
+import useCustomerSearch from "./useCustomerSearch";
+
+// Customer ID, Org ID, Customer Name, Phone, Email, Passport, Aadhaar, Visa No., GSTIN, Linked Account, Total Bookings, Created By, Updated By, Deleted?, Archived At, Created At, Updated At
 
 const CustomerManagement: React.FC = () => {
   // const { customers, addCustomer, updateCustomer, deleteCustomer, getBookingsByCustomer } = useApp();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isTicketHistoryModalOpen, setIsTicketHistoryModalOpen] =
-    useState(false);
+  const customers: Customer[] = [];
+
+  // Local state
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
-  const [selectedCustomerTickets, setSelectedCustomerTickets] = useState<any[]>(
-    []
-  );
-  const [searchTerm, setSearchTerm] = useState("");
-  const [formData, setFormData] = useState({
-    full_name: "",
+  const [historyTickets, setHistoryTickets] = useState<any[]>([]);
+  const [formData, setFormData] = useState<CustomerFormState>({
+    name: "",
     email: "",
     phone: "",
     address: "",
@@ -41,15 +31,108 @@ const CustomerManagement: React.FC = () => {
     gstin: "",
   });
 
-  const filteredCustomers = customers.filter(
-    (customer) =>
-      customer.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.phone?.includes(searchTerm)
+  // Search
+  const { searchTerm, setSearchTerm, filtered } = useCustomerSearch(customers);
+
+  // Stats
+  const stats = useMemo(
+    () => ({
+      total: customers.length,
+      business: customers.filter((c) => c.gstin).length,
+    }),
+    [customers]
   );
 
-  const handleViewTicketHistory = (customer: Customer) => {
-    // Mock ticket history - in real implementation, this would come from the database
+  // Handlers
+  const openForm = (customer?: Customer) => {
+    if (customer) {
+      setSelectedCustomer(customer);
+      setFormData({
+        name: customer.name,
+        email: customer.email || "",
+        phone: customer.phone || "",
+        address: customer.address || "",
+        passport_number: customer.passport_number || "",
+        gstin: customer.gstin || "",
+      });
+    } else {
+      setSelectedCustomer(null);
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+        passport_number: "",
+        gstin: "",
+      });
+    }
+    setIsFormOpen(true);
+  };
+
+  const closeForm = () => {
+    setIsFormOpen(false);
+    setSelectedCustomer(null);
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      passport_number: "",
+      gstin: "",
+    });
+  };
+
+  async function createCustomer() {
+    const url = "http://localhost:3000/customers";
+
+    const data = {
+      name: formData?.name,
+      email: formData?.email,
+      phone: formData?.phone,
+      address: formData?.address,
+      passport_number: formData?.passport_number,
+      gstin: formData?.gstin,
+    };
+
+    try {
+      const response = await axios.post(url, data, {
+        headers: {
+          Accept: "*/*",
+          "Content-Type": "application/json",
+          Authorization:
+            "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyN2Y1cEJEblRVYlNtQXN6Y29CaiIsImVtYWlsIjoidGFtYWxjb2Rlc0BnbWFpbC5jb20iLCJyb2xlIjoiT3duZXIiLCJuYW1lIjoiVGFtYWwgRGFzIiwib3JnSWQiOiJ2M1h0WE81QTdOVzh3cTJBcFZDMCIsImlhdCI6MTc1NjUwMTQ5MywiZXhwIjoxNzU3NDAxNDkzLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.AUJHcPzx2ijx-9DT9bHnt3_o7qJIQmFuCzZMoC8Pyg4tnJZ5AE62YrGRfat7hBVdaTodI1dXCWG5sKdhfuPbfPndqa8bGoyov9YidDbsP8tnp91xHZsjJdE2nyamrx2XAaNf9NRnrzPoXWtwf-0wGxncSlTM_bAfBFqgu1peMhACyRHSZoqXXRgWRyFJ0VqHKj2uzQ3X09rQ23tf3q38xCGIt0e57iNPhGBNw49pXmc_blgIA-tWp4gIypUE6QGvSVVNR3_bxWRRw87CoQQLe0xaKVb40grk7csDYD7pG7JnlL_efwWCZjsb_AL5vFKpyuoedCYkHJ-Vc_HN6fsMrw", // replace with real token
+        },
+        withCredentials: true, // sends cookies like refreshToken if backend uses them
+      });
+
+      console.log("Customer created:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      throw error;
+    }
+  }
+
+  const submitForm: React.FormEventHandler = async (e) => {
+    e.preventDefault();
+    // if (selectedCustomer) {
+    //   updateCustomer(selectedCustomer.customer_id, formData);
+    // } else {
+    //   addCustomer(formData);
+    // }
+    console.log(formData);
+    await createCustomer();
+    closeForm();
+  };
+
+  const confirmDelete = (customerId: string) => {
+    if (window.confirm("Are you sure you want to delete this customer?")) {
+      // deleteCustomer(customerId);
+    }
+  };
+
+  const viewTicketHistory = (customer: Customer) => {
+    // Mock data. Replace with DB query.
     const mockTickets = [
       {
         id: "1",
@@ -74,67 +157,12 @@ const CustomerManagement: React.FC = () => {
     ];
 
     setSelectedCustomer(customer);
-    setSelectedCustomerTickets(mockTickets);
-    setIsTicketHistoryModalOpen(true);
+    setHistoryTickets(mockTickets);
+    setIsHistoryOpen(true);
   };
 
-  const handleOpenModal = (customer?: Customer) => {
-    if (customer) {
-      setSelectedCustomer(customer);
-      setFormData({
-        full_name: customer.full_name,
-        email: customer.email || "",
-        phone: customer.phone || "",
-        address: customer.address || "",
-        passport_number: customer.passport_number || "",
-        gstin: customer.gstin || "",
-      });
-    } else {
-      setSelectedCustomer(null);
-      setFormData({
-        full_name: "",
-        email: "",
-        phone: "",
-        address: "",
-        passport_number: "",
-        gstin: "",
-      });
-    }
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedCustomer(null);
-    setFormData({
-      full_name: "",
-      email: "",
-      phone: "",
-      address: "",
-      passport_number: "",
-      gstin: "",
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedCustomer) {
-      updateCustomer(selectedCustomer.customer_id, formData);
-    } else {
-      addCustomer(formData);
-    }
-    handleCloseModal();
-  };
-
-  const handleDelete = (customerId: string) => {
-    if (window.confirm("Are you sure you want to delete this customer?")) {
-      deleteCustomer(customerId);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-IN");
-  };
+  // placeholder until wired from context/store
+  const getBookingsByCustomer = (id: string) => [] as any[];
 
   return (
     <div className="space-y-6">
@@ -156,7 +184,7 @@ const CustomerManagement: React.FC = () => {
           >
             Upload Tickets
           </Button>
-          <Button onClick={() => handleOpenModal()} icon={Plus}>
+          <Button onClick={() => openForm()} icon={Plus}>
             Add Customer
           </Button>
         </div>
@@ -166,352 +194,56 @@ const CustomerManagement: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search customers..."
+            {/* Search icon preserved in input */}
+            <CustomerTable.SearchBox
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={setSearchTerm}
             />
           </div>
         </div>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-blue-600">
-              {customers.length}
-            </p>
+            <p className="text-2xl font-bold text-blue-600">{stats.total}</p>
             <p className="text-sm text-gray-600">Total Customers</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-green-600">
-              {customers.filter((c) => c.gstin).length}
+              {stats.business}
             </p>
             <p className="text-sm text-gray-600">Business Customers</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Customer Table */}
-      <Card>
-        <CardHeader>
-          <h3 className="text-lg font-semibold text-gray-900">All Customers</h3>
-          <p className="text-sm text-gray-600">
-            Manage customer information and view booking history
-          </p>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableCell header>Name</TableCell>
-                <TableCell header>Contact</TableCell>
-                <TableCell header>GSTIN</TableCell>
-                <TableCell header>Bookings</TableCell>
-                <TableCell header>Created</TableCell>
-                <TableCell header>Actions</TableCell>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCustomers.map((customer) => {
-                const bookings = getBookingsByCustomer(customer.customer_id);
-                return (
-                  <TableRow key={customer.customer_id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {customer.full_name}
-                        </p>
-                        {customer.passport_number && (
-                          <p className="text-sm text-gray-500">
-                            Passport: {customer.passport_number}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        {customer.email && (
-                          <p className="text-sm text-gray-900">
-                            {customer.email}
-                          </p>
-                        )}
-                        {customer.phone && (
-                          <p className="text-sm text-gray-600">
-                            {customer.phone}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {customer.gstin ? (
-                        <Badge variant="info" size="sm">
-                          {customer.gstin}
-                        </Badge>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="default" size="sm">
-                        {bookings.length} booking
-                        {bookings.length !== 1 ? "s" : ""}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-gray-600">
-                        {formatDate(customer.created_at)}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          icon={FileText}
-                          onClick={() => handleViewTicketHistory(customer)}
-                          title="View Ticket History"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          icon={Edit}
-                          onClick={() => handleOpenModal(customer)}
-                        />
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          icon={Trash2}
-                          onClick={() => handleDelete(customer.customer_id)}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Table */}
+      <CustomerTable
+        customers={filtered}
+        onEdit={openForm}
+        onDelete={confirmDelete}
+        onViewTickets={viewTicketHistory}
+        getBookingsByCustomer={getBookingsByCustomer}
+      />
 
       {/* Ticket History Modal */}
-      <Modal
-        isOpen={isTicketHistoryModalOpen}
-        onClose={() => setIsTicketHistoryModalOpen(false)}
-        title={`Ticket History - ${selectedCustomer?.full_name}`}
-        size="xl"
-      >
-        <div className="space-y-6">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <h4 className="font-semibold text-blue-900 mb-2">
-              Customer Information
-            </h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p>
-                  <span className="font-medium">Name:</span>{" "}
-                  {selectedCustomer?.full_name}
-                </p>
-                <p>
-                  <span className="font-medium">Email:</span>{" "}
-                  {selectedCustomer?.email || "N/A"}
-                </p>
-              </div>
-              <div>
-                <p>
-                  <span className="font-medium">Phone:</span>{" "}
-                  {selectedCustomer?.phone || "N/A"}
-                </p>
-                <p>
-                  <span className="font-medium">GSTIN:</span>{" "}
-                  {selectedCustomer?.gstin || "N/A"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-semibold text-gray-900 mb-4">
-              Uploaded Tickets
-            </h4>
-            {selectedCustomerTickets.length > 0 ? (
-              <div className="space-y-3">
-                {selectedCustomerTickets.map((ticket) => (
-                  <div
-                    key={ticket.id}
-                    className="border border-gray-200 rounded-lg p-4"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <FileText className="w-5 h-5 text-gray-600" />
-                          <span className="font-medium text-gray-900">
-                            {ticket.fileName}
-                          </span>
-                          <Badge variant="success" size="sm">
-                            {ticket.status}
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                          <div>
-                            <p>
-                              <span className="font-medium">PNR:</span>{" "}
-                              {ticket.pnr}
-                            </p>
-                            <p>
-                              <span className="font-medium">Route:</span>{" "}
-                              {ticket.route}
-                            </p>
-                          </div>
-                          <div>
-                            <p>
-                              <span className="font-medium">Upload Date:</span>{" "}
-                              {new Date(ticket.uploadDate).toLocaleDateString()}
-                            </p>
-                            <p>
-                              <span className="font-medium">Amount:</span> ₹
-                              {ticket.amount.toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm" icon={Eye}>
-                          View PDF
-                        </Button>
-                        {ticket.linkedBookingId && (
-                          <Button variant="outline" size="sm">
-                            View Booking
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">
-                  No tickets uploaded for this customer
-                </p>
-                <Button
-                  variant="outline"
-                  className="mt-4"
-                  onClick={() => {
-                    setIsTicketHistoryModalOpen(false);
-                    window.location.hash = "#tickets";
-                  }}
-                >
-                  Upload Ticket
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      </Modal>
+      <TicketHistoryModal
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        customer={selectedCustomer}
+        tickets={historyTickets}
+      />
 
       {/* Add/Edit Customer Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
+      <CustomerFormModal
+        isOpen={isFormOpen}
+        onClose={closeForm}
         title={selectedCustomer ? "Edit Customer" : "Add New Customer"}
-        size="lg"
-      >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.full_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, full_name: e.target.value })
-                }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone
-              </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Passport Number
-              </label>
-              <input
-                type="text"
-                value={formData.passport_number}
-                onChange={(e) =>
-                  setFormData({ ...formData, passport_number: e.target.value })
-                }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                GSTIN
-              </label>
-              <input
-                type="text"
-                value={formData.gstin}
-                onChange={(e) =>
-                  setFormData({ ...formData, gstin: e.target.value })
-                }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Address
-            </label>
-            <textarea
-              rows={3}
-              value={formData.address}
-              onChange={(e) =>
-                setFormData({ ...formData, address: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex items-center justify-end space-x-3 pt-4">
-            <Button type="button" variant="outline" onClick={handleCloseModal}>
-              Cancel
-            </Button>
-            <Button type="submit">
-              {selectedCustomer ? "Update Customer" : "Add Customer"}
-            </Button>
-          </div>
-        </form>
-      </Modal>
+        formData={formData}
+        setFormData={setFormData}
+        onSubmit={submitForm}
+        isEditing={Boolean(selectedCustomer)}
+      />
     </div>
   );
 };

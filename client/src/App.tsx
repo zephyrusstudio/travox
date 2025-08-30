@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import CustomerManagement from "./components/customers/CustomerManagement";
 import TicketUploadManager from "./components/tickets/TicketUploadManager";
 import Layout from "./components/ui/Layout";
+import VendorManagement from "./components/vendors/VendorManagement";
 
 const AppContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState("dashboard");
@@ -14,8 +15,8 @@ const AppContent: React.FC = () => {
       //   return <Dashboard />;
       case "customers":
         return <CustomerManagement />;
-      // case "vendors":
-      //   return <VendorManagement />;
+      case "vendors":
+        return <VendorManagement />;
       // case "bookings":
       //   return <BookingManagement />;
       // case "payments":

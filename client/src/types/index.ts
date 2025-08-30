@@ -5,9 +5,9 @@ export interface Customer {
   email?: string;
   phone?: string;
   address?: string;
-  passport_no?: string;
-  aadhaar_no?: string;
-  visa_no?: string;
+  passportNo?: string;
+  aadhaarNo?: string;
+  visaNo?: string;
   gstin?: string;
   totalBookings?: number;
   createdBy?: string;

@@ -45,9 +45,9 @@ const CustomerTable: React.FC<CustomerTableProps> & {
                       <p className="font-medium text-gray-900">
                         {customer.name}
                       </p>
-                      {customer.passport_no && (
+                      {customer.passportNo && (
                         <p className="text-sm text-gray-500">
-                          Passport: {customer.passport_no}
+                          Passport: {customer.passportNo}
                         </p>
                       )}
                     </div>

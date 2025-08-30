@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Customer } from "../../types";
 import Button from "../ui/Button";
 import Card, { CardContent } from "../ui/Card";
-import CustomerFormModal from "./CustomerFormModal";
+import CustomerFormModal, { CustomerFormState } from "./CustomerFormModal";
 import CustomerTable from "./CustomerTable";
 import TicketHistoryModal from "./TicketHistoryModal";
 import useCustomerSearch from "./useCustomerSearch";
@@ -17,9 +17,8 @@ const CustomerManagement: React.FC = () => {
   // Local state
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null
-  );
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<CustomerFormState | null>(null);
   const [historyTickets, setHistoryTickets] = useState<any[]>([]);
 
   // Search

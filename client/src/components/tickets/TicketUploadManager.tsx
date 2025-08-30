@@ -125,7 +125,7 @@ const TicketUploadManager: React.FC = () => {
     email: "",
     phone: "",
     address: "",
-    passport_no: "",
+    passportNo: "",
     gstin: "",
   });
 
@@ -501,7 +501,7 @@ const TicketUploadManager: React.FC = () => {
   //     email: "",
   //     phone: "",
   //     address: "",
-  //     passport_no: "",
+  //     passportNo: "",
   //     gstin: "",
   //   });
   //   setIsAddCustomerModalOpen(false);
@@ -1096,11 +1096,11 @@ const TicketUploadManager: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={newCustomerData.passport_no}
+                value={newCustomerData.passportNo}
                 onChange={(e) =>
                   setNewCustomerData({
                     ...newCustomerData,
-                    passport_no: e.target.value,
+                    passportNo: e.target.value,
                   })
                 }
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"

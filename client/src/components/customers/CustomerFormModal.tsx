@@ -4,14 +4,22 @@ import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 
 export type CustomerFormState = {
+  id: string;
+  orgId: string;
   name: string;
-  email: string;
-  phone: string;
-  address: string;
-  passport_no: string;
-  aadhaar_no: string;
-  visa_no: string;
-  gstin: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  passportNo?: string;
+  aadhaarNo?: string;
+  visaNo?: string;
+  gstin?: string;
+  totalBookings?: number;
+  createdBy?: string;
+  updatedBy?: string;
+  isDeleted?: boolean;
+  createdAt: string;
+  updatedAt?: string;
 };
 
 export type CustomerFormModalProps = {
@@ -39,10 +47,18 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     email: "",
     phone: "",
     address: "",
-    passport_no: "",
-    aadhaar_no: "",
-    visa_no: "",
+    passportNo: "",
+    aadhaarNo: "",
+    visaNo: "",
     gstin: "",
+    createdAt: "",
+    id: "",
+    orgId: "",
+    totalBookings: 0,
+    createdBy: "",
+    updatedBy: "",
+    isDeleted: false,
+    updatedAt: "",
   });
 
   async function createCustomer() {
@@ -53,9 +69,9 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       email: formData?.email,
       phone: formData?.phone,
       address: formData?.address,
-      passport_no: formData?.passport_no,
-      aadhaar_no: formData?.aadhaar_no,
-      visa_no: formData?.visa_no,
+      passportNo: formData?.passportNo,
+      aadhaarNo: formData?.aadhaarNo,
+      visaNo: formData?.visaNo,
       gstin: formData?.gstin,
     };
 
@@ -99,9 +115,9 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       email: "",
       phone: "",
       address: "",
-      passport_no: "",
-      aadhaar_no: "",
-      visa_no: "",
+      passportNo: "",
+      aadhaarNo: "",
+      visaNo: "",
       gstin: "",
     });
     setIsFormOpen(false);
@@ -116,10 +132,18 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       email: selectedCustomer?.email || "",
       phone: selectedCustomer?.phone || "",
       address: selectedCustomer?.address || "",
-      passport_no: selectedCustomer?.passport_no || "",
-      aadhaar_no: selectedCustomer?.aadhaar_no || "",
-      visa_no: selectedCustomer?.visa_no || "",
+      passportNo: selectedCustomer?.passportNo || "",
+      aadhaarNo: selectedCustomer?.aadhaarNo || "",
+      visaNo: selectedCustomer?.visaNo || "",
       gstin: selectedCustomer?.gstin || "",
+      id: selectedCustomer?.id || "",
+      orgId: selectedCustomer?.orgId || "",
+      createdAt: selectedCustomer?.createdAt || "",
+      totalBookings: selectedCustomer?.totalBookings || 0,
+      createdBy: selectedCustomer?.createdBy || "",
+      updatedBy: selectedCustomer?.updatedBy || "",
+      isDeleted: selectedCustomer?.isDeleted || false,
+      updatedAt: selectedCustomer?.updatedAt || "",
     });
   }, [selectedCustomer]);
 
@@ -185,9 +209,9 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
             </label>
             <input
               type="text"
-              value={formData.passport_no}
+              value={formData.passportNo}
               onChange={(e) =>
-                setFormData({ ...formData, passport_no: e.target.value })
+                setFormData({ ...formData, passportNo: e.target.value })
               }
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -211,9 +235,9 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
             </label>
             <input
               type="text"
-              value={formData.aadhaar_no}
+              value={formData.aadhaarNo}
               onChange={(e) =>
-                setFormData({ ...formData, aadhaar_no: e.target.value })
+                setFormData({ ...formData, aadhaarNo: e.target.value })
               }
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -224,27 +248,15 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
             </label>
             <input
               type="text"
-              value={formData.visa_no}
+              value={formData.visaNo}
               onChange={(e) =>
-                setFormData({ ...formData, visa_no: e.target.value })
+                setFormData({ ...formData, visaNo: e.target.value })
               }
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Address
-          </label>
-          <textarea
-            rows={3}
-            value={formData.address}
-            onChange={(e) =>
-              setFormData({ ...formData, address: e.target.value })
-            }
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+
         <div className="flex items-center justify-end space-x-3 pt-4">
           <Button
             type="button"

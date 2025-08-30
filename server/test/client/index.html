@@ -314,15 +314,29 @@
                     <button class="endpoint-button get" onclick="testEndpoint('GET', '/customers/search?q=test')">
                         <span class="method-badge">GET</span>Search Customers
                     </button>
-                    <button class="endpoint-button post" onclick="testEndpoint('POST', '/customers', { name: 'Test Customer', email: 'customer@example.com', phone: '+1234567890' })">
-                        <span class="method-badge">POST</span>Create Customer
-                    </button>
                     <button class="endpoint-button get" onclick="testEndpoint('GET', '/customers/test-customer-id')">
                         <span class="method-badge">GET</span>Get Customer by ID
                     </button>
                     <button class="endpoint-button get" onclick="testEndpoint('GET', '/customers/test-customer-id/stats')">
                         <span class="method-badge">GET</span>Get Customer Stats
                     </button>
+                </div>
+                <div style="margin-top: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <input type="email" id="createCustomerEmail" placeholder="Customer Email" style="width: 150px; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+                        <input type="tel" id="createCustomerPhone" placeholder="Phone Number" style="width: 150px; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+                        <button class="endpoint-button post" onclick="createCustomerWithEmailAndPhone()">
+                            <span class="method-badge">POST</span>Create Customer
+                        </button>
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="text" id="customerId" placeholder="Customer ID" style="width: 150px; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;">
+                        <button class="endpoint-button delete" onclick="softDeleteCustomer()">
+                            <span class="method-badge">DELETE</span>Soft Delete
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -616,6 +630,48 @@
                     showResponse(`🚀 ${method} ${endpoint}\n\nError: ${error.message}`);
                     showStatus(`Request failed: ${error.message}`, 'error');
                 });
+        }
+
+        function softDeleteCustomer() {
+            const customerId = document.getElementById('customerId').value.trim();
+            if (!customerId) {
+                showStatus('Please enter a customer ID', 'error');
+                return;
+            }
+            testEndpoint('DELETE', `/customers/${customerId}`);
+        }
+
+        function createCustomerWithEmail() {
+            const email = document.getElementById('createCustomerEmail').value.trim();
+            if (!email) {
+                showStatus('Please enter an email address', 'error');
+                return;
+            }
+            testEndpoint('POST', '/customers', { 
+                name: 'Test Customer', 
+                email: email, 
+                phone: '+1234567890' 
+            });
+        }
+
+        function createCustomerWithEmailAndPhone() {
+            const email = document.getElementById('createCustomerEmail').value.trim();
+            const phone = document.getElementById('createCustomerPhone').value.trim();
+            
+            if (!email) {
+                showStatus('Please enter an email address', 'error');
+                return;
+            }
+            if (!phone) {
+                showStatus('Please enter a phone number', 'error');
+                return;
+            }
+            
+            testEndpoint('POST', '/customers', { 
+                name: 'Test Customer', 
+                email: email, 
+                phone: phone 
+            });
         }
 
         function clearResponse() {

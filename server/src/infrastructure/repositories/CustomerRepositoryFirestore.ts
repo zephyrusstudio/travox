@@ -113,21 +113,22 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
   }
 
   async update(customer: Customer, orgId: string): Promise<Customer> {
-    const updateData = {
+    const updateData: any = {
       name: customer.name,
       phone: customer.phone,
       email: customer.email,
-      passport_no: customer.passportNo,
-      aadhaar_no: customer.aadhaarNo,
-      visa_no: customer.visaNo,
-      gstin: customer.gstin,
-      account_id: customer.accountId,
       total_bookings: customer.totalBookings,
       updated_by: customer.updatedBy,
       is_deleted: customer.isDeleted,
-      archived_at: customer.archivedAt ? Timestamp.fromDate(customer.archivedAt) : undefined,
       updated_at: Timestamp.now(),
     };
+
+    if (customer.passportNo !== undefined) updateData.passport_no = customer.passportNo;
+    if (customer.aadhaarNo !== undefined) updateData.aadhaar_no = customer.aadhaarNo;
+    if (customer.visaNo !== undefined) updateData.visa_no = customer.visaNo;
+    if (customer.gstin !== undefined) updateData.gstin = customer.gstin;
+    if (customer.accountId !== undefined) updateData.account_id = customer.accountId;
+    if (customer.archivedAt !== undefined) updateData.archived_at = Timestamp.fromDate(customer.archivedAt);
 
     await this.collection.doc(customer.id).set(updateData, { merge: true });
     customer.updatedAt = new Date();

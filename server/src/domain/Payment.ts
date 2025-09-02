@@ -4,10 +4,15 @@ export class Payment {
   constructor(
     public id: string,
     public orgId: string,
+    public paymentType: PaymentType,
     public amount: number,
     public currency: string,
-    public paymentType: PaymentType,
     public paymentMode: PaymentMode,
+    public createdBy: string,
+    public updatedBy: string,
+    public isDeleted: boolean = false,
+    public createdAt: Date = new Date(),
+    public updatedAt: Date = new Date(),
     public bookingId?: string,
     public customerId?: string,
     public vendorId?: string,
@@ -18,12 +23,7 @@ export class Payment {
     public receiptNo?: string,
     public fromAccountId?: string,
     public toAccountId?: string,
-    public createdBy: string = '',
-    public updatedBy: string = '',
-    public isDeleted: boolean = false,
-    public archivedAt?: Date,
-    public createdAt: Date = new Date(),
-    public updatedAt: Date = new Date()
+    public archivedAt?: Date
   ) {}
 
   static createReceivable(
@@ -50,10 +50,15 @@ export class Payment {
     return new Payment(
       '',
       orgId,
+      PaymentType.RECEIVABLE,
       amount,
       currency,
-      PaymentType.RECEIVABLE,
       paymentMode,
+      createdBy,
+      createdBy,
+      false,
+      now,
+      now,
       bookingId,
       customerId,
       undefined,
@@ -63,13 +68,7 @@ export class Payment {
       options?.notes,
       options?.receiptNo,
       options?.fromAccountId,
-      options?.toAccountId,
-      createdBy,
-      createdBy,
-      false,
-      undefined,
-      now,
-      now
+      options?.toAccountId
     );
   }
 
@@ -93,10 +92,15 @@ export class Payment {
     return new Payment(
       '',
       orgId,
+      PaymentType.EXPENSE,
       amount,
       currency,
-      PaymentType.EXPENSE,
       paymentMode,
+      createdBy,
+      createdBy,
+      false,
+      now,
+      now,
       bookingId,
       undefined,
       vendorId,
@@ -106,13 +110,7 @@ export class Payment {
       options?.notes,
       options?.receiptNo,
       options?.fromAccountId,
-      options?.toAccountId,
-      createdBy,
-      createdBy,
-      false,
-      undefined,
-      now,
-      now
+      options?.toAccountId
     );
   }
 
@@ -140,10 +138,15 @@ export class Payment {
     return new Payment(
       '',
       orgId,
+      PaymentType.REFUND_INBOUND,
       amount,
       currency,
-      PaymentType.REFUND_INBOUND,
       paymentMode,
+      createdBy,
+      createdBy,
+      false,
+      now,
+      now,
       bookingId,
       customerId,
       undefined,
@@ -153,13 +156,7 @@ export class Payment {
       options?.notes,
       options?.receiptNo,
       options?.fromAccountId,
-      options?.toAccountId,
-      createdBy,
-      createdBy,
-      false,
-      undefined,
-      now,
-      now
+      options?.toAccountId
     );
   }
 
@@ -187,10 +184,15 @@ export class Payment {
     return new Payment(
       '',
       orgId,
+      PaymentType.REFUND_OUTBOUND,
       amount,
       currency,
-      PaymentType.REFUND_OUTBOUND,
       paymentMode,
+      createdBy,
+      createdBy,
+      false,
+      now,
+      now,
       bookingId,
       undefined,
       vendorId,
@@ -200,13 +202,7 @@ export class Payment {
       options?.notes,
       options?.receiptNo,
       options?.fromAccountId,
-      options?.toAccountId,
-      createdBy,
-      createdBy,
-      false,
-      undefined,
-      now,
-      now
+      options?.toAccountId
     );
   }
 

@@ -1,21 +1,59 @@
 import { injectable, inject } from 'tsyringe';
 import { IBookingRepository } from '../../repositories/IBookingRepository';
 import { Booking } from '../../../domain/Booking';
-import { BookingStatus } from '../../../models/FirestoreTypes';
+import { BookingStatus, ModeOfJourney, PAXType } from '../../../models/FirestoreTypes';
+import { BookingPax } from '../../../domain/BookingPax';
+import { BookingItinerary } from '../../../domain/BookingItinerary';
+import { BookingSegment } from '../../../domain/BookingSegment';
+
+// DTOs for creation from raw request data
+interface PaxDTO {
+  paxName: string;
+  paxType: PAXType;
+  passportNo?: string;
+  dob?: Date;
+}
+
+interface SegmentDTO {
+  seqNo: number;
+  modeOfJourney: ModeOfJourney;
+  carrierCode?: string;
+  serviceNumber?: string;
+  depCode?: string;
+  arrCode?: string;
+  depAt?: Date;
+  arrAt?: Date;
+  classCode?: string;
+  baggage?: string;
+  hotelName?: string;
+  hotelAddress?: string;
+  checkIn?: Date;
+  checkOut?: Date;
+  roomType?: string;
+  mealPlan?: string;
+  operatorName?: string;
+  boardingPoint?: string;
+  dropPoint?: string;
+  misc?: Record<string, any>;
+}
+
+interface ItineraryDTO {
+  name: string;
+  seqNo: number;
+  segments: SegmentDTO[];
+}
 
 interface CreateBookingDTO {
   customerId: string;
-  bookingDate?: Date;
-  paxCount: number;
   currency: string;
   totalAmount: number;
+  pax: PaxDTO[];
+  itineraries?: ItineraryDTO[];
+  bookingDate?: Date;
   paidAmount?: number;
   packageName?: string;
-  primaryPaxName?: string;
   pnrNo?: string;
   modeOfJourney?: string;
-  travelStartAt?: Date;
-  travelEndAt?: Date;
   advanceAmount?: number;
   status?: BookingStatus;
 }
@@ -27,54 +65,50 @@ export class CreateBooking {
   ) {}
 
   async execute(data: CreateBookingDTO, orgId: string, createdBy: string): Promise<Booking> {
-    // Validate required fields
-    if (!data.customerId || !data.paxCount || !data.currency || !data.totalAmount) {
-      throw new Error('Missing required fields: customerId, paxCount, currency, totalAmount');
+    // --- Validation ---
+    if (!data.customerId || !data.currency || !data.totalAmount || !data.pax || data.pax.length === 0) {
+      throw new Error('Missing required fields: customerId, currency, totalAmount, and at least one pax');
     }
-
-    if (data.paxCount <= 0) {
-      throw new Error('Pax count must be greater than 0');
-    }
-
     if (data.totalAmount <= 0) {
       throw new Error('Total amount must be greater than 0');
     }
-
     if (data.paidAmount && data.paidAmount > data.totalAmount) {
       throw new Error('Paid amount cannot exceed total amount');
     }
 
-    // Create booking domain object
+    // --- Domain Object Creation ---
+    const tempBookingId = 'temp-id'; // Will be replaced by the real one in Booking.create
+
+    const pax = data.pax.map(p => BookingPax.create(orgId, tempBookingId, p.paxName, p.paxType, { dob: p.dob, passportNo: p.passportNo }));
+    
+    const itineraries = (data.itineraries || []).map(i => {
+      const tempItineraryId = 'temp-itinerary-id'; // Will be replaced
+      const segments = i.segments.map(s => BookingSegment.create(orgId, tempItineraryId, s.seqNo, s.modeOfJourney, s));
+      return BookingItinerary.create(orgId, tempBookingId, i.name, i.seqNo, segments);
+    });
+
     const booking = Booking.create(
       orgId,
       data.customerId,
-      data.paxCount,
       data.totalAmount,
       data.currency,
       createdBy,
       {
+        pax,
+        itineraries,
         packageName: data.packageName,
-        primaryPaxName: data.primaryPaxName,
         pnrNo: data.pnrNo,
         modeOfJourney: data.modeOfJourney,
-        travelStartAt: data.travelStartAt,
-        travelEndAt: data.travelEndAt,
-        advanceAmount: data.advanceAmount
+        advanceAmount: data.advanceAmount,
+        status: data.status,
+        bookingDate: data.bookingDate
       }
     );
 
-    // Set additional fields after creation
-    if (data.bookingDate) {
-      booking.bookingDate = data.bookingDate;
-    }
     if (data.paidAmount) {
-      booking.paidAmount = data.paidAmount;
-    }
-    if (data.status) {
-      booking.status = data.status;
+      booking.addPayment(data.paidAmount, createdBy);
     }
 
-    // Save to repository
     return await this.bookingRepo.create(booking, orgId);
   }
 }

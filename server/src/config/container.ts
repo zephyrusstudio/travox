@@ -23,6 +23,10 @@ import { IAuditLogRepository } from '../application/repositories/IAuditLogReposi
 import { AuditLogRepositoryFirestore } from '../infrastructure/repositories/AuditLogRepositoryFirestore';
 import { IBookingRepository } from '../application/repositories/IBookingRepository';
 import { BookingRepositoryFirestore } from '../infrastructure/repositories/BookingRepositoryFirestore';
+import { IPaymentRepository } from '../application/repositories/IPaymentRepository';
+import { PaymentRepositoryFirestore } from '../infrastructure/repositories/PaymentRepositoryFirestore';
+import { IAccountRepository } from '../application/repositories/IAccountRepository';
+import { AccountRepositoryFirestore } from '../infrastructure/repositories/AccountRepositoryFirestore';
 
 // Register core services
 container.registerSingleton<IUserRepository>('IUserRepository', UserRepositoryFirestore);
@@ -38,5 +42,7 @@ container.registerSingleton<ICustomerRepository>('ICustomerRepository', Customer
 container.registerSingleton<IVendorRepository>('IVendorRepository', VendorRepositoryFirestore);
 container.registerSingleton<IAuditLogRepository>('IAuditLogRepository', AuditLogRepositoryFirestore);
 container.registerSingleton<IBookingRepository>('IBookingRepository', BookingRepositoryFirestore);
+container.registerSingleton<IPaymentRepository>('IPaymentRepository', PaymentRepositoryFirestore);
+container.registerSingleton<IAccountRepository>('IAccountRepository', AccountRepositoryFirestore);
 
 export { container };

@@ -1,19 +1,57 @@
 import { injectable, inject } from 'tsyringe';
 import { IBookingRepository } from '../../repositories/IBookingRepository';
 import { Booking } from '../../../domain/Booking';
-import { BookingStatus } from '../../../models/FirestoreTypes';
+import { BookingStatus, ModeOfJourney, PAXType } from '../../../models/FirestoreTypes';
+import { BookingPax } from '../../../domain/BookingPax';
+import { BookingItinerary } from '../../../domain/BookingItinerary';
+import { BookingSegment } from '../../../domain/BookingSegment';
+
+// Re-using DTOs from CreateBooking for consistency
+interface PaxDTO {
+  paxName: string;
+  paxType: PAXType;
+  passportNo?: string;
+  dob?: Date;
+}
+
+interface SegmentDTO {
+  seqNo: number;
+  modeOfJourney: ModeOfJourney;
+  carrierCode?: string;
+  serviceNumber?: string;
+  depCode?: string;
+  arrCode?: string;
+  depAt?: Date;
+  arrAt?: Date;
+  classCode?: string;
+  baggage?: string;
+  hotelName?: string;
+  hotelAddress?: string;
+  checkIn?: Date;
+  checkOut?: Date;
+  roomType?: string;
+  mealPlan?: string;
+  operatorName?: string;
+  boardingPoint?: string;
+  dropPoint?: string;
+  misc?: Record<string, any>;
+}
+
+interface ItineraryDTO {
+  name: string;
+  seqNo: number;
+  segments: SegmentDTO[];
+}
 
 interface UpdateBookingDTO {
-  paxCount?: number;
+  customerId?: string;
   currency?: string;
   totalAmount?: number;
-  paidAmount?: number;
+  pax?: PaxDTO[];
+  itineraries?: ItineraryDTO[];
   packageName?: string;
-  primaryPaxName?: string;
   pnrNo?: string;
   modeOfJourney?: string;
-  travelStartAt?: Date;
-  travelEndAt?: Date;
   advanceAmount?: number;
   status?: BookingStatus;
 }
@@ -25,96 +63,76 @@ export class UpdateBooking {
   ) {}
 
   async execute(bookingId: string, data: UpdateBookingDTO, orgId: string, updatedBy: string): Promise<Booking> {
-    // Fetch existing booking
     const booking = await this.bookingRepo.findById(bookingId, orgId);
     if (!booking) {
       throw new Error('Booking not found');
     }
-
     if (booking.isDeleted) {
-      throw new Error('Cannot update deleted booking');
+      throw new Error('Cannot update a deleted booking');
     }
 
-    // Validate business rules
-    if (data.paxCount !== undefined && data.paxCount <= 0) {
-      throw new Error('Pax count must be greater than 0');
+    // Update top-level properties
+    booking.customerId = data.customerId || booking.customerId;
+    booking.currency = data.currency || booking.currency;
+    booking.packageName = data.packageName || booking.packageName;
+    booking.pnrNo = data.pnrNo || booking.pnrNo;
+    booking.modeOfJourney = data.modeOfJourney || booking.modeOfJourney;
+    booking.advanceAmount = data.advanceAmount || booking.advanceAmount;
+
+    if (data.totalAmount !== undefined) {
+      booking.updateAmount(data.totalAmount, updatedBy);
     }
 
-    if (data.totalAmount !== undefined && data.totalAmount <= 0) {
-      throw new Error('Total amount must be greater than 0');
+    // Replace Pax and Itineraries if provided
+    if (data.pax) {
+      booking.pax = data.pax.map(p => BookingPax.create(orgId, booking.id, p.paxName, p.paxType, p));
+    }
+    if (data.itineraries) {
+      booking.itineraries = data.itineraries.map(i => {
+        const itinerary = BookingItinerary.create(orgId, booking.id, i.name, i.seqNo);
+        itinerary.segments = i.segments.map(s => BookingSegment.create(orgId, itinerary.id, s.seqNo, s.modeOfJourney, s));
+        return itinerary;
+      });
     }
 
-    if (data.paidAmount !== undefined) {
-      const totalAmount = data.totalAmount || booking.totalAmount;
-      if (data.paidAmount > totalAmount) {
-        throw new Error('Paid amount cannot exceed total amount');
-      }
-    }
+    // Recalculate denormalized fields after updates
+    booking.recalculatePaxFields();
+    booking.recalculateTravelDates();
 
-    // Update fields
-    if (data.paxCount !== undefined) booking.paxCount = data.paxCount;
-    if (data.currency !== undefined) booking.currency = data.currency;
-    if (data.totalAmount !== undefined) booking.totalAmount = data.totalAmount;
-    if (data.paidAmount !== undefined) booking.paidAmount = data.paidAmount;
-    if (data.packageName !== undefined) booking.packageName = data.packageName;
-    if (data.primaryPaxName !== undefined) booking.primaryPaxName = data.primaryPaxName;
-    if (data.pnrNo !== undefined) booking.pnrNo = data.pnrNo;
-    if (data.modeOfJourney !== undefined) booking.modeOfJourney = data.modeOfJourney;
-    if (data.travelStartAt !== undefined) booking.travelStartAt = data.travelStartAt;
-    if (data.travelEndAt !== undefined) booking.travelEndAt = data.travelEndAt;
-    if (data.advanceAmount !== undefined) booking.advanceAmount = data.advanceAmount;
-    if (data.status !== undefined) booking.status = data.status;
+    // Update status last, as it might have dependencies on other fields
+    if (data.status) {
+      booking.updateStatus(data.status, updatedBy);
+    }
 
     booking.updatedBy = updatedBy;
     booking.updatedAt = new Date();
 
-    // Save to repository
     return await this.bookingRepo.update(booking, orgId);
   }
 
   async updatePayment(bookingId: string, paidAmount: number, orgId: string, updatedBy: string): Promise<boolean> {
-    // Fetch existing booking
     const booking = await this.bookingRepo.findById(bookingId, orgId);
     if (!booking) {
       throw new Error('Booking not found');
     }
-
-    if (booking.isDeleted) {
-      throw new Error('Cannot update payment for deleted booking');
-    }
-
-    if (paidAmount < 0) {
-      throw new Error('Paid amount cannot be negative');
-    }
-
     if (paidAmount > booking.totalAmount) {
       throw new Error('Paid amount cannot exceed total amount');
     }
-
+    // This directly updates the field in the DB, bypassing the domain object for this specific case.
     return await this.bookingRepo.updatePayment(bookingId, paidAmount, orgId, updatedBy);
   }
 
   async updateStatus(bookingId: string, status: BookingStatus, orgId: string, updatedBy: string): Promise<Booking> {
-    // Fetch existing booking
     const booking = await this.bookingRepo.findById(bookingId, orgId);
     if (!booking) {
       throw new Error('Booking not found');
     }
-
-    if (booking.isDeleted) {
-      throw new Error('Cannot update status of deleted booking');
-    }
-
-    // Update status
-    booking.status = status;
-    booking.updatedBy = updatedBy;
-    booking.updatedAt = new Date();
-
+    booking.updateStatus(status, updatedBy);
     return await this.bookingRepo.update(booking, orgId);
   }
 
   async cancel(bookingId: string, orgId: string, updatedBy: string): Promise<Booking> {
-    return await this.updateStatus(bookingId, BookingStatus.CANCELLED, orgId, updatedBy);
+    return this.updateStatus(bookingId, BookingStatus.CANCELLED, orgId, updatedBy);
   }
 
   async confirm(bookingId: string, orgId: string, updatedBy: string): Promise<Booking> {
@@ -122,12 +140,6 @@ export class UpdateBooking {
     if (!booking) {
       throw new Error('Booking not found');
     }
-
-    if (booking.isDeleted) {
-      throw new Error('Cannot confirm deleted booking');
-    }
-
-    // Use domain method which enforces business rules
     booking.confirm(updatedBy);
     return await this.bookingRepo.update(booking, orgId);
   }
@@ -137,12 +149,6 @@ export class UpdateBooking {
     if (!booking) {
       throw new Error('Booking not found');
     }
-
-    if (booking.isDeleted) {
-      throw new Error('Cannot ticket deleted booking');
-    }
-
-    // Use domain method which enforces business rules
     booking.ticket(updatedBy);
     return await this.bookingRepo.update(booking, orgId);
   }
@@ -152,12 +158,6 @@ export class UpdateBooking {
     if (!booking) {
       throw new Error('Booking not found');
     }
-
-    if (booking.isDeleted) {
-      throw new Error('Cannot complete deleted booking');
-    }
-
-    // Use domain method which enforces business rules
     booking.complete(updatedBy, adminOverride);
     return await this.bookingRepo.update(booking, orgId);
   }

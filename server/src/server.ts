@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 import { json } from 'body-parser';
 import path from 'path';
 import { errorHandler } from './middleware/errorHandler';
-import { registerRoutes } from './api/routes/routes';
+import { registerRoutes } from './api/routes';
 import { loggerMiddleware } from './middleware/loggerMiddleware';
 import { dateParserMiddleware } from './middleware/dateParser';
 

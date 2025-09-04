@@ -1,6 +1,6 @@
 node_modules
 dist
 .env
-firestore-creds.json
+*creds.json
 doc
 test

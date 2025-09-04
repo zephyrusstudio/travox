@@ -7,6 +7,7 @@ import { registerPaymentRoutes } from './routes/paymentRoutes';
 import { registerAuditLogRoutes } from './routes/auditLogRoutes';
 import { registerUserRoutes } from './routes/userRoutes';
 import { registerAccountRoutes } from './routes/accountRoutes';
+import { registerFileRoutes } from './routes/fileRoutes';
 
 export function registerRoutes(app: Express) {
     registerAuthRoutes(app);
@@ -17,4 +18,5 @@ export function registerRoutes(app: Express) {
     registerAuditLogRoutes(app);
     registerUserRoutes(app);
     registerAccountRoutes(app);
+    registerFileRoutes(app);
 }

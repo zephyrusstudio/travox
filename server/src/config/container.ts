@@ -1,4 +1,7 @@
 import { container } from 'tsyringe';
+import { Firestore } from 'firebase-admin/firestore';
+import path from 'path';
+import { firestore as adminFirestore } from '../config/firestore';
 
 // Core dependencies
 import { IUserRepository } from '../application/repositories/IUserRepository';
@@ -27,6 +30,13 @@ import { IPaymentRepository } from '../application/repositories/IPaymentReposito
 import { PaymentRepositoryFirestore } from '../infrastructure/repositories/PaymentRepositoryFirestore';
 import { IAccountRepository } from '../application/repositories/IAccountRepository';
 import { AccountRepositoryFirestore } from '../infrastructure/repositories/AccountRepositoryFirestore';
+import { IFileRepository } from '../application/repositories/IFileRepository';
+import { FileRepositoryFirestore } from '../infrastructure/repositories/FileRepositoryFirestore';
+import { IGoogleDriveService } from '../application/services/IGoogleDriveService';
+import { GoogleDriveService } from '../infrastructure/services/GoogleDriveService';
+
+// Register Firestore instance
+container.registerInstance<Firestore>('Firestore', adminFirestore);
 
 // Register core services
 container.registerSingleton<IUserRepository>('IUserRepository', UserRepositoryFirestore);
@@ -44,5 +54,20 @@ container.registerSingleton<IAuditLogRepository>('IAuditLogRepository', AuditLog
 container.registerSingleton<IBookingRepository>('IBookingRepository', BookingRepositoryFirestore);
 container.registerSingleton<IPaymentRepository>('IPaymentRepository', PaymentRepositoryFirestore);
 container.registerSingleton<IAccountRepository>('IAccountRepository', AccountRepositoryFirestore);
+
+// Register File services
+container.register<IFileRepository>('FileRepository', {
+    useFactory: (c) => {
+        const firestoreInstance = c.resolve<Firestore>('Firestore');
+        return new FileRepositoryFirestore(firestoreInstance);
+    },
+});
+
+container.register<IGoogleDriveService>('GoogleDriveService', {
+    useFactory: () => {
+        const keyFilePath = path.resolve(process.cwd(), 'gdrive-creds.json');
+        return new GoogleDriveService(keyFilePath);
+    },
+});
 
 export { container };

@@ -31,7 +31,8 @@ export class Booking {
     public isDeleted: boolean = false,
     public archivedAt?: Date,
     public createdAt: Date = new Date(),
-    public updatedAt: Date = new Date()
+    public updatedAt: Date = new Date(),
+    public ticketId?: string
   ) {
     this.paxCount = this.pax.length;
     this.primaryPaxName = this.pax[0]?.paxName;
@@ -78,7 +79,8 @@ export class Booking {
       false,
       undefined,
       now,
-      now
+      now,
+      undefined // ticketId
     );
 
     // Ensure child objects have the correct bookingId

@@ -4,6 +4,7 @@ import { CreateBooking } from '../../application/useCases/booking/CreateBooking'
 import { GetBookings } from '../../application/useCases/booking/GetBookings';
 import { UpdateBooking } from '../../application/useCases/booking/UpdateBooking';
 import { DeleteBooking } from '../../application/useCases/booking/DeleteBooking';
+import { GetBookingTicket } from '../../application/useCases/booking/GetBookingTicket';
 import { BookingStatus } from '../../models/FirestoreTypes';
 
 export class BookingController {
@@ -312,6 +313,29 @@ export class BookingController {
         status: 'success',
         data: stats
       });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  async getBookingTicket(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.user?.orgId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+      const { id } = req.params;
+      const { orgId } = req.user;
+
+      const getBookingTicket = container.resolve(GetBookingTicket);
+      const { file, buffer } = await getBookingTicket.execute({ booking_id: id, org_id: orgId });
+
+      res.setHeader('Content-Type', file.mime_type);
+      res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
+      res.send(buffer);
     } catch (error: any) {
       res.status(500).json({
         status: 'error',

@@ -203,6 +203,7 @@ export interface BookingDocument extends BaseDocument {
   updated_by: string;
   is_deleted: boolean;
   archived_at?: Timestamp;
+  ticket_id?: string;
 }
 
 
@@ -248,6 +249,9 @@ export interface BookingSegmentDocument extends BaseDocument {
 
 
 export interface FileDocument extends BaseDocument {
+  name: string;
+  mime_type: string;
+  size: number;
   booking_id?: string;
   customer_id?: string;
   vendor_id?: string;

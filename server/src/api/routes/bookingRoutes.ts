@@ -22,5 +22,6 @@ export function registerBookingRoutes(app: Express) {
     app.patch('/bookings/:id/confirm', requireAuth(), auditLogger('bookings'), bookingCtrl.confirm);
     app.patch('/bookings/:id/complete', requireAuth(), auditLogger('bookings'), bookingCtrl.complete);
     app.delete('/bookings/:id', requireAuth(), auditLogger('bookings'), bookingCtrl.delete);
+    app.get('/bookings/:id/ticket', requireAuth(), bookingCtrl.getBookingTicket);
     //app.patch('/bookings/:id/archive', requireAuth(), auditLogger('bookings'), bookingCtrl.archive);
 }

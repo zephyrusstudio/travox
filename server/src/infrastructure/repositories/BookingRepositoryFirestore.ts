@@ -232,6 +232,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       mode_of_journey: booking.modeOfJourney || null,
       advance_amount: booking.advanceAmount || null,
       archived_at: booking.archivedAt ? Timestamp.fromDate(booking.archivedAt) : null,
+      ticket_id: booking.ticketId || null,
 
       pax: booking.pax.map(p => ({
         id: p.id,
@@ -353,7 +354,8 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       data.is_deleted || false,
       data.archived_at?.toDate(),
       data.created_at.toDate(),
-      data.updated_at.toDate()
+      data.updated_at.toDate(),
+      data.ticket_id
     );
 
     return booking;

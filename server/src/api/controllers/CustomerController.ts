@@ -4,6 +4,7 @@ import { CreateCustomer } from '../../application/useCases/customer/CreateCustom
 import { UpdateCustomer } from '../../application/useCases/customer/UpdateCustomer';
 import { GetCustomers } from '../../application/useCases/customer/GetCustomers';
 import { DeleteCustomer } from '../../application/useCases/customer/DeleteCustomer';
+import { GetBookings } from '../../application/useCases/booking/GetBookings';
 
 export class CustomerController {
   async create(req: Request, res: Response) {
@@ -131,6 +132,38 @@ export class CustomerController {
       res.json({
         status: 'success',
         data: stats
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  async listBookings(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(GetBookings);
+      const orgId = req.user?.orgId!;
+      const { id } = req.params;
+      
+      // First verify that the customer exists
+      const customerUseCase = container.resolve(GetCustomers);
+      const customer = await customerUseCase.findById(id, orgId);
+      
+      if (!customer) {
+        return res.status(404).json({
+          status: 'error',
+          data: { message: 'Customer not found' }
+        });
+      }
+      
+      // Get bookings for this customer
+      const bookings = await useCase.getByCustomerId(id, orgId);
+      
+      res.json({
+        status: 'success',
+        data: bookings
       });
     } catch (error: any) {
       res.status(500).json({

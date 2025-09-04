@@ -33,6 +33,7 @@ export function registerRoutes(app: Express) {
     app.get('/customers/:id', requireAuth(), auditLogger('customers'), customerCtrl.getById);
     app.put('/customers/:id', requireAuth(), auditLogger('customers'), customerCtrl.update);
     app.get('/customers/:id/stats', requireAuth(), customerCtrl.getStats);
+    app.get('/customers/:id/list-bookings', requireAuth(), customerCtrl.listBookings);
     app.delete('/customers/:id', requireAuth(), auditLogger('customers'), customerCtrl.delete);
 
     // Vendor routes (protected)
@@ -51,16 +52,16 @@ export function registerRoutes(app: Express) {
     app.get('/bookings/overdue', requireAuth(), bookingCtrl.getOverdue);
     app.get('/bookings/revenue-stats', requireAuth(), bookingCtrl.getRevenueStats);
     app.get('/bookings/travel-dates', requireAuth(), bookingCtrl.getByTravelDates);
-    app.get('/bookings/customer/:customerId', requireAuth(), bookingCtrl.getByCustomerId);
+    //app.get('/bookings/customer/:customerId', requireAuth(), bookingCtrl.getByCustomerId);
     app.get('/bookings/:id', requireAuth(), auditLogger('bookings'), bookingCtrl.getById);
     app.put('/bookings/:id', requireAuth(), auditLogger('bookings'), bookingCtrl.update);
-    app.patch('/bookings/:id/payment', requireAuth(), auditLogger('bookings'), bookingCtrl.updatePayment);
+    //app.patch('/bookings/:id/payment', requireAuth(), auditLogger('bookings'), bookingCtrl.updatePayment);
     app.patch('/bookings/:id/status', requireAuth(), auditLogger('bookings'), bookingCtrl.updateStatus);
     app.patch('/bookings/:id/cancel', requireAuth(), auditLogger('bookings'), bookingCtrl.cancel);
     app.patch('/bookings/:id/confirm', requireAuth(), auditLogger('bookings'), bookingCtrl.confirm);
     app.patch('/bookings/:id/complete', requireAuth(), auditLogger('bookings'), bookingCtrl.complete);
     app.delete('/bookings/:id', requireAuth(), auditLogger('bookings'), bookingCtrl.delete);
-    app.patch('/bookings/:id/archive', requireAuth(), auditLogger('bookings'), bookingCtrl.archive);
+    //app.patch('/bookings/:id/archive', requireAuth(), auditLogger('bookings'), bookingCtrl.archive);
 
     // Payment routes (protected)
     app.post('/payments/receivable', requireAuth(), auditLogger('payments'), paymentCtrl.createReceivable);

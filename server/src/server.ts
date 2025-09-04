@@ -6,6 +6,7 @@ import path from 'path';
 import { errorHandler } from './middleware/errorHandler';
 import { registerRoutes } from './api/routes/routes';
 import { loggerMiddleware } from './middleware/loggerMiddleware';
+import { dateParserMiddleware } from './middleware/dateParser';
 
 export async function startServer() {
     const app = express();
@@ -20,6 +21,7 @@ export async function startServer() {
     
     // Basic middleware
     app.use(json());
+    app.use(dateParserMiddleware); // Parse date strings to Date objects
     app.use(cookieParser());
     app.use(loggerMiddleware);
 

@@ -159,4 +159,24 @@ export class CustomerController {
       });
     }
   }
+
+  async delete(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(DeleteCustomer);
+      const orgId = req.user?.orgId!;
+      const { id } = req.params;
+
+      await useCase.delete(id, orgId);
+
+      res.json({
+        status: 'success',
+        data: { message: 'Customer deleted successfully' }
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
 }

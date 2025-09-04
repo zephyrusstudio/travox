@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { container } from '../../config/container';
 import { CreateVendor } from '../../application/useCases/vendor/CreateVendor';
+import { UpdateVendor } from '../../application/useCases/vendor/UpdateVendor';
+import { DeleteVendor } from '../../application/useCases/vendor/DeleteVendor';
 import { GetVendors } from '../../application/useCases/vendor/GetVendors';
 import { ServiceType } from '../../models/FirestoreTypes';
 
@@ -104,6 +106,47 @@ export class VendorController {
       res.json({
         status: 'success',
         data: stats
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  async update(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(UpdateVendor);
+      const orgId = req.user?.orgId!;
+      const updatedBy = req.user?.id!;
+      const { id } = req.params;
+
+      const vendor = await useCase.execute(id, req.body, orgId, updatedBy);
+
+      res.json({
+        status: 'success',
+        data: vendor
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  async delete(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(DeleteVendor);
+      const orgId = req.user?.orgId!;
+      const { id } = req.params;
+
+      await useCase.delete(id, orgId);
+
+      res.json({
+        status: 'success',
+        data: { message: 'Vendor deleted successfully' }
       });
     } catch (error: any) {
       res.status(500).json({

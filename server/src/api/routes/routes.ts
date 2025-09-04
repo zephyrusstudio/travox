@@ -33,14 +33,16 @@ export function registerRoutes(app: Express) {
     app.get('/customers/:id', requireAuth(), auditLogger('customers'), customerCtrl.getById);
     app.put('/customers/:id', requireAuth(), auditLogger('customers'), customerCtrl.update);
     app.get('/customers/:id/stats', requireAuth(), customerCtrl.getStats);
-    app.delete('/customers/:id', requireAuth(), auditLogger('customers'), customerCtrl.softDelete);
+    app.delete('/customers/:id', requireAuth(), auditLogger('customers'), customerCtrl.delete);
 
     // Vendor routes (protected)
     app.post('/vendors', requireAuth(), auditLogger('vendors'), vendorCtrl.create);
     app.get('/vendors', requireAuth(), vendorCtrl.getAll);
     app.get('/vendors/search', requireAuth(), vendorCtrl.search);
     app.get('/vendors/:id', requireAuth(), auditLogger('vendors'), vendorCtrl.getById);
+    app.put('/vendors/:id', requireAuth(), auditLogger('vendors'), vendorCtrl.update);
     app.get('/vendors/:id/stats', requireAuth(), vendorCtrl.getStats);
+    app.delete('/vendors/:id', requireAuth(), auditLogger('vendors'), vendorCtrl.delete);
 
     // Booking routes (protected)
     app.post('/bookings', requireAuth(), auditLogger('bookings'), bookingCtrl.create);

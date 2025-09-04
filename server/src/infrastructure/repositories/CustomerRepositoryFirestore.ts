@@ -151,6 +151,17 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
     return true;
   }
 
+  async delete(id: string, orgId: string): Promise<boolean> {
+    const doc = await this.collection.doc(id).get();
+    if (!doc.exists) return false;
+    
+    const data = doc.data() as CustomerDocument;
+    if (data.org_id !== orgId) return false;
+
+    await this.collection.doc(id).delete();
+    return true;
+  }
+
   async archive(id: string, orgId: string, updatedBy: string): Promise<boolean> {
     const doc = await this.collection.doc(id).get();
     if (!doc.exists) return false;

@@ -11,6 +11,7 @@ export interface IVendorRepository {
   findAll(orgId: string, limit?: number): Promise<Vendor[]>;
   update(vendor: Vendor, orgId: string): Promise<Vendor>;
   softDelete(id: string, orgId: string, updatedBy: string): Promise<boolean>;
+  delete(id: string, orgId: string): Promise<boolean>;
   archive(id: string, orgId: string, updatedBy: string): Promise<boolean>;
   search(query: string, orgId: string, limit?: number): Promise<Vendor[]>;
   getActiveVendors(orgId: string): Promise<Vendor[]>;

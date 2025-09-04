@@ -9,6 +9,7 @@ export interface ICustomerRepository {
   findAll(orgId: string, limit?: number): Promise<Customer[]>;
   update(customer: Customer, orgId: string): Promise<Customer>;
   softDelete(id: string, orgId: string, updatedBy: string): Promise<boolean>;
+  delete(id: string, orgId: string): Promise<boolean>;
   archive(id: string, orgId: string, updatedBy: string): Promise<boolean>;
   search(query: string, orgId: string, limit?: number): Promise<Customer[]>;
   getActiveCustomers(orgId: string): Promise<Customer[]>;

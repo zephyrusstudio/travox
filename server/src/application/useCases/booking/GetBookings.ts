@@ -48,6 +48,10 @@ export class GetBookings {
     return await this.bookingRepo.findById(bookingId, orgId);
   }
 
+  async getByCustomerId(customerId: string, orgId: string): Promise<Booking[]> {
+    return await this.bookingRepo.findByCustomerId(customerId, orgId);
+  }
+
   async getUpcoming(orgId: string, days?: number): Promise<Booking[]> {
     return await this.bookingRepo.getUpcomingBookings(orgId, days);
   }

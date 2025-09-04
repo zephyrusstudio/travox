@@ -4,6 +4,8 @@ import { CreateReceivable } from '../../application/useCases/payment/CreateRecei
 import { CreateExpense } from '../../application/useCases/payment/CreateExpense';
 import { CreateInboundRefund } from '../../application/useCases/payment/CreateInboundRefund';
 import { CreateOutboundRefund } from '../../application/useCases/payment/CreateOutboundRefund';
+import { GetPayments } from '../../application/useCases/payment/GetPayments';
+import { GetPaymentById } from '../../application/useCases/payment/GetPaymentById';
 
 export class PaymentController {
   async createReceivable(req: Request, res: Response) {
@@ -80,6 +82,52 @@ export class PaymentController {
       });
     } catch (error: any) {
       res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  async getPayments(req: Request, res: Response) {
+    try {
+      const getPayments = container.resolve(GetPayments);
+      const { limit, offset } = req.query;
+      const payments = await getPayments.execute(
+        req.user?.orgId!, 
+        limit ? Number(limit) : undefined, 
+        offset ? Number(offset) : undefined
+      );
+      
+      res.json({
+        status: 'success',
+        data: payments
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  async getPaymentById(req: Request, res: Response) {
+    try {
+      const getPaymentById = container.resolve(GetPaymentById);
+      const payment = await getPaymentById.execute(req.params.id, req.user?.orgId!);
+      
+      if (!payment) {
+        return res.status(404).json({
+          status: 'error',
+          data: { message: 'Payment not found' }
+        });
+      }
+      
+      res.json({
+        status: 'success',
+        data: payment
+      });
+    } catch (error: any) {
+      res.status(500).json({
         status: 'error',
         data: { message: error.message }
       });

@@ -73,6 +73,22 @@ export class BookingController {
     }
   }
 
+  async getByCustomerId(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(GetBookings);
+      const bookings = await useCase.getByCustomerId(req.params.customerId, req.user?.orgId!);
+      res.json({
+        status: 'success',
+        data: bookings
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
   async update(req: Request, res: Response) {
     try {
       const useCase = container.resolve(UpdateBooking);
@@ -176,22 +192,6 @@ export class BookingController {
       const useCase = container.resolve(UpdateBooking);
       const adminOverride = req.body?.adminOverride === true;
       const booking = await useCase.complete(req.params.id, req.user?.orgId!, req.user?.id!, adminOverride);
-      res.json({
-        status: 'success',
-        data: booking
-      });
-    } catch (error: any) {
-      res.status(400).json({
-        status: 'error',
-        data: { message: error.message }
-      });
-    }
-  }
-
-  async ticket(req: Request, res: Response) {
-    try {
-      const useCase = container.resolve(UpdateBooking);
-      const booking = await useCase.ticket(req.params.id, req.user?.orgId!, req.user?.id!);
       res.json({
         status: 'success',
         data: booking

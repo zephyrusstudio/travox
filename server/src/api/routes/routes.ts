@@ -3,8 +3,10 @@ import { AuthController } from '../controllers/AuthController';
 import { CustomerController } from '../controllers/CustomerController';
 import { VendorController } from '../controllers/VendorController';
 import { BookingController } from '../controllers/BookingController';
+import { PaymentController } from '../controllers/PaymentController';
 import { AuditLogController } from '../controllers/AuditLogController';
 import { UserController } from '../controllers/UserController';
+import { AccountController } from '../controllers/AccountController';
 import { requireAuth } from '../../middleware/requireAuth';
 import { auditLogger } from '../../middleware/auditLogger';
 import { UserRole } from '../../models/FirestoreTypes';
@@ -14,8 +16,10 @@ export function registerRoutes(app: Express) {
     const customerCtrl = new CustomerController();
     const vendorCtrl = new VendorController();
     const bookingCtrl = new BookingController();
+    const paymentCtrl = new PaymentController();
     const auditLogCtrl = new AuditLogController();
     const userCtrl = new UserController();
+    const accountCtrl = new AccountController();
 
     // Auth routes (Google OIDC only)
     app.post('/auth/google', authCtrl.googleLogin);
@@ -45,6 +49,7 @@ export function registerRoutes(app: Express) {
     app.get('/bookings/overdue', requireAuth(), bookingCtrl.getOverdue);
     app.get('/bookings/revenue-stats', requireAuth(), bookingCtrl.getRevenueStats);
     app.get('/bookings/travel-dates', requireAuth(), bookingCtrl.getByTravelDates);
+    app.get('/bookings/customer/:customerId', requireAuth(), bookingCtrl.getByCustomerId);
     app.get('/bookings/:id', requireAuth(), auditLogger('bookings'), bookingCtrl.getById);
     app.put('/bookings/:id', requireAuth(), auditLogger('bookings'), bookingCtrl.update);
     app.patch('/bookings/:id/payment', requireAuth(), auditLogger('bookings'), bookingCtrl.updatePayment);
@@ -54,6 +59,14 @@ export function registerRoutes(app: Express) {
     app.patch('/bookings/:id/complete', requireAuth(), auditLogger('bookings'), bookingCtrl.complete);
     app.delete('/bookings/:id', requireAuth(), auditLogger('bookings'), bookingCtrl.delete);
     app.patch('/bookings/:id/archive', requireAuth(), auditLogger('bookings'), bookingCtrl.archive);
+
+    // Payment routes (protected)
+    app.post('/payments/receivable', requireAuth(), auditLogger('payments'), paymentCtrl.createReceivable);
+    app.post('/payments/expense', requireAuth(), auditLogger('payments'), paymentCtrl.createExpense);
+    app.post('/payments/inbound-refund', requireAuth(), auditLogger('payments'), paymentCtrl.createInboundRefund);
+    app.post('/payments/outbound-refund', requireAuth(), auditLogger('payments'), paymentCtrl.createOutboundRefund);
+    app.get('/payments', requireAuth(), paymentCtrl.getPayments);
+    app.get('/payments/:id', requireAuth(), paymentCtrl.getPaymentById);
 
     // Audit Log routes (protected - admin/owner only)
     app.post('/audit-logs', requireAuth([UserRole.ADMIN, UserRole.OWNER]), auditLogCtrl.create);
@@ -71,4 +84,12 @@ export function registerRoutes(app: Express) {
     app.post('/users/change-role', requireAuth([UserRole.ADMIN, UserRole.OWNER]), userCtrl.changeRole);
     app.post('/users/:id/activate', requireAuth([UserRole.ADMIN, UserRole.OWNER]), userCtrl.activate);
     app.post('/users/:id/deactivate', requireAuth([UserRole.ADMIN, UserRole.OWNER]), userCtrl.deactivate);
+
+    // Account routes (Bank/UPI accounts) - protected
+    app.get('/accounts', requireAuth(), accountCtrl.getAccounts);
+    app.get('/accounts/:id', requireAuth(), accountCtrl.getAccount);
+    app.post('/accounts', requireAuth(), accountCtrl.createAccount);
+    app.put('/accounts/:id', requireAuth(), accountCtrl.updateAccount);
+    app.delete('/accounts/:id', requireAuth(), accountCtrl.deleteAccount);
+    app.post('/accounts/:id/archive', requireAuth(), accountCtrl.archiveAccount);
 }

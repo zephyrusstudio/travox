@@ -19,6 +19,7 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
       phone: customer.phone,
       email: customer.email,
       total_bookings: customer.totalBookings,
+      total_spent: customer.totalSpent,
       created_by: customer.createdBy,
       updated_by: customer.updatedBy,
       is_deleted: customer.isDeleted,
@@ -118,6 +119,7 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
       phone: customer.phone,
       email: customer.email,
       total_bookings: customer.totalBookings,
+      total_spent: customer.totalSpent,
       updated_by: customer.updatedBy,
       is_deleted: customer.isDeleted,
       updated_at: Timestamp.now(),
@@ -220,7 +222,7 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
     // TODO: Implement actual stats calculation from bookings collection
     return {
       totalBookings: customer.totalBookings,
-      totalSpent: 0, // Would need to calculate from bookings
+      totalSpent: customer.totalSpent, // Now using the tracked totalSpent
       lastBookingDate: undefined // Would need to get from latest booking
     };
   }
@@ -238,6 +240,7 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
       doc.gstin,
       doc.account_id,
       doc.total_bookings || 0,
+      doc.total_spent || 0,
       doc.created_by,
       doc.updated_by,
       doc.is_deleted,

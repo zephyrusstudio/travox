@@ -1,5 +1,6 @@
 import { injectable, inject } from 'tsyringe';
 import { IBookingRepository } from '../../repositories/IBookingRepository';
+import { ICustomerRepository } from '../../repositories/ICustomerRepository';
 import { Booking } from '../../../domain/Booking';
 import { BookingStatus, ModeOfJourney, PAXType } from '../../../models/FirestoreTypes';
 import { BookingPax } from '../../../domain/BookingPax';
@@ -61,7 +62,8 @@ interface CreateBookingDTO {
 @injectable()
 export class CreateBooking {
   constructor(
-    @inject('IBookingRepository') private bookingRepo: IBookingRepository
+    @inject('IBookingRepository') private bookingRepo: IBookingRepository,
+    @inject('ICustomerRepository') private customerRepo: ICustomerRepository
   ) {}
 
   async execute(data: CreateBookingDTO, orgId: string, createdBy: string): Promise<Booking> {
@@ -72,7 +74,13 @@ export class CreateBooking {
     if (data.totalAmount <= 0) {
       throw new Error('Total amount must be greater than 0');
     }
-    if (data.paidAmount && data.paidAmount > data.totalAmount) {
+
+    let paidAmount = 0;
+    if (data.advanceAmount !== undefined && typeof data.advanceAmount === 'number') {
+      paidAmount = data.advanceAmount;
+    }
+
+    if (paidAmount > data.totalAmount) {
       throw new Error('Paid amount cannot exceed total amount');
     }
 
@@ -105,10 +113,20 @@ export class CreateBooking {
       }
     );
 
-    if (data.paidAmount) {
-      booking.addPayment(data.paidAmount, createdBy);
+    if (paidAmount > 0) {
+      booking.addPayment(paidAmount, createdBy);
     }
 
-    return await this.bookingRepo.create(booking, orgId);
+    // Persist booking
+    const createdBooking = await this.bookingRepo.create(booking, orgId);
+
+    // Update customer's totalBookings
+    const customer = await this.customerRepo.findById(data.customerId, orgId);
+    if (customer) {
+      customer.incrementBookingCount();
+      await this.customerRepo.update(customer, orgId);
+    }
+
+    return createdBooking;
   }
 }

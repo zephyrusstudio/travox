@@ -5,6 +5,7 @@ import { UpdateCustomer } from '../../application/useCases/customer/UpdateCustom
 import { GetCustomers } from '../../application/useCases/customer/GetCustomers';
 import { DeleteCustomer } from '../../application/useCases/customer/DeleteCustomer';
 import { GetBookings } from '../../application/useCases/booking/GetBookings';
+import { GetAccount } from '../../application/useCases/account/GetAccount';
 
 export class CustomerController {
   async create(req: Request, res: Response) {
@@ -164,6 +165,61 @@ export class CustomerController {
       res.json({
         status: 'success',
         data: bookings
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  async getAccount(req: Request, res: Response) {
+    try {
+      const customerUseCase = container.resolve(GetCustomers);
+      const accountUseCase = container.resolve(GetAccount);
+      const orgId = req.user?.orgId!;
+      const { id } = req.params;
+      
+      // First verify that the customer exists
+      const customer = await customerUseCase.findById(id, orgId);
+      
+      if (!customer) {
+        return res.status(404).json({
+          status: 'error',
+          data: { message: 'Customer not found' }
+        });
+      }
+      
+      // Check if customer has an account
+      if (!customer.accountId) {
+        return res.status(404).json({
+          status: 'error',
+          data: { message: 'No account associated with this customer' }
+        });
+      }
+      
+      // Get the account
+      const account = await accountUseCase.execute(customer.accountId);
+      
+      if (!account) {
+        return res.status(404).json({
+          status: 'error',
+          data: { message: 'Account not found' }
+        });
+      }
+      
+      // Verify the account belongs to the user's organization
+      if (account.orgId !== orgId) {
+        return res.status(403).json({
+          status: 'error',
+          data: { message: 'Access denied' }
+        });
+      }
+      
+      res.json({
+        status: 'success',
+        data: account
       });
     } catch (error: any) {
       res.status(500).json({

@@ -158,6 +158,7 @@ export interface CustomerDocument extends BaseDocument {
   gstin?: string;
   account_id?: string;
   total_bookings?: number;
+  total_spent?: number;
   created_by: string;
   updated_by: string;
   is_deleted: boolean;

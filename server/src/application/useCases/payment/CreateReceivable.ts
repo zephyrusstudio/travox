@@ -1,6 +1,7 @@
 import { injectable, inject } from 'tsyringe';
 import { IPaymentRepository } from '../../repositories/IPaymentRepository';
 import { IBookingRepository } from '../../repositories/IBookingRepository';
+import { ICustomerRepository } from '../../repositories/ICustomerRepository';
 import { Payment } from '../../../domain/Payment';
 import { PaymentMode } from '../../../models/FirestoreTypes';
 
@@ -21,7 +22,8 @@ interface CreateReceivableDTO {
 export class CreateReceivable {
   constructor(
     @inject('IPaymentRepository') private paymentRepo: IPaymentRepository,
-    @inject('IBookingRepository') private bookingRepo: IBookingRepository
+    @inject('IBookingRepository') private bookingRepo: IBookingRepository,
+    @inject('ICustomerRepository') private customerRepo: ICustomerRepository
   ) {}
 
   async execute(data: CreateReceivableDTO, orgId: string, createdBy: string): Promise<Payment> {
@@ -67,6 +69,13 @@ export class CreateReceivable {
     // Update booking paid amount
     booking.addPayment(data.amount, createdBy);
     await this.bookingRepo.update(booking, orgId);
+
+    // Update customer's total spent
+    const customer = await this.customerRepo.findById(customerId, orgId);
+    if (customer) {
+      customer.addToTotalSpent(data.amount);
+      await this.customerRepo.update(customer, orgId);
+    }
 
     return savedPayment;
   }

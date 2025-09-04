@@ -43,9 +43,39 @@ const CustomerManagement: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const confirmDelete = (customerId: string) => {
+  const fetchCustomers = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/customers", {
+        headers: {
+          Accept: "*/*",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true, // needed for refreshToken cookie
+      });
+      setCustomers(response.data?.data);
+    } catch (err) {
+      console.error("Error fetching customers:", err);
+    }
+  };
+
+  const confirmDelete = async (customerId: string) => {
     if (window.confirm("Are you sure you want to delete this customer?")) {
-      // deleteCustomer(customerId);
+      const response = await axios.get(
+        `http://localhost:3000/customers/${customerId}`,
+        {
+          headers: {
+            Accept: "*/*",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true, // needed for refreshToken cookie
+        }
+      );
+
+      if (response?.status === 200) {
+        fetchCustomers();
+      }
     }
   };
 
@@ -83,22 +113,6 @@ const CustomerManagement: React.FC = () => {
   const getBookingsByCustomer = (id: string) => [] as any[];
 
   useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        const response = await axios.get("http://localhost:3000/customers", {
-          headers: {
-            Accept: "*/*",
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true, // needed for refreshToken cookie
-        });
-        setCustomers(response.data?.data);
-      } catch (err) {
-        console.error("Error fetching customers:", err);
-      }
-    };
-
     fetchCustomers();
   }, []);
 

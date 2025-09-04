@@ -1,10 +1,6 @@
 import {
-  AlertCircle,
-  BarChart3,
   Bell,
-  BookOpen,
   Building2,
-  Calculator,
   Calendar,
   ChevronDown,
   Clock,
@@ -33,23 +29,23 @@ interface LayoutProps {
 const sidebarItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "tickets", label: "Ticket Upload", icon: Upload },
-  {
-    id: "ledgers",
-    label: "Ledgers & Reports",
-    icon: BookOpen,
-    submenu: [
-      { id: "customer-ledger", label: "Customer Ledger", icon: Users },
-      { id: "vendor-ledger", label: "Vendor Ledger", icon: Building2 },
-      {
-        id: "outstanding-payments",
-        label: "Outstanding Payments",
-        icon: AlertCircle,
-      },
-      { id: "monthly-summary", label: "Monthly Summary", icon: BarChart3 },
-      { id: "gst-tax", label: "GST & Tax View", icon: Calculator },
-    ],
-  },
-  { id: "calendar", label: "Calendar", icon: Calendar },
+  // {
+  //   id: "ledgers",
+  //   label: "Ledgers & Reports",
+  //   icon: BookOpen,
+  //   submenu: [
+  //     { id: "customer-ledger", label: "Customer Ledger", icon: Users },
+  //     { id: "vendor-ledger", label: "Vendor Ledger", icon: Building2 },
+  //     {
+  //       id: "outstanding-payments",
+  //       label: "Outstanding Payments",
+  //       icon: AlertCircle,
+  //     },
+  //     { id: "monthly-summary", label: "Monthly Summary", icon: BarChart3 },
+  //     { id: "gst-tax", label: "GST & Tax View", icon: Calculator },
+  //   ],
+  // },
+  // { id: "calendar", label: "Calendar", icon: Calendar },
   { id: "customers", label: "Customers", icon: Users },
   { id: "vendors", label: "Vendors", icon: Building2 },
   { id: "bookings", label: "Bookings", icon: Calendar },

@@ -252,14 +252,10 @@ export interface FileDocument extends BaseDocument {
   name: string;
   mime_type: string;
   size: number;
-  booking_id?: string;
-  customer_id?: string;
-  vendor_id?: string;
   kind: FileKind;
-  path: string;
+  gdrive_id: string;
   uploaded_by: string;
   uploaded_at: Timestamp;
-  is_deleted: boolean;
 }
 
 

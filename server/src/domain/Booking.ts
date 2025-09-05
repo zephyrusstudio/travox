@@ -79,8 +79,7 @@ export class Booking {
       false,
       undefined,
       now,
-      now,
-      undefined // ticketId
+      now
     );
 
     // Ensure child objects have the correct bookingId

@@ -15,6 +15,10 @@ import { IRefreshTokenRepository } from '../application/repositories/IRefreshTok
 import { IGoogleOidcService } from '../application/services/IGoogleOidcService';
 import { GoogleOidcService } from '../infrastructure/services/GoogleOidcService';
 
+// Google Drive service
+import { IGoogleDriveService } from '../application/services/IGoogleDriveService';
+import { GoogleDriveService } from '../infrastructure/services/GoogleDriveService';
+
 // TMS dependencies
 import { IOrganizationRepository } from '../application/repositories/IOrganizationRepository';
 import { OrganizationRepositoryFirestore } from '../infrastructure/repositories/OrganizationRepositoryFirestore';
@@ -32,8 +36,6 @@ import { IAccountRepository } from '../application/repositories/IAccountReposito
 import { AccountRepositoryFirestore } from '../infrastructure/repositories/AccountRepositoryFirestore';
 import { IFileRepository } from '../application/repositories/IFileRepository';
 import { FileRepositoryFirestore } from '../infrastructure/repositories/FileRepositoryFirestore';
-import { IGoogleDriveService } from '../application/services/IGoogleDriveService';
-import { GoogleDriveService } from '../infrastructure/services/GoogleDriveService';
 
 // Register Firestore instance
 container.registerInstance<Firestore>('Firestore', adminFirestore);
@@ -46,6 +48,9 @@ container.registerSingleton<IRefreshTokenRepository>('IRefreshTokenRepository', 
 // Register Google OIDC service
 container.registerSingleton<IGoogleOidcService>('IGoogleOidcService', GoogleOidcService);
 
+// Register Google Drive service
+container.registerSingleton<IGoogleDriveService>('IGoogleDriveService', GoogleDriveService);
+
 // Register TMS services
 container.registerSingleton<IOrganizationRepository>('IOrganizationRepository', OrganizationRepositoryFirestore);
 container.registerSingleton<ICustomerRepository>('ICustomerRepository', CustomerRepositoryFirestore);
@@ -54,20 +59,6 @@ container.registerSingleton<IAuditLogRepository>('IAuditLogRepository', AuditLog
 container.registerSingleton<IBookingRepository>('IBookingRepository', BookingRepositoryFirestore);
 container.registerSingleton<IPaymentRepository>('IPaymentRepository', PaymentRepositoryFirestore);
 container.registerSingleton<IAccountRepository>('IAccountRepository', AccountRepositoryFirestore);
-
-// Register File services
-container.register<IFileRepository>('FileRepository', {
-    useFactory: (c) => {
-        const firestoreInstance = c.resolve<Firestore>('Firestore');
-        return new FileRepositoryFirestore(firestoreInstance);
-    },
-});
-
-container.register<IGoogleDriveService>('GoogleDriveService', {
-    useFactory: () => {
-        const keyFilePath = path.resolve(process.cwd(), 'gdrive-creds.json');
-        return new GoogleDriveService(keyFilePath);
-    },
-});
+container.registerSingleton<IFileRepository>('IFileRepository', FileRepositoryFirestore);
 
 export { container };

@@ -97,6 +97,22 @@ export class BookingRepositoryFirestore implements IBookingRepository {
     return booking;
   }
 
+  async updateFields(id: string, fields: Record<string, any>, orgId: string): Promise<boolean> {
+    // First verify the booking exists and belongs to the org
+    const doc = await this.findById(id, orgId);
+    if (!doc) {
+      throw new Error('Booking not found or not authorized');
+    }
+
+    const updateData = {
+      ...fields,
+      updated_at: Timestamp.now()
+    };
+
+    await this.collection.doc(id).update(updateData);
+    return true;
+  }
+
   async softDelete(id: string, orgId: string, updatedBy: string): Promise<boolean> {
     const doc = await this.findById(id, orgId);
     if (!doc) {
@@ -232,7 +248,6 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       mode_of_journey: booking.modeOfJourney || null,
       advance_amount: booking.advanceAmount || null,
       archived_at: booking.archivedAt ? Timestamp.fromDate(booking.archivedAt) : null,
-      ticket_id: booking.ticketId || null,
 
       pax: booking.pax.map(p => ({
         id: p.id,
@@ -283,6 +298,12 @@ export class BookingRepositoryFirestore implements IBookingRepository {
         }))
       }))
     };
+
+    // Add ticket_id if it exists
+    if (booking.ticketId) {
+      docData.ticket_id = booking.ticketId;
+    }
+
     return docData;
   }
 

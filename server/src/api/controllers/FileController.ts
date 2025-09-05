@@ -1,83 +1,151 @@
-import { Request, Response } from "express";
-import { container } from "tsyringe";
-import { UploadFile } from "../../application/useCases/file/UploadFile";
-import { GetFiles } from "../../application/useCases/file/GetFiles";
-import { GetFile } from "../../application/useCases/file/GetFile";
-import { DeleteFile } from "../../application/useCases/file/DeleteFile";
+import { Request, Response } from 'express';
+import { container } from '../../config/container';
+import { CreateFile } from '../../application/useCases/file/CreateFile';
+import { GetFiles } from '../../application/useCases/file/GetFiles';
+import { UpdateFile } from '../../application/useCases/file/UpdateFile';
+import { DeleteFile } from '../../application/useCases/file/DeleteFile';
+import { DownloadFile } from '../../application/useCases/file/DownloadFile';
+import { FileKind } from '../../models/FirestoreTypes';
+import { transformFileForResponse, transformFilesForResponse } from '../../utils/fileTransform';
 
 export class FileController {
-    async uploadFile(req: Request, res: Response): Promise<void> {
-        if (!req.user) {
-            res.status(401).json({ message: "Unauthorized" });
-            return;
-        }
-        const { orgId } = req.user;
-        if (!orgId) {
-            res.status(400).json({ message: "Organization ID is required" });
-            return;
-        }
-        const { kind, booking_id, customer_id, vendor_id } = req.body;
-        const file = req.file;
-
-        if (!file) {
-            res.status(400).json({ message: "File is required" });
-            return;
-        }
-
-        const uploadFile = container.resolve(UploadFile);
-        const result = await uploadFile.execute({
-            org_id: orgId,
-            uploaded_by: req.user.id,
-            fileName: file.originalname,
-            mimeType: file.mimetype,
-            fileBuffer: file.buffer,
-            kind,
-            booking_id,
-            customer_id,
-            vendor_id,
+  async create(req: Request, res: Response) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          status: 'error',
+          data: { message: 'No file uploaded' }
         });
+      }
 
-        res.status(201).json(result);
+      const { bookingId, kind } = req.body;
+
+      // Validate required fields
+      if (!kind || !Object.values(FileKind).includes(kind)) {
+        return res.status(400).json({
+          status: 'error',
+          data: { message: 'Valid file kind is required' }
+        });
+      }
+
+      const useCase = container.resolve(CreateFile);
+      const file = await useCase.execute({
+        name: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+        fileBuffer: req.file.buffer,
+        bookingId,
+        kind
+      }, req.user?.orgId!, req.user?.id!);
+
+      res.status(201).json({
+        status: 'success',
+        data: transformFileForResponse(file)
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
+  }
 
-    async getFiles(req: Request, res: Response): Promise<void> {
-        if (!req.user?.orgId) {
-            res.status(401).json({ message: "Unauthorized" });
-            return;
-        }
-        const { orgId } = req.user;
-        const getFiles = container.resolve(GetFiles);
-        const files = await getFiles.execute({ org_id: orgId });
-        res.status(200).json(files);
+  async getAll(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(GetFiles);
+      
+      const filters = {
+        kind: req.query.kind as FileKind,
+        uploadedBy: req.query.uploadedBy as string,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+        offset: req.query.offset ? parseInt(req.query.offset as string) : undefined
+      };
+
+      const files = await useCase.execute(filters, req.user?.orgId!);
+      res.json({
+        status: 'success',
+        data: transformFilesForResponse(files)
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
+  }
 
-    async getFile(req: Request, res: Response): Promise<void> {
-        if (!req.user?.orgId) {
-            res.status(401).json({ message: "Unauthorized" });
-            return;
-        }
-        const { id } = req.params;
-        const { orgId } = req.user;
+  async getById(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(GetFiles);
+      const file = await useCase.getById(req.params.id, req.user?.orgId!);
+      
+      if (!file) {
+        return res.status(404).json({
+          status: 'error',
+          data: { message: 'File not found' }
+        });
+      }
 
-        const getFile = container.resolve(GetFile);
-        const { file, buffer } = await getFile.execute({ id, org_id: orgId });
-
-        res.setHeader('Content-Type', file.mime_type);
-        res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
-        res.send(buffer);
+      res.json({
+        status: 'success',
+        data: transformFileForResponse(file)
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
+  }
 
-    async deleteFile(req: Request, res: Response): Promise<void> {
-        if (!req.user?.orgId) {
-            res.status(401).json({ message: "Unauthorized" });
-            return;
-        }
-        const { id } = req.params;
-        const { orgId } = req.user;
-
-        const deleteFile = container.resolve(DeleteFile);
-        await deleteFile.execute({ id, org_id: orgId });
-
-        res.status(204).send();
+  async update(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(UpdateFile);
+      const file = await useCase.execute(req.params.id, req.body, req.user?.orgId!);
+      
+      res.json({
+        status: 'success',
+        data: transformFileForResponse(file)
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
     }
+  }
+
+  async delete(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(DeleteFile);
+      
+      await useCase.execute(req.params.id, req.user?.orgId!);
+      
+      res.json({
+        status: 'success',
+        data: { message: 'File deleted successfully' }
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  async download(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(DownloadFile);
+      const result = await useCase.execute(req.params.id, req.user?.orgId!);
+      
+      res.setHeader('Content-Type', result.mimeType);
+      res.setHeader('Content-Disposition', `attachment; filename="${result.fileName}"`);
+      res.send(result.fileBuffer);
+    } catch (error: any) {
+      res.status(400).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
 }

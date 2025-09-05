@@ -74,6 +74,20 @@ export class VendorRepositoryFirestore implements IVendorRepository {
     return this.mapFirestoreToVendor(doc.data() as VendorDocument, doc.id);
   }
 
+  async findByAccountId(accountId: string, orgId: string): Promise<Vendor | null> {
+    const querySnapshot = await this.collection
+      .where('org_id', '==', orgId)
+      .where('account_id', '==', accountId)
+      .where('is_deleted', '==', false)
+      .limit(1)
+      .get();
+
+    if (querySnapshot.empty) return null;
+
+    const doc = querySnapshot.docs[0];
+    return this.mapFirestoreToVendor(doc.data() as VendorDocument, doc.id);
+  }
+
   async findByNameAndServiceType(name: string, serviceType: ServiceType, orgId: string): Promise<Vendor | null> {
     const querySnapshot = await this.collection
       .where('org_id', '==', orgId)

@@ -7,6 +7,7 @@ export interface IVendorRepository {
   findByEmail(email: string, orgId: string): Promise<Vendor | null>;
   findByPhone(phone: string, orgId: string): Promise<Vendor | null>;
   findByNameAndServiceType(name: string, serviceType: ServiceType, orgId: string): Promise<Vendor | null>;
+  findByAccountId(accountId: string, orgId: string): Promise<Vendor | null>;
   findByServiceType(serviceType: ServiceType, orgId: string): Promise<Vendor[]>;
   findAll(orgId: string, limit?: number): Promise<Vendor[]>;
   update(vendor: Vendor, orgId: string): Promise<Vendor>;

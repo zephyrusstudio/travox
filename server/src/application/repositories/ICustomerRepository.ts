@@ -6,6 +6,7 @@ export interface ICustomerRepository {
   findByEmail(email: string, orgId: string): Promise<Customer | null>;
   findByPhone(phone: string, orgId: string): Promise<Customer | null>;
   findByPassport(passportNo: string, orgId: string): Promise<Customer | null>;
+  findByAccountId(accountId: string, orgId: string): Promise<Customer | null>;
   findAll(orgId: string, limit?: number): Promise<Customer[]>;
   update(customer: Customer, orgId: string): Promise<Customer>;
   softDelete(id: string, orgId: string, updatedBy: string): Promise<boolean>;

@@ -33,17 +33,21 @@ export class Payment {
     currency: string,
     paymentMode: PaymentMode,
     createdBy: string,
-    customerId?: string,
+    customerId: string,
+    fromAccountId: string,
     options?: {
       category?: string;
       notes?: string;
       receiptNo?: string;
-      fromAccountId?: string;
       toAccountId?: string;
     }
   ): Payment {
     if (!bookingId) {
       throw new Error('Booking ID is required for receivables');
+    }
+
+    if (!fromAccountId) {
+      throw new Error('From account ID is required for receivables');
     }
 
     const now = new Date();
@@ -67,7 +71,7 @@ export class Payment {
       options?.category,
       options?.notes,
       options?.receiptNo,
-      options?.fromAccountId,
+      fromAccountId,
       options?.toAccountId
     );
   }
@@ -78,16 +82,19 @@ export class Payment {
     currency: string,
     paymentMode: PaymentMode,
     createdBy: string,
+    toAccountId: string,
     vendorId?: string,
-    bookingId?: string,
     options?: {
       category?: string;
       notes?: string;
       receiptNo?: string;
       fromAccountId?: string;
-      toAccountId?: string;
     }
   ): Payment {
+    if (!toAccountId) {
+      throw new Error('To account ID is required for expenses');
+    }
+
     const now = new Date();
     return new Payment(
       '',
@@ -101,27 +108,27 @@ export class Payment {
       false,
       now,
       now,
-      bookingId,
       undefined,
-      vendorId,
+      undefined,
+      vendorId, 
       undefined,
       undefined,
       options?.category,
       options?.notes,
       options?.receiptNo,
       options?.fromAccountId,
-      options?.toAccountId
+      toAccountId
     );
   }
 
   static createInboundRefund(
     orgId: string,
-    bookingId: string,
     amount: number,
     currency: string,
     paymentMode: PaymentMode,
     createdBy: string,
-    customerId?: string,
+    vendorId: string,
+    refundOfPaymentId: string,
     options?: {
       category?: string;
       notes?: string;
@@ -130,8 +137,8 @@ export class Payment {
       toAccountId?: string;
     }
   ): Payment {
-    if (!bookingId) {
-      throw new Error('Booking ID is required for inbound refunds');
+    if (!refundOfPaymentId) {
+      throw new Error('Expense payment ID is required for inbound refunds');
     }
 
     const now = new Date();
@@ -147,11 +154,10 @@ export class Payment {
       false,
       now,
       now,
-      bookingId,
-      customerId,
       undefined,
+      vendorId,
       undefined,
-      undefined,
+      refundOfPaymentId,
       options?.category,
       options?.notes,
       options?.receiptNo,
@@ -162,11 +168,12 @@ export class Payment {
 
   static createOutboundRefund(
     orgId: string,
-    vendorId: string,
+    customerId: string,
     amount: number,
     currency: string,
     paymentMode: PaymentMode,
     createdBy: string,
+    refundOfPaymentId: string,
     bookingId?: string,
     options?: {
       category?: string;
@@ -176,8 +183,12 @@ export class Payment {
       toAccountId?: string;
     }
   ): Payment {
-    if (!vendorId) {
-      throw new Error('Vendor ID is required for outbound refunds');
+    if (!customerId) {
+      throw new Error('Customer ID is required for outbound refunds');
+    }
+
+    if (!refundOfPaymentId) {
+      throw new Error('Receivable payment ID is required for outbound refunds');
     }
 
     const now = new Date();
@@ -194,10 +205,10 @@ export class Payment {
       now,
       now,
       bookingId,
+      customerId,
       undefined,
-      vendorId,
       undefined,
-      undefined,
+      refundOfPaymentId,
       options?.category,
       options?.notes,
       options?.receiptNo,

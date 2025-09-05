@@ -95,6 +95,21 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
     return this.documentToDomain(data, doc.id);
   }
 
+  async findByAccountId(accountId: string, orgId: string): Promise<Customer | null> {
+    const query = await this.collection
+      .where('org_id', '==', orgId)
+      .where('account_id', '==', accountId)
+      .where('is_deleted', '==', false)
+      .limit(1)
+      .get();
+    
+    if (query.empty) return null;
+    
+    const doc = query.docs[0];
+    const data = doc.data() as CustomerDocument;
+    return this.documentToDomain(data, doc.id);
+  }
+
   async findAll(orgId: string, limit?: number): Promise<Customer[]> {
     // Simplified query for testing - just filter by org_id
     let query = this.collection.where('org_id', '==', orgId);

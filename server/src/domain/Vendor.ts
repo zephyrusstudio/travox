@@ -69,6 +69,11 @@ export class Vendor {
     this.updatedAt = new Date();
   }
 
+  deductExpense(amount: number): void {
+    this.totalExpense -= amount;
+    this.updatedAt = new Date();
+  }
+
   incrementBookingCount(): void {
     this.totalBookings += 1;
     this.updatedAt = new Date();

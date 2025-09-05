@@ -7,14 +7,13 @@ import { PaymentMode } from '../../../models/FirestoreTypes';
 
 interface CreateReceivableDTO {
   bookingId: string;
-  customerId?: string;
   amount: number;
   currency: string;
   paymentMode: PaymentMode;
+  fromAccountId: string;
   category?: string;
   notes?: string;
   receiptNo?: string;
-  fromAccountId?: string;
   toAccountId?: string;
 }
 
@@ -42,8 +41,15 @@ export class CreateReceivable {
       throw new Error('Booking not found');
     }
 
-    // Use customer from booking if not provided
-    const customerId = data.customerId || booking.customerId;
+    // Derive customer ID from fromAccountId
+    if (!data.fromAccountId) {
+      throw new Error('From account ID is required');
+    }
+    
+    const customer = await this.customerRepo.findByAccountId(data.fromAccountId, orgId);
+    if (!customer) {
+      throw new Error('No customer found for the specified account');
+    }
 
     // Create receivable payment
     const payment = Payment.createReceivable(
@@ -53,12 +59,12 @@ export class CreateReceivable {
       data.currency,
       data.paymentMode,
       createdBy,
-      customerId,
+      customer.id,
+      data.fromAccountId,
       {
         category: data.category,
         notes: data.notes,
         receiptNo: data.receiptNo,
-        fromAccountId: data.fromAccountId,
         toAccountId: data.toAccountId,
       }
     );
@@ -71,11 +77,8 @@ export class CreateReceivable {
     await this.bookingRepo.update(booking, orgId);
 
     // Update customer's total spent
-    const customer = await this.customerRepo.findById(customerId, orgId);
-    if (customer) {
-      customer.addToTotalSpent(data.amount);
-      await this.customerRepo.update(customer, orgId);
-    }
+    customer.addToTotalSpent(data.amount);
+    await this.customerRepo.update(customer, orgId);
 
     return savedPayment;
   }

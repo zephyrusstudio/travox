@@ -1,19 +1,13 @@
 import { injectable, inject } from 'tsyringe';
 import { IPaymentRepository } from '../../repositories/IPaymentRepository';
-import { IBookingRepository } from '../../repositories/IBookingRepository';
+import { IVendorRepository } from '../../repositories/IVendorRepository';
 import { Payment } from '../../../domain/Payment';
-import { PaymentMode } from '../../../models/FirestoreTypes';
 
 interface CreateInboundRefundDTO {
-  bookingId: string;
-  customerId?: string;
-  amount: number;
-  currency: string;
-  paymentMode: PaymentMode;
+  refundOfPaymentId: string; 
   category?: string;
   notes?: string;
   receiptNo?: string;
-  fromAccountId?: string;
   toAccountId?: string;
 }
 
@@ -21,59 +15,52 @@ interface CreateInboundRefundDTO {
 export class CreateInboundRefund {
   constructor(
     @inject('IPaymentRepository') private paymentRepo: IPaymentRepository,
-    @inject('IBookingRepository') private bookingRepo: IBookingRepository
+    @inject('IVendorRepository') private vendorRepo: IVendorRepository
   ) {}
 
   async execute(data: CreateInboundRefundDTO, orgId: string, createdBy: string): Promise<Payment> {
-    // Validate required fields
-    if (!data.bookingId) {
-      throw new Error('Booking ID is required for inbound refunds');
+    
+    const originalPayment = await this.paymentRepo.findById(data.refundOfPaymentId, orgId);
+    if (!originalPayment || originalPayment.paymentType !== 'EXPENSE') {
+      throw new Error('Original expense payment not found');
     }
 
-    if (data.amount <= 0) {
-      throw new Error('Amount must be greater than 0');
+    const vendorId = originalPayment.vendorId;
+    const amount = originalPayment.amount;
+    const currency = originalPayment.currency;
+    const paymentMode = originalPayment.paymentMode;
+    const fromAccountId = originalPayment.toAccountId; 
+
+    if (!vendorId) {
+      throw new Error('Original payment must have a vendor ID');
     }
 
-    // Verify booking exists
-    const booking = await this.bookingRepo.findById(data.bookingId, orgId);
-    if (!booking) {
-      throw new Error('Booking not found');
+    const vendor = await this.vendorRepo.findById(vendorId, orgId);
+    if (!vendor) {
+      throw new Error('Vendor not found');
     }
 
-    // Use customer from booking if not provided
-    const customerId = data.customerId || booking.customerId;
-
-    // Validate refund amount doesn't exceed paid amount
-    if (data.amount > booking.paidAmount) {
-      throw new Error('Refund amount cannot exceed paid amount');
-    }
-
-    // Create inbound refund payment
     const payment = Payment.createInboundRefund(
       orgId,
-      data.bookingId,
-      data.amount,
-      data.currency,
-      data.paymentMode,
+      amount,
+      currency,
+      paymentMode,
       createdBy,
-      customerId,
+      vendorId,
+      data.refundOfPaymentId,
       {
         category: data.category,
         notes: data.notes,
         receiptNo: data.receiptNo,
-        fromAccountId: data.fromAccountId,
-        toAccountId: data.toAccountId,
+        fromAccountId: fromAccountId,
+        toAccountId: originalPayment.fromAccountId,
       }
     );
 
-    // Save payment
     const savedPayment = await this.paymentRepo.create(payment, orgId);
 
-    // Decrease booking paid amount
-    booking.paidAmount -= data.amount;
-    booking.updatedBy = createdBy;
-    booking.updatedAt = new Date();
-    await this.bookingRepo.update(booking, orgId);
+    vendor.deductExpense(amount);
+    await this.vendorRepo.update(vendor, orgId);
 
     return savedPayment;
   }

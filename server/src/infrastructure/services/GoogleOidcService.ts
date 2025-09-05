@@ -8,16 +8,16 @@ export class GoogleOidcService implements IGoogleOidcService {
     private allowedDomains: string[];
 
     constructor() {
-        const clientId = process.env.GOOGLE_CLIENT_ID;
+        const clientId = process.env.OAUTH_CLIENT_ID;
         if (!clientId) {
-            throw new Error('GOOGLE_CLIENT_ID environment variable is required');
+            throw new Error('OAUTH_CLIENT_ID environment variable is required');
         }
 
         this.client = new OAuth2Client(clientId);
         
         // Parse allowed domains from environment variable (comma-separated)
-        // e.g., GOOGLE_ALLOWED_DOMAINS="perccent.com,example.com" or leave empty for any domain
-        const allowedDomainsEnv = process.env.GOOGLE_ALLOWED_DOMAINS;
+        // e.g., OAUTH_ALLOWED_DOMAINS="perccent.com,example.com" or leave empty for any domain
+        const allowedDomainsEnv = process.env.OAUTH_ALLOWED_DOMAINS;
         this.allowedDomains = allowedDomainsEnv 
             ? allowedDomainsEnv.split(',').map(domain => domain.trim().toLowerCase())
             : [];
@@ -33,7 +33,7 @@ export class GoogleOidcService implements IGoogleOidcService {
         try {
             const ticket = await this.client.verifyIdToken({
                 idToken,
-                audience: process.env.GOOGLE_CLIENT_ID,
+                audience: process.env.OAUTH_CLIENT_ID,
             });
 
             const payload = ticket.getPayload();

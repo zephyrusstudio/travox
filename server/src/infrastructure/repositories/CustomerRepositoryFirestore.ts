@@ -19,6 +19,7 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
       phone: customer.phone,
       email: customer.email,
       total_bookings: customer.totalBookings,
+      total_spent: customer.totalSpent,
       created_by: customer.createdBy,
       updated_by: customer.updatedBy,
       is_deleted: customer.isDeleted,
@@ -94,6 +95,21 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
     return this.documentToDomain(data, doc.id);
   }
 
+  async findByAccountId(accountId: string, orgId: string): Promise<Customer | null> {
+    const query = await this.collection
+      .where('org_id', '==', orgId)
+      .where('account_id', '==', accountId)
+      .where('is_deleted', '==', false)
+      .limit(1)
+      .get();
+    
+    if (query.empty) return null;
+    
+    const doc = query.docs[0];
+    const data = doc.data() as CustomerDocument;
+    return this.documentToDomain(data, doc.id);
+  }
+
   async findAll(orgId: string, limit?: number): Promise<Customer[]> {
     // Simplified query for testing - just filter by org_id
     let query = this.collection.where('org_id', '==', orgId);
@@ -118,6 +134,7 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
       phone: customer.phone,
       email: customer.email,
       total_bookings: customer.totalBookings,
+      total_spent: customer.totalSpent,
       updated_by: customer.updatedBy,
       is_deleted: customer.isDeleted,
       updated_at: Timestamp.now(),
@@ -148,6 +165,17 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
       updated_at: Timestamp.now(),
     }, { merge: true });
 
+    return true;
+  }
+
+  async delete(id: string, orgId: string): Promise<boolean> {
+    const doc = await this.collection.doc(id).get();
+    if (!doc.exists) return false;
+    
+    const data = doc.data() as CustomerDocument;
+    if (data.org_id !== orgId) return false;
+
+    await this.collection.doc(id).delete();
     return true;
   }
 
@@ -209,7 +237,7 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
     // TODO: Implement actual stats calculation from bookings collection
     return {
       totalBookings: customer.totalBookings,
-      totalSpent: 0, // Would need to calculate from bookings
+      totalSpent: customer.totalSpent, // Now using the tracked totalSpent
       lastBookingDate: undefined // Would need to get from latest booking
     };
   }
@@ -227,6 +255,7 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
       doc.gstin,
       doc.account_id,
       doc.total_bookings || 0,
+      doc.total_spent || 0,
       doc.created_by,
       doc.updated_by,
       doc.is_deleted,

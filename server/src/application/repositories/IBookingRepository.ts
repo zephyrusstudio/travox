@@ -10,6 +10,7 @@ export interface IBookingRepository {
   findByDateRange(startDate: Date, endDate: Date, orgId: string): Promise<Booking[]>;
   findAll(orgId: string, limit?: number): Promise<Booking[]>;
   update(booking: Booking, orgId: string): Promise<Booking>;
+  updateFields(id: string, fields: Record<string, any>, orgId: string): Promise<boolean>;
   softDelete(id: string, orgId: string, updatedBy: string): Promise<boolean>;
   archive(id: string, orgId: string, updatedBy: string): Promise<boolean>;
   

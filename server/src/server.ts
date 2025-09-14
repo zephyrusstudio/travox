@@ -3,12 +3,29 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import path from "path";
-import { registerRoutes } from "./api/routes/routes";
+import { registerRoutes } from "./api/routes";
+import { dateParserMiddleware } from "./middleware/dateParser";
 import { errorHandler } from "./middleware/errorHandler";
 import { loggerMiddleware } from "./middleware/loggerMiddleware";
 
 export async function startServer() {
   const app = express();
+
+  // CORS middleware for frontend testing
+  app.use(
+    cors({
+      origin: ["http://localhost:8080", "http://127.0.0.1:8080", "file://"],
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization", "x-refresh-token"],
+    })
+  );
+
+  // Basic middleware
+  app.use(json());
+  app.use(dateParserMiddleware); // Parse date strings to Date objects
+  app.use(cookieParser());
+  app.use(loggerMiddleware);
 
   // CORS middleware for frontend testing
   app.use(

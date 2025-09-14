@@ -158,6 +158,7 @@ export interface CustomerDocument extends BaseDocument {
   gstin?: string;
   account_id?: string;
   total_bookings?: number;
+  total_spent?: number;
   created_by: string;
   updated_by: string;
   is_deleted: boolean;
@@ -202,6 +203,7 @@ export interface BookingDocument extends BaseDocument {
   updated_by: string;
   is_deleted: boolean;
   archived_at?: Timestamp;
+  ticket_id?: string;
 }
 
 
@@ -247,14 +249,13 @@ export interface BookingSegmentDocument extends BaseDocument {
 
 
 export interface FileDocument extends BaseDocument {
-  booking_id?: string;
-  customer_id?: string;
-  vendor_id?: string;
+  name: string;
+  mime_type: string;
+  size: number;
   kind: FileKind;
-  path: string;
+  gdrive_id: string;
   uploaded_by: string;
   uploaded_at: Timestamp;
-  is_deleted: boolean;
 }
 
 

@@ -1,19 +1,19 @@
 import { injectable, inject } from 'tsyringe';
 import { IPaymentRepository } from '../../repositories/IPaymentRepository';
 import { IBookingRepository } from '../../repositories/IBookingRepository';
+import { ICustomerRepository } from '../../repositories/ICustomerRepository';
 import { Payment } from '../../../domain/Payment';
 import { PaymentMode } from '../../../models/FirestoreTypes';
 
 interface CreateReceivableDTO {
   bookingId: string;
-  customerId?: string;
   amount: number;
   currency: string;
   paymentMode: PaymentMode;
+  fromAccountId: string;
   category?: string;
   notes?: string;
   receiptNo?: string;
-  fromAccountId?: string;
   toAccountId?: string;
 }
 
@@ -21,7 +21,8 @@ interface CreateReceivableDTO {
 export class CreateReceivable {
   constructor(
     @inject('IPaymentRepository') private paymentRepo: IPaymentRepository,
-    @inject('IBookingRepository') private bookingRepo: IBookingRepository
+    @inject('IBookingRepository') private bookingRepo: IBookingRepository,
+    @inject('ICustomerRepository') private customerRepo: ICustomerRepository
   ) {}
 
   async execute(data: CreateReceivableDTO, orgId: string, createdBy: string): Promise<Payment> {
@@ -40,8 +41,15 @@ export class CreateReceivable {
       throw new Error('Booking not found');
     }
 
-    // Use customer from booking if not provided
-    const customerId = data.customerId || booking.customerId;
+    // Derive customer ID from fromAccountId
+    if (!data.fromAccountId) {
+      throw new Error('From account ID is required');
+    }
+    
+    const customer = await this.customerRepo.findByAccountId(data.fromAccountId, orgId);
+    if (!customer) {
+      throw new Error('No customer found for the specified account');
+    }
 
     // Create receivable payment
     const payment = Payment.createReceivable(
@@ -51,12 +59,12 @@ export class CreateReceivable {
       data.currency,
       data.paymentMode,
       createdBy,
-      customerId,
+      customer.id,
+      data.fromAccountId,
       {
         category: data.category,
         notes: data.notes,
         receiptNo: data.receiptNo,
-        fromAccountId: data.fromAccountId,
         toAccountId: data.toAccountId,
       }
     );
@@ -67,6 +75,10 @@ export class CreateReceivable {
     // Update booking paid amount
     booking.addPayment(data.amount, createdBy);
     await this.bookingRepo.update(booking, orgId);
+
+    // Update customer's total spent
+    customer.addToTotalSpent(data.amount);
+    await this.customerRepo.update(customer, orgId);
 
     return savedPayment;
   }

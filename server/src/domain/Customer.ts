@@ -11,6 +11,7 @@ export class Customer {
     public gstin?: string,
     public accountId?: string,
     public totalBookings: number = 0,
+    public totalSpent: number = 0,
     public createdBy: string = '',
     public updatedBy: string = '',
     public isDeleted: boolean = false,
@@ -45,7 +46,8 @@ export class Customer {
       options?.visaNo,
       options?.gstin,
       options?.accountId,
-      0,
+      0, // totalBookings
+      0, // totalSpent
       createdBy,
       createdBy,
       false,
@@ -71,6 +73,16 @@ export class Customer {
 
   incrementBookingCount(): void {
     this.totalBookings += 1;
+    this.updatedAt = new Date();
+  }
+
+  addToTotalSpent(amount: number): void {
+    this.totalSpent += amount;
+    this.updatedAt = new Date();
+  }
+
+  deductFromTotalSpent(amount: number): void {
+    this.totalSpent = Math.max(0, this.totalSpent - amount);
     this.updatedAt = new Date();
   }
 
@@ -112,6 +124,7 @@ export class Customer {
       gstin: this.gstin,
       accountId: this.accountId,
       totalBookings: this.totalBookings,
+      totalSpent: this.totalSpent,
       createdBy: this.createdBy,
       updatedBy: this.updatedBy,
       isDeleted: this.isDeleted,

@@ -1,9 +1,21 @@
-# node-api-template
+# TMS Backend API
 
 # Project Architecture Overview
 
-This document describes the overall architecture and folder structure of the Auth API microservice.  
+This document describes the overall architecture and folder structure of the Travel Management System (TMS) API microservice.  
 It follows **Clean/Hexagonal Architecture**, best practices for Node.js and TypeScript, and is designed for scalability, modularity, testability, and ease of maintenance.
+
+## Features
+
+- **Authentication & Authorization** - Google OAuth integration with JWT tokens
+- **Customer Management** - CRUD operations for customer data
+- **Vendor Management** - Service provider management
+- **Booking Management** - Travel booking lifecycle management
+- **Payment Tracking** - Financial transaction management
+- **Account Management** - Banking and payment account setup
+- **File Management** - Document upload/download with Google Drive integration
+- **Audit Logging** - Complete activity tracking
+- **Multi-tenancy** - Organization-based data isolation
 
 ---
 
@@ -17,9 +29,7 @@ It follows **Clean/Hexagonal Architecture**, best practices for Node.js and Type
   /infrastructure     # External adapters: DB, cache, 3rd party APIs, JWT, etc.
   /config             # App configs, DI container, env management
   /middleware         # Express middleware (auth, logger, error handler, etc.)
-  /jobs               # Background workers, event handlers (if any)
   /utils              # Shared utilities, constants, type guards, mappers
-  /tests              # Unit, integration, and E2E tests (mirrors src structure)
   server.ts           # App bootstrap, DI, express setup
   index.ts            # Main entry (calls server.ts, handles process signals)
 ```

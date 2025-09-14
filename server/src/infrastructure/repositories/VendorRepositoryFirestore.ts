@@ -74,6 +74,20 @@ export class VendorRepositoryFirestore implements IVendorRepository {
     return this.mapFirestoreToVendor(doc.data() as VendorDocument, doc.id);
   }
 
+  async findByAccountId(accountId: string, orgId: string): Promise<Vendor | null> {
+    const querySnapshot = await this.collection
+      .where('org_id', '==', orgId)
+      .where('account_id', '==', accountId)
+      .where('is_deleted', '==', false)
+      .limit(1)
+      .get();
+
+    if (querySnapshot.empty) return null;
+
+    const doc = querySnapshot.docs[0];
+    return this.mapFirestoreToVendor(doc.data() as VendorDocument, doc.id);
+  }
+
   async findByNameAndServiceType(name: string, serviceType: ServiceType, orgId: string): Promise<Vendor | null> {
     const querySnapshot = await this.collection
       .where('org_id', '==', orgId)
@@ -116,20 +130,22 @@ export class VendorRepositoryFirestore implements IVendorRepository {
   }
 
   async update(vendor: Vendor, orgId: string): Promise<Vendor> {
-    const doc: Partial<VendorDocument> = {
+    const doc: any = {
       name: vendor.name,
       service_type: vendor.serviceType,
-      poc_name: vendor.pocName,
-      phone: vendor.phone,
-      email: vendor.email,
-      gstin: vendor.gstin,
-      account_id: vendor.accountId,
       total_expense: vendor.totalExpense,
       total_bookings: vendor.totalBookings,
       updated_by: vendor.updatedBy,
-      archived_at: vendor.archivedAt ? Timestamp.fromDate(vendor.archivedAt) : undefined,
       updated_at: Timestamp.fromDate(vendor.updatedAt)
     };
+
+    // Only add optional fields if they are not undefined
+    if (vendor.pocName !== undefined) doc.poc_name = vendor.pocName;
+    if (vendor.phone !== undefined) doc.phone = vendor.phone;
+    if (vendor.email !== undefined) doc.email = vendor.email;
+    if (vendor.gstin !== undefined) doc.gstin = vendor.gstin;
+    if (vendor.accountId !== undefined) doc.account_id = vendor.accountId;
+    if (vendor.archivedAt !== undefined) doc.archived_at = Timestamp.fromDate(vendor.archivedAt);
 
     await this.collection.doc(vendor.id).update(doc);
     return vendor;
@@ -141,6 +157,17 @@ export class VendorRepositoryFirestore implements IVendorRepository {
 
     vendor.softDelete(updatedBy);
     await this.update(vendor, orgId);
+    return true;
+  }
+
+  async delete(id: string, orgId: string): Promise<boolean> {
+    const doc = await this.collection.doc(id).get();
+    if (!doc.exists) return false;
+    
+    const data = doc.data() as VendorDocument;
+    if (data.org_id !== orgId) return false;
+
+    await this.collection.doc(id).delete();
     return true;
   }
 

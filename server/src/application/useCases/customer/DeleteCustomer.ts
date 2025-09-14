@@ -10,4 +10,8 @@ export class DeleteCustomer {
   async softDelete(id: string, orgId: string, updatedBy: string): Promise<boolean> {
     return await this.customerRepo.softDelete(id, orgId, updatedBy);
   }
+
+  async delete(id: string, orgId: string): Promise<boolean> {
+    return await this.customerRepo.delete(id, orgId);
+  }
 }

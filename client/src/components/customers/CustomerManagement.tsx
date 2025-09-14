@@ -9,9 +9,6 @@ import CustomerTable from "./CustomerTable";
 import TicketHistoryModal from "./TicketHistoryModal";
 import useCustomerSearch from "./useCustomerSearch";
 
-const token =
-  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyN2Y1cEJEblRVYlNtQXN6Y29CaiIsImVtYWlsIjoidGFtYWxjb2Rlc0BnbWFpbC5jb20iLCJyb2xlIjoiT3duZXIiLCJuYW1lIjoiVGFtYWwgRGFzIiwib3JnSWQiOiJ2M1h0WE81QTdOVzh3cTJBcFZDMCIsImlhdCI6MTc1NjUwMTQ5MywiZXhwIjoxNzU3NDAxNDkzLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.AUJHcPzx2ijx-9DT9bHnt3_o7qJIQmFuCzZMoC8Pyg4tnJZ5AE62YrGRfat7hBVdaTodI1dXCWG5sKdhfuPbfPndqa8bGoyov9YidDbsP8tnp91xHZsjJdE2nyamrx2XAaNf9NRnrzPoXWtwf-0wGxncSlTM_bAfBFqgu1peMhACyRHSZoqXXRgWRyFJ0VqHKj2uzQ3X09rQ23tf3q38xCGIt0e57iNPhGBNw49pXmc_blgIA-tWp4gIypUE6QGvSVVNR3_bxWRRw87CoQQLe0xaKVb40grk7csDYD7pG7JnlL_efwWCZjsb_AL5vFKpyuoedCYkHJ-Vc_HN6fsMrw";
-
 const CustomerManagement: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   // Local state
@@ -49,7 +46,7 @@ const CustomerManagement: React.FC = () => {
         headers: {
           Accept: "*/*",
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${sessionStorage?.getItem("token")}`,
         },
         withCredentials: true, // needed for refreshToken cookie
       });
@@ -67,7 +64,7 @@ const CustomerManagement: React.FC = () => {
           headers: {
             Accept: "*/*",
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${sessionStorage?.getItem("token")}`,
           },
           withCredentials: true, // needed for refreshToken cookie
         }

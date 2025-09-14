@@ -1,5 +1,7 @@
 import React, { useState } from "react";
+import BookingManagement from "./components/bookings/BookingManagement";
 import CustomerManagement from "./components/customers/CustomerManagement";
+import PaymentManagement from "./components/payments/PaymentManagement";
 import TicketUploadManager from "./components/tickets/TicketUploadManager";
 import Layout from "./components/ui/Layout";
 import VendorManagement from "./components/vendors/VendorManagement";
@@ -17,10 +19,10 @@ const AppContent: React.FC = () => {
         return <CustomerManagement />;
       case "vendors":
         return <VendorManagement />;
-      // case "bookings":
-      //   return <BookingManagement />;
-      // case "payments":
-      //   return <PaymentManagement />;
+      case "bookings":
+        return <BookingManagement />;
+      case "payments":
+        return <PaymentManagement />;
       // case "expenses":
       //   return <ExpenseManagement />;
       // case "refunds":

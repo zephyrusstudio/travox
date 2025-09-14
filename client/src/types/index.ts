@@ -26,13 +26,14 @@ export type CustomerTableProps = {
 };
 
 export interface Vendor {
-  vendor_id: string;
-  vendor_name: string;
-  service_type: string;
-  contact_person?: string;
+  id: string;
+  name: string;
+  serviceType: string;
+  pocName?: string;
   email?: string;
   phone?: string;
-  bank_details?: string;
+  gstin?: string;
+  accountId?: string;
 }
 
 export interface Service {

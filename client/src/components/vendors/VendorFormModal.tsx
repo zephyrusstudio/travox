@@ -3,12 +3,13 @@ import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 
 export type VendorFormState = {
-  vendor_name: string;
-  service_type: string;
-  contact_person: string;
+  name: string;
+  serviceType: string;
+  pocName: string;
   email: string;
   phone: string;
-  bank_details: string;
+  gstin: string;
+  accountId: string;
 };
 
 export type VendorFormModalProps = {
@@ -41,22 +42,23 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
             <input
               type="text"
               required
-              value={formData.vendor_name}
+              value={formData.name}
               onChange={(e) =>
-                setFormData({ ...formData, vendor_name: e.target.value })
+                setFormData({ ...formData, name: e.target.value })
               }
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Service Type *
             </label>
             <select
               required
-              value={formData.service_type}
+              value={formData.serviceType}
               onChange={(e) =>
-                setFormData({ ...formData, service_type: e.target.value })
+                setFormData({ ...formData, serviceType: e.target.value })
               }
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -68,19 +70,21 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
               ))}
             </select>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Contact Person
             </label>
             <input
               type="text"
-              value={formData.contact_person}
+              value={formData.pocName}
               onChange={(e) =>
-                setFormData({ ...formData, contact_person: e.target.value })
+                setFormData({ ...formData, pocName: e.target.value })
               }
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Email
@@ -94,6 +98,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Phone
@@ -107,26 +112,41 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              GSTIN
+            </label>
+            <input
+              type="text"
+              value={formData.gstin}
+              onChange={(e) =>
+                setFormData({ ...formData, gstin: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Account ID / Bank Details
+            </label>
+            <input
+              type="text"
+              value={formData.accountId}
+              onChange={(e) =>
+                setFormData({ ...formData, accountId: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Bank Details
-          </label>
-          <textarea
-            rows={3}
-            value={formData.bank_details}
-            onChange={(e) =>
-              setFormData({ ...formData, bank_details: e.target.value })
-            }
-            placeholder="Bank name, account number, IFSC code, etc."
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+
         <div className="flex items-center justify-end space-x-3 pt-4">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit">{/** same button copy **/}Save</Button>
+          <Button type="submit">Save</Button>
         </div>
       </form>
     </Modal>

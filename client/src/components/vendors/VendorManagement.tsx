@@ -20,12 +20,13 @@ const VendorManagement: React.FC = () => {
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
-    vendor_name: "",
-    service_type: "",
-    contact_person: "",
-    email: "",
+    name: "",
+    serviceType: "",
+    pocName: "",
     phone: "",
-    bank_details: "",
+    email: "",
+    gstin: "",
+    accountId: "",
   });
 
   // NOTE: placeholder; wire your real expenses source here
@@ -60,22 +61,24 @@ const VendorManagement: React.FC = () => {
     if (vendor) {
       setSelectedVendor(vendor);
       setFormData({
-        vendor_name: vendor.vendor_name,
-        service_type: vendor.service_type,
-        contact_person: vendor.contact_person || "",
+        name: vendor.name,
+        serviceType: vendor.serviceType,
+        pocName: vendor.pocName || "",
         email: vendor.email || "",
         phone: vendor.phone || "",
-        bank_details: vendor.bank_details || "",
+        gstin: vendor.gstin || "",
+        accountId: vendor.accountId || "",
       });
     } else {
       setSelectedVendor(null);
       setFormData({
-        vendor_name: "",
-        service_type: "",
-        contact_person: "",
+        name: "",
+        serviceType: "",
+        pocName: "",
         email: "",
         phone: "",
-        bank_details: "",
+        gstin: "",
+        accountId: "",
       });
     }
     setIsModalOpen(true);
@@ -85,12 +88,13 @@ const VendorManagement: React.FC = () => {
     setIsModalOpen(false);
     setSelectedVendor(null);
     setFormData({
-      vendor_name: "",
-      service_type: "",
-      contact_person: "",
+      name: "",
+      serviceType: "",
+      pocName: "",
       email: "",
       phone: "",
-      bank_details: "",
+      gstin: "",
+      accountId: "",
     });
   };
 

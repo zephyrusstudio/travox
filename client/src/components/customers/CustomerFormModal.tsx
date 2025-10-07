@@ -14,6 +14,13 @@ export type CustomerFormState = {
   aadhaarNo?: string;
   visaNo?: string;
   gstin?: string;
+  // New optional bank fields
+  bank_name?: string;
+  ifsc_code?: string;
+  branch_name?: string;
+  account_no?: string;
+  upi_id?: string;
+
   totalBookings?: number;
   createdBy?: string;
   updatedBy?: string;
@@ -51,6 +58,13 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     aadhaarNo: "",
     visaNo: "",
     gstin: "",
+    // New optional bank fields init
+    bank_name: "",
+    ifsc_code: "",
+    branch_name: "",
+    account_no: "",
+    upi_id: "",
+
     createdAt: "",
     id: "",
     orgId: "",
@@ -64,7 +78,8 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
   async function createCustomer() {
     const url = "http://localhost:3000/customers";
 
-    const data = {
+    // Build payload without making bank fields mandatory
+    const data: Record<string, unknown> = {
       name: formData?.name,
       email: formData?.email,
       phone: formData?.phone,
@@ -74,6 +89,13 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       visaNo: formData?.visaNo,
       gstin: formData?.gstin,
     };
+
+    // Append optional bank fields only if provided
+    if (formData.bank_name) data.bank_name = formData.bank_name;
+    if (formData.ifsc_code) data.ifsc_code = formData.ifsc_code;
+    if (formData.branch_name) data.branch_name = formData.branch_name;
+    if (formData.account_no) data.account_no = formData.account_no;
+    if (formData.upi_id) data.upi_id = formData.upi_id;
 
     try {
       const response = await axios.post(url, data, {
@@ -98,14 +120,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
 
   const submitForm: React.FormEventHandler = async (e) => {
     e.preventDefault();
-    // if (selectedCustomer) {
-    //   updateCustomer(selectedCustomer.customer_id, formData);
-    // } else {
-    //   addCustomer(formData);
-    // }
-    console.log(formData);
     await createCustomer();
-
     setSelectedCustomer(null);
   };
 
@@ -119,6 +134,20 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       aadhaarNo: "",
       visaNo: "",
       gstin: "",
+      bank_name: "",
+      ifsc_code: "",
+      branch_name: "",
+      account_no: "",
+      upi_id: "",
+      // below are not required when clearing
+      id: "",
+      orgId: "",
+      createdAt: "",
+      totalBookings: 0,
+      createdBy: "",
+      updatedBy: "",
+      isDeleted: false,
+      updatedAt: "",
     });
     setIsFormOpen(false);
     setSelectedCustomer(null);
@@ -136,6 +165,11 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       aadhaarNo: selectedCustomer?.aadhaarNo || "",
       visaNo: selectedCustomer?.visaNo || "",
       gstin: selectedCustomer?.gstin || "",
+      bank_name: selectedCustomer?.bank_name || "",
+      ifsc_code: selectedCustomer?.ifsc_code || "",
+      branch_name: selectedCustomer?.branch_name || "",
+      account_no: selectedCustomer?.account_no || "",
+      upi_id: selectedCustomer?.upi_id || "",
       id: selectedCustomer?.id || "",
       orgId: selectedCustomer?.orgId || "",
       createdAt: selectedCustomer?.createdAt || "",
@@ -254,6 +288,86 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               }
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+        </div>
+
+        {/* Bank Account section - optional */}
+        <div className="pt-6">
+          <div className="flex items-baseline justify-between">
+            <h3 className="text-lg font-bold text-gray-900">Bank Account</h3>
+            <span className="text-xs text-gray-500">Optional</span>
+          </div>
+
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Bank Name
+              </label>
+              <input
+                type="text"
+                value={formData.bank_name || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, bank_name: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Branch Name
+              </label>
+              <input
+                type="text"
+                value={formData.branch_name || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, branch_name: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Account Number
+              </label>
+              <input
+                type="text"
+                value={formData.account_no || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, account_no: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                inputMode="numeric"
+                autoComplete="off"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                IFSC Code
+              </label>
+              <input
+                type="text"
+                value={formData.ifsc_code || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, ifsc_code: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                autoCapitalize="characters"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                UPI ID
+              </label>
+              <input
+                type="text"
+                value={formData.upi_id || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, upi_id: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                autoComplete="off"
+              />
+            </div>
           </div>
         </div>
 

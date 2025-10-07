@@ -14,27 +14,11 @@ export async function startServer() {
   // CORS middleware for frontend testing
   app.use(
     cors({
-      origin: ["http://localhost:8080", "http://127.0.0.1:8080", "file://"],
-      credentials: true,
-      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", "x-refresh-token"],
-    })
-  );
-
-  // Basic middleware
-  app.use(json());
-  app.use(dateParserMiddleware); // Parse date strings to Date objects
-  app.use(cookieParser());
-  app.use(loggerMiddleware);
-
-  // CORS middleware for frontend testing
-  app.use(
-    cors({
       origin: [
         "http://localhost:5173",
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-        "file://",
+        "http://localhost:8080", 
+        "http://127.0.0.1:8080", 
+        "file://"
       ],
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -44,6 +28,7 @@ export async function startServer() {
 
   // Basic middleware
   app.use(json());
+  app.use(dateParserMiddleware); // Parse date strings to Date objects
   app.use(cookieParser());
   app.use(loggerMiddleware);
 
@@ -60,12 +45,6 @@ export async function startServer() {
   app.get("/ping", (req, res) => {
     res.status(200).json({ message: "pong" });
   });
-
-  // Serve auth test frontend
-  app.use(
-    "/auth-test-fe",
-    express.static(path.join(__dirname, "../auth-test-fe"))
-  );
 
   // API routes
   registerRoutes(app);

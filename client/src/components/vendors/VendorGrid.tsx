@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Building2, Edit, Trash2 } from "lucide-react";
 import React from "react";
 import { Vendor } from "../../types";
@@ -31,12 +32,14 @@ const VendorGrid: React.FC<VendorGridProps> = ({
   onDelete,
   getVendorExpenseTotal,
 }) => {
+  if (vendors?.length === 0) return;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {vendors.map((vendor) => {
-        const totalExpenses = getVendorExpenseTotal(vendor.vendor_id);
+        const totalExpenses = getVendorExpenseTotal(vendor.id);
         return (
-          <Card key={vendor.vendor_id} hover>
+          <Card key={vendor.id} hover>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
@@ -45,15 +48,13 @@ const VendorGrid: React.FC<VendorGridProps> = ({
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">
-                      {vendor.vendor_name}
+                      {vendor.name}
                     </h3>
                     <Badge
-                      variant={
-                        getServiceTypeVariant(vendor.service_type) as any
-                      }
+                      variant={getServiceTypeVariant(vendor.serviceType) as any}
                       size="sm"
                     >
-                      {vendor.service_type}
+                      {vendor.serviceType}
                     </Badge>
                   </div>
                 </div>
@@ -68,16 +69,16 @@ const VendorGrid: React.FC<VendorGridProps> = ({
                     variant="danger"
                     size="sm"
                     icon={Trash2}
-                    onClick={() => onDelete(vendor.vendor_id)}
+                    onClick={() => onDelete(vendor.id)}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                {vendor.contact_person && (
+                {vendor.pocName && (
                   <p className="text-sm text-gray-600">
                     <span className="font-medium">Contact:</span>{" "}
-                    {vendor.contact_person}
+                    {vendor.pocName}
                   </p>
                 )}
                 {vendor.email && (

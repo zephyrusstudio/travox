@@ -1,11 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// src/components/vendors/VendorManagement.tsx
 import { Plus, Search } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Vendor } from "../../types";
+import { ApiError, apiRequest } from "../../utils/apiConnector";
+import { errorToast } from "../../utils/toasts";
 import Button from "../ui/Button";
-import Card, { CardContent } from "../ui/Card";
 import VendorFormModal from "./VendorFormModal";
 import VendorGrid from "./VendorGrid";
-const serviceTypes = [
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Constants
+// ───────────────────────────────────────────────────────────────────────────────
+const SERVICE_TYPES = [
   "Flight",
   "Hotel",
   "Visa",
@@ -14,12 +21,28 @@ const serviceTypes = [
   "Other",
 ] as const;
 
+// Placeholder; replace with your real source
+type Expense = { vendor_id: string; amount: number };
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Component
+// ───────────────────────────────────────────────────────────────────────────────
 const VendorManagement: React.FC = () => {
-  const [vendors, setVendors] = useState<any[]>([]);
+  // State
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<{
+    name: string;
+    serviceType: string;
+    pocName: string;
+    phone: string;
+    email: string;
+    gstin: string;
+    accountId: string;
+  }>({
     name: "",
     serviceType: "",
     pocName: "",
@@ -29,91 +52,113 @@ const VendorManagement: React.FC = () => {
     accountId: "",
   });
 
-  // NOTE: placeholder; wire your real expenses source here
-  const expenses: Array<{ vendor_id: string; amount: number }> = [];
+  // Replace with API/selector
+  const expenses: Expense[] = [];
 
-  const filteredVendors = useMemo(
-    () =>
-      vendors.filter(
-        (vendor) =>
-          vendor.vendor_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          vendor.service_type
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          vendor.contact_person
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase())
-      ),
-    [vendors, searchTerm]
-  );
-
-  const getVendorExpenseTotal = (vendorId: string) =>
-    expenses
-      .filter((e) => e.vendor_id === vendorId)
-      .reduce((t, e) => t + e.amount, 0);
+  // Derived
+  const filteredVendors = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return vendors;
+    return vendors.filter((v) => {
+      const name = v.name?.toLowerCase() || "";
+      const type = v.serviceType?.toLowerCase() || "";
+      const poc = v.pocName?.toLowerCase() || "";
+      return name.includes(q) || type.includes(q) || poc.includes(q);
+    });
+  }, [vendors, searchTerm]);
 
   const totalExpensesAmount = useMemo(
-    () => expenses.reduce((t, e) => t + e.amount, 0),
+    () => expenses.reduce((t, e) => t + (e.amount || 0), 0),
     [expenses]
   );
 
-  const handleOpenModal = (vendor?: Vendor) => {
-    if (vendor) {
-      setSelectedVendor(vendor);
-      setFormData({
-        name: vendor.name,
-        serviceType: vendor.serviceType,
-        pocName: vendor.pocName || "",
-        email: vendor.email || "",
-        phone: vendor.phone || "",
-        gstin: vendor.gstin || "",
-        accountId: vendor.accountId || "",
-      });
-    } else {
-      setSelectedVendor(null);
-      setFormData({
-        name: "",
-        serviceType: "",
-        pocName: "",
-        email: "",
-        phone: "",
-        gstin: "",
-        accountId: "",
-      });
-    }
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedVendor(null);
+  // Helpers
+  const resetForm = useCallback(() => {
     setFormData({
       name: "",
       serviceType: "",
       pocName: "",
-      email: "",
       phone: "",
+      email: "",
       gstin: "",
       accountId: "",
     });
-  };
+  }, []);
 
-  const handleSubmit: React.FormEventHandler = (e) => {
-    e.preventDefault();
-    // if (selectedVendor) {
-    //   updateVendor(selectedVendor.vendor_id, formData);
-    // } else {
-    //   addVendor(formData);
-    // }
-    handleCloseModal();
-  };
-
-  const handleDelete = (vendorId: string) => {
-    if (window.confirm("Are you sure you want to delete this vendor?")) {
-      // deleteVendor(vendorId);
+  const fetchVendors = async () => {
+    try {
+      const res = await apiRequest<any>({ method: "GET", url: "/vendors" });
+      setVendors(res?.data ?? []);
+    } catch (e) {
+      const err = e as ApiError;
+      errorToast("Failed to fetch vendors");
     }
   };
 
+  const getVendorExpenseTotal = useCallback(
+    (vendorId: string) =>
+      expenses
+        .filter((e) => e.vendor_id === vendorId)
+        .reduce((t, e) => t + (e.amount || 0), 0),
+    [expenses]
+  );
+
+  // Handlers
+  const handleOpenModal = useCallback(
+    (vendor?: Vendor) => {
+      if (vendor) {
+        setSelectedVendor(vendor);
+        setFormData({
+          name: vendor.name || "",
+          serviceType: vendor.serviceType || "",
+          pocName: vendor.pocName || "",
+          email: vendor.email || "",
+          phone: vendor.phone || "",
+          gstin: vendor.gstin || "",
+          accountId: vendor.accountId || "",
+        });
+      } else {
+        setSelectedVendor(null);
+        resetForm();
+      }
+      setIsModalOpen(true);
+    },
+    [resetForm]
+  );
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+    setSelectedVendor(null);
+    resetForm();
+  }, [resetForm]);
+
+  const handleSubmit: React.FormEventHandler = useCallback(
+    (e) => {
+      e.preventDefault();
+      // TODO: wire to API
+      // if (selectedVendor) {
+      //   updateVendor(selectedVendor.id, formData)
+      //     .then(() => refreshList());
+      // } else {
+      //   createVendor(formData)
+      //     .then(() => refreshList());
+      // }
+      handleCloseModal();
+    },
+    [handleCloseModal /*, selectedVendor, formData */]
+  );
+
+  const handleDelete = useCallback((vendorId: string) => {
+    if (!window.confirm("Delete this vendor?")) return;
+    // TODO: wire to API
+    // deleteVendor(vendorId).then(() => refreshList());
+  }, []);
+
+  useEffect(() => {
+    fetchVendors();
+  }, []);
+
+  // Render
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -132,10 +177,10 @@ const VendorManagement: React.FC = () => {
       </div>
 
       {/* Search and Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="md:col-span-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+      <div className="grid grid-cols-1  gap-6">
+        <div className="">
+          <label className="relative block">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
               placeholder="Search vendors..."
@@ -143,25 +188,11 @@ const VendorManagement: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-          </div>
+          </label>
         </div>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-blue-600">{vendors.length}</p>
-            <p className="text-sm text-gray-600">Total Vendors</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">
-              ₹{totalExpensesAmount.toLocaleString()}
-            </p>
-            <p className="text-sm text-gray-600">Total Expenses</p>
-          </CardContent>
-        </Card>
       </div>
 
-      {/* Vendor Cards Grid */}
+      {/* Grid */}
       <VendorGrid
         vendors={filteredVendors}
         onEdit={handleOpenModal}
@@ -169,7 +200,7 @@ const VendorManagement: React.FC = () => {
         getVendorExpenseTotal={getVendorExpenseTotal}
       />
 
-      {/* Add/Edit Vendor Modal */}
+      {/* Modal */}
       <VendorFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -177,7 +208,7 @@ const VendorManagement: React.FC = () => {
         formData={formData}
         setFormData={setFormData}
         onSubmit={handleSubmit}
-        serviceTypes={serviceTypes as unknown as string[]}
+        serviceTypes={[...SERVICE_TYPES] as unknown as string[]}
       />
     </div>
   );

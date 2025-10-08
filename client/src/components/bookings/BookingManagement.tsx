@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // components/bookings/BookingManagement.tsx
 import {
   Calendar,
@@ -9,8 +10,10 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import React, { useState } from "react";
-import { Booking } from "../../types";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Booking, Customer } from "../../types";
+import { ApiError, apiRequest } from "../../utils/apiConnector";
+import { errorToast, successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
@@ -22,7 +25,15 @@ import Table, {
   TableRow,
 } from "../ui/Table";
 import BookingForm from "./BookingForm";
-import { BookingStatus, TicketData, TravelCategory } from "./booking.types";
+import {
+  BookingStatus,
+  CustomerLite,
+  NewCustomerData,
+  TicketData,
+  TravelCategory,
+} from "./booking.types";
+
+type BookingRow = Booking & { pnr?: string };
 
 const BookingManagement: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,20 +42,179 @@ const BookingManagement: React.FC = () => {
   const [selectedTicketData, setSelectedTicketData] =
     useState<TicketData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const bookings = [];
-  const customers = [];
-  const addCustomer = (customer: any) => {
-    //
-  };
+  const [bookings, setBookings] = useState<BookingRow[]>([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [bookingsError, setBookingsError] = useState<string | null>(null);
+  const [customers, setCustomers] = useState<CustomerLite[]>([]);
+  const [customersLoading, setCustomersLoading] = useState(false);
+  const [customersError, setCustomersError] = useState<string | null>(null);
 
-  const filteredBookings = bookings.filter(
-    (b) =>
-      b.package_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.status.toLowerCase().includes(searchTerm.toLowerCase())
+  const fetchBookings = useCallback(async () => {
+    setBookingsLoading(true);
+    setBookingsError(null);
+    try {
+      const res = await apiRequest<any>({
+        method: "GET",
+        url: "/bookings",
+        params: { limit: 50, unmask: true },
+      });
+
+      const isHttpError = typeof res?.status === "number" && res.status >= 400;
+      const isFailureStatus =
+        typeof res?.status === "string" && res.status !== "success";
+
+      if (!res || isHttpError || isFailureStatus) {
+        const message =
+          res?.data?.message || res?.message || "Failed to load bookings";
+        throw new Error(message);
+      }
+
+      const items: any[] = Array.isArray(res?.data) ? res.data : [];
+      const normalizeStatus = (status: string): BookingStatus => {
+        const normalized = (status || "").toLowerCase();
+        if (normalized === BookingStatus.Confirmed)
+          return BookingStatus.Confirmed;
+        if (normalized === BookingStatus.Cancelled)
+          return BookingStatus.Cancelled;
+        return BookingStatus.Pending;
+      };
+
+      const mapped: BookingRow[] = items.map((record) => {
+        const bookingDate: string = record?.bookingDate || "";
+        const travelStart: string =
+          record?.travelStartDate || record?.journeyDate || bookingDate || "";
+        const travelEnd: string =
+          record?.travelEndDate || record?.returnDate || bookingDate || "";
+        const paxCount =
+          record?.paxCount ??
+          (Array.isArray(record?.pax) ? record.pax.length : 0);
+
+        const booking: BookingRow = {
+          booking_id: record?.id ? String(record.id) : "",
+          customer_id: record?.customerId ? String(record.customerId) : "",
+          customer_name:
+            record?.customerName ||
+            record?.primaryPaxName ||
+            record?.customer?.name ||
+            "",
+          package_name: record?.packageName || "Untitled Package",
+          booking_date: bookingDate,
+          travel_start_date: travelStart,
+          travel_end_date: travelEnd,
+          pax_count: paxCount,
+          total_amount: Number(record?.totalAmount) || 0,
+          advance_received: Number(record?.advanceAmount) || 0,
+          balance_amount:
+            Number(
+              record?.dueAmount ??
+                (record?.totalAmount ?? 0) - (record?.paidAmount ?? 0)
+            ) || 0,
+          status: normalizeStatus(record?.status),
+        };
+
+        return { ...booking, pnr: record?.pnrNo || undefined };
+      });
+
+      setBookings(mapped);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to load bookings. Please try again.";
+      setBookingsError(message);
+    } finally {
+      setBookingsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
+
+  const fetchCustomers = useCallback(async () => {
+    setCustomersLoading(true);
+    setCustomersError(null);
+    try {
+      const res = await apiRequest<{ data: Customer[] }>({
+        method: "GET",
+        url: "/customers",
+      });
+      const mapped = (res?.data ?? []).map((c) => ({
+        customer_id: c.id,
+        full_name: c.name,
+        email: c.email,
+        phone: c.phone,
+        passportNo: c.passportNo,
+        gstin: c.gstin,
+      }));
+      setCustomers(mapped);
+    } catch (err) {
+      const apiErr = err as ApiError;
+      setCustomersError(apiErr.message ?? "Failed to load customers");
+    } finally {
+      setCustomersLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
+
+  const addCustomer = useCallback(
+    async (customer: NewCustomerData) => {
+      setCustomersError(null);
+      try {
+        const payload = {
+          name: customer.full_name.trim(),
+          email: customer.email || undefined,
+          phone: customer.phone || undefined,
+          address: customer.address || undefined,
+          passportNo: customer.passportNo || undefined,
+          gstin: customer.gstin || undefined,
+        };
+
+        const response = await apiRequest<any>({
+          method: "POST",
+          url: "/customers",
+          data: payload,
+          headers: { Accept: "*/*", "Content-Type": "application/json" },
+        });
+
+        if (response?.status !== "success") {
+          throw new Error(response?.message || "Unable to add customer");
+        }
+
+        successToast("Customer added");
+        await fetchCustomers();
+      } catch (err) {
+        const apiErr = err as ApiError;
+        const message = apiErr.message ?? "Failed to add customer";
+        setCustomersError(message);
+        errorToast(message);
+      }
+    },
+    [fetchCustomers]
   );
 
-  const handleViewTicket = (booking: Booking) => {
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
+  const filteredBookings = useMemo(() => {
+    if (!normalizedSearch) return bookings;
+    return bookings.filter((b) => {
+      const packageName = (b.package_name || "").toLowerCase();
+      const customerName = (b.customer_name || "").toLowerCase();
+      const status = (b.status || "").toLowerCase();
+      const pnr = ((b as any).pnr || "").toLowerCase();
+      return (
+        packageName.includes(normalizedSearch) ||
+        customerName.includes(normalizedSearch) ||
+        status.includes(normalizedSearch) ||
+        pnr.includes(normalizedSearch)
+      );
+    });
+  }, [bookings, normalizedSearch]);
+
+  const handleViewTicket = (booking: BookingRow) => {
     const mock: TicketData = {
       fileName: `${booking.package_name.replace(/\s+/g, "_")}_ticket.pdf`,
       pnr: (booking as any).pnr || "ABC123",
@@ -83,7 +253,12 @@ const BookingManagement: React.FC = () => {
     }
   };
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString("en-IN");
+  const formatDate = (d?: string) => {
+    if (!d) return "-";
+    const parsed = new Date(d);
+    if (Number.isNaN(parsed.getTime())) return "-";
+    return parsed.toLocaleDateString("en-IN");
+  };
 
   const getStatusVariant = (status: string) => {
     switch (status as BookingStatus) {
@@ -98,17 +273,50 @@ const BookingManagement: React.FC = () => {
     }
   };
 
-  const stats = (() => {
-    const totalBookings = 10;
-    const confirmedBookings = 11;
-    const totalRevenue = 11;
-    const pendingAmount = 12;
+  const stats = useMemo(() => {
+    const totalBookings = bookings.length;
+    const confirmedBookings = bookings.filter(
+      (b) => b.status === BookingStatus.Confirmed
+    ).length;
+    const totalRevenue = bookings.reduce(
+      (sum, b) => sum + (Number(b.total_amount) || 0),
+      0
+    );
+    const pendingAmount = bookings.reduce(
+      (sum, b) => sum + (Number(b.balance_amount) || 0),
+      0
+    );
     return { totalBookings, confirmedBookings, totalRevenue, pendingAmount };
-  })();
+  }, [bookings]);
 
-  const submitBooking = (payload: any) => {
-    //
-  };
+  const submitBooking = useCallback(
+    async (payload: any) => {
+      const response = await apiRequest<any>({
+        method: "POST",
+        url: "/bookings",
+        data: payload,
+        headers: { Accept: "*/*", "Content-Type": "application/json" },
+      });
+
+      const isHttpError =
+        typeof response?.status === "number" && response.status >= 400;
+      const isFailureStatus =
+        typeof response?.status === "string" && response.status !== "success";
+
+      if (!response || isHttpError || isFailureStatus) {
+        const message =
+          response?.data?.message ||
+          response?.message ||
+          "Failed to create booking";
+        throw new Error(message);
+      }
+
+      successToast("Booking added");
+      await fetchBookings();
+      return response;
+    },
+    [fetchBookings]
+  );
 
   return (
     <div className="space-y-6">
@@ -181,6 +389,12 @@ const BookingManagement: React.FC = () => {
         </div>
       </div>
 
+      {bookingsError && (
+        <div className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          {bookingsError}
+        </div>
+      )}
+
       {/* Table */}
       <Card>
         <CardHeader>
@@ -200,93 +414,111 @@ const BookingManagement: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredBookings.map((b) => (
-                <TableRow key={b.booking_id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {b.package_name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Booked: {formatDate(b.booking_date)}
-                      </p>
-                      {(b as any).pnr && (
-                        <p className="text-xs text-blue-600 font-mono">
-                          PNR: {(b as any).pnr}
-                        </p>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <p className="font-medium text-gray-900">
-                      {b.customer_name}
-                    </p>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="text-sm text-gray-900">
-                        {formatDate(b.travel_start_date)}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        to {formatDate(b.travel_end_date)}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="default" size="sm">
-                      {b.pax_count} {b.pax_count === 1 ? "person" : "people"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        ₹{b.total_amount.toLocaleString()}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Paid: ₹{b.advance_received.toLocaleString()}
-                      </p>
-                      {b.balance_amount > 0 && (
-                        <p className="text-sm text-red-600">
-                          Due: ₹{b.balance_amount.toLocaleString()}
-                        </p>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={getStatusVariant(b.status) as any}
-                      size="sm"
-                    >
-                      {b.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      {(b as any).ticketId && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          icon={Eye}
-                          onClick={() => handleViewTicket(b)}
-                          title="View Ticket"
-                        />
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        icon={Edit}
-                        onClick={() => handleOpenModal(b)}
-                      />
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        icon={Trash2}
-                        onClick={() => handleDelete(b.booking_id)}
-                      />
+              {bookingsLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7}>
+                    <div className="py-8 text-center text-sm text-gray-500">
+                      Loading bookings...
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : filteredBookings.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7}>
+                    <div className="py-8 text-center text-sm text-gray-500">
+                      No bookings found.
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredBookings.map((b) => (
+                  <TableRow key={b.booking_id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {b.package_name}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Booked: {formatDate(b.booking_date)}
+                        </p>
+                        {(b as any).pnr && (
+                          <p className="text-xs text-blue-600 font-mono">
+                            PNR: {(b as any).pnr}
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-medium text-gray-900">
+                        {b.customer_name || "-"}
+                      </p>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="text-sm text-gray-900">
+                          {formatDate(b.travel_start_date)}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          to {formatDate(b.travel_end_date)}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="default" size="sm">
+                        {b.pax_count} {b.pax_count === 1 ? "person" : "people"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          ₹{b.total_amount.toLocaleString()}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Paid: ₹{b.advance_received.toLocaleString()}
+                        </p>
+                        {b.balance_amount > 0 && (
+                          <p className="text-sm text-red-600">
+                            Due: ₹{b.balance_amount.toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={getStatusVariant(b.status) as any}
+                        size="sm"
+                      >
+                        {b.status.toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {(b as any).pnr && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            icon={Eye}
+                            onClick={() => handleViewTicket(b)}
+                            title="View Ticket"
+                          />
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          icon={Edit}
+                          onClick={() => handleOpenModal(b)}
+                        />
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          icon={Trash2}
+                          onClick={() => handleDelete(b.booking_id)}
+                        />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -382,9 +614,17 @@ const BookingManagement: React.FC = () => {
         title={selectedBooking ? "Edit Booking" : "Add New Booking"}
         size="xl"
       >
+        {customersLoading && (
+          <div className="mb-4 text-sm text-gray-500">Loading customers...</div>
+        )}
+        {customersError && (
+          <div className="mb-4 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+            {customersError}
+          </div>
+        )}
         <BookingForm
           selectedBooking={selectedBooking}
-          customers={customers as any}
+          customers={customers}
           onAddCustomer={addCustomer}
           onSubmitBooking={submitBooking}
           onCancel={resetAndClose}

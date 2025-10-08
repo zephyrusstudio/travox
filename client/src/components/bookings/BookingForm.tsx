@@ -1,232 +1,73 @@
-// components/bookings/BookingForm.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Bot, CheckCircle, Loader, Upload, X } from "lucide-react";
-import React, { useRef, useState } from "react";
-import { Booking } from "../../types";
+import React, { useRef } from "react";
 import Button from "../ui/Button";
 import {
-  AIDataState,
-  BookingFormState,
   BookingStatus,
   CustomerLite,
-  ExtractedData,
-  Gender,
   NewCustomerData,
   TravelCategory,
 } from "./booking.types";
+import { useBookingForm } from "./useBookingForm";
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Types
+// ──────────────────────────────────────────────────────────────────────────────
 
 type Props = {
-  selectedBooking: Booking | null;
+  selectedBooking: any | null; // keep as any to avoid leaking app-specific shape
   customers: CustomerLite[];
   onAddCustomer: (c: NewCustomerData) => void;
-  onSubmitBooking: (payload: any) => void; // uses app’s booking shape
+  onSubmitBooking: (payload: any) => Promise<any> | any; // app's booking shape
   onCancel: () => void;
 };
 
-const BookingForm: React.FC<Props> = ({
-  selectedBooking,
-  customers,
-  onAddCustomer,
-  onSubmitBooking,
-  onCancel,
-}) => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [processingComplete, setProcessingComplete] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+// ──────────────────────────────────────────────────────────────────────────────
+// Small UI primitives
+// ──────────────────────────────────────────────────────────────────────────────
+
+const Labeled: React.FC<{ label: string; children: React.ReactNode }> = ({
+  label,
+  children,
+}) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label}
+    </label>
+    {children}
+  </div>
+);
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Component
+// ──────────────────────────────────────────────────────────────────────────────
+
+const BookingForm: React.FC<Props> = (props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showAddCustomer, setShowAddCustomer] = useState(false);
-
-  const [aiData, setAiData] = useState<AIDataState>({
-    pnr: "",
-    route: "",
-    airline: "",
-    flightNumber: "",
-    journeyDate: "",
-    journeyTime: "",
-    returnDate: "",
-    bookingAmount: 0,
-    travelCategory: TravelCategory.Domestic,
-    paxList: [],
-  });
-
-  const [formData, setFormData] = useState<BookingFormState>(
-    selectedBooking
-      ? {
-          customer_id: selectedBooking.customer_id,
-          customer_name: selectedBooking.customer_name || "",
-          package_name: selectedBooking.package_name,
-          booking_date: selectedBooking.booking_date,
-          travel_start_date: selectedBooking.travel_start_date,
-          travel_end_date: selectedBooking.travel_end_date,
-          pax_count: selectedBooking.pax_count,
-          total_amount: selectedBooking.total_amount,
-          advance_received: selectedBooking.advance_received,
-          status: selectedBooking.status as BookingStatus,
-        }
-      : {
-          customer_id: "",
-          customer_name: "",
-          package_name: "",
-          booking_date: new Date().toISOString().split("T")[0],
-          travel_start_date: "",
-          travel_end_date: "",
-          pax_count: 1,
-          total_amount: 0,
-          advance_received: 0,
-          status: BookingStatus.Pending,
-        }
-  );
-
-  const [newCustomerData, setNewCustomerData] = useState<NewCustomerData>({
-    full_name: "",
-    email: "",
-    phone: "",
-    address: "",
-    passportNo: "",
-    gstin: "",
-  });
-
-  const extractDataFromFile = async (file: File): Promise<ExtractedData> => {
-    await new Promise((r) => setTimeout(r, 3000));
-    return {
-      paxList: [
-        { name: "John Doe", age: 35, gender: Gender.Male, isPrimary: true },
-        { name: "Jane Doe", age: 32, gender: Gender.Female, isPrimary: false },
-      ],
-      bookingDate: new Date().toISOString().split("T")[0],
-      journeyDate: new Date(Date.now() + 7 * 864e5).toISOString().split("T")[0],
-      journeyTime: "10:30",
-      returnDate: new Date(Date.now() + 14 * 864e5).toISOString().split("T")[0],
-      pnr: "ABC123",
-      bookingAmount: 45000,
-      travelCategory: TravelCategory.International,
-      airline: "Air India",
-      flightNumber: "AI 131",
-      route: "DEL-LHR",
-    };
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.includes("pdf") && !file.type.includes("image")) {
-      alert("Please upload only PDF files or images");
-      return;
-    }
-    setUploadedFile(file);
-    setIsProcessing(true);
-    setProcessingComplete(false);
-    try {
-      const extracted = await extractDataFromFile(file);
-      setAiData({
-        pnr: extracted.pnr,
-        route: extracted.route || "",
-        airline: extracted.airline || "",
-        flightNumber: extracted.flightNumber || "",
-        journeyDate: extracted.journeyDate,
-        journeyTime: extracted.journeyTime,
-        returnDate: extracted.returnDate || "",
-        bookingAmount: extracted.bookingAmount,
-        travelCategory: extracted.travelCategory,
-        paxList: extracted.paxList,
-      });
-      setFormData((prev) => ({
-        ...prev,
-        package_name: `${extracted.route} - ${extracted.travelCategory} Trip`,
-        booking_date: extracted.bookingDate,
-        travel_start_date: extracted.journeyDate,
-        travel_end_date: extracted.returnDate || extracted.journeyDate,
-        pax_count: extracted.paxList.length,
-        total_amount: extracted.bookingAmount,
-      }));
-      setProcessingComplete(true);
-    } catch {
-      alert("Error processing file. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleCustomerSelect = (customerId: string) => {
-    const customer = customers.find((c) => c.customer_id === customerId);
-    if (!customer) return;
-    setFormData((s) => ({
-      ...s,
-      customer_id: customerId,
-      customer_name: customer.full_name,
-    }));
-  };
-
-  const addPassenger = () =>
-    setAiData((s) => ({
-      ...s,
-      paxList: [...s.paxList, { name: "", isPrimary: false }],
-    }));
-
-  const removePassenger = (idx: number) =>
-    setAiData((s) => ({
-      ...s,
-      paxList: s.paxList.filter((_, i) => i !== idx),
-    }));
-
-  const updatePassenger = (
-    idx: number,
-    field: keyof AIDataState["paxList"][number],
-    value: any
-  ) =>
-    setAiData((s) => ({
-      ...s,
-      paxList: s.paxList.map((p, i) =>
-        i === idx ? { ...p, [field]: value } : p
-      ),
-    }));
-
-  const handleAddNewCustomer = () => {
-    if (!newCustomerData.full_name.trim()) {
-      alert("Customer name is required");
-      return;
-    }
-    onAddCustomer(newCustomerData);
-    setTimeout(() => {
-      const newC = customers.find(
-        (c) => c.full_name === newCustomerData.full_name
-      );
-      if (newC) {
-        setFormData((prev) => ({
-          ...prev,
-          customer_id: newC.customer_id,
-          customer_name: newC.full_name,
-        }));
-      }
-    }, 100);
-    setNewCustomerData({
-      full_name: "",
-      email: "",
-      phone: "",
-      address: "",
-      passportNo: "",
-      gstin: "",
-    });
-    setShowAddCustomer(false);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.customer_id) {
-      alert("Please select a customer or add a new customer");
-      return;
-    }
-    const payload: any = {
-      ...formData,
-      balance_amount: formData.total_amount - formData.advance_received,
-      ...(aiData.pnr && { pnr: aiData.pnr, ticketId: "generated-ticket-id" }),
-    };
-    onSubmitBooking(payload);
-    onCancel();
-  };
+  const {
+    // state
+    aiData,
+    formData,
+    newCustomerData,
+    ui,
+    // derived
+    balance,
+    // handlers
+    handleFileUpload,
+    handleCustomerSelect,
+    setAiData,
+    setFormField,
+    setNewCustomerField,
+    addPassenger,
+    removePassenger,
+    updatePassenger,
+    handleAddNewCustomer,
+    handleSubmit,
+  } = useBookingForm(props);
 
   return (
     <div className="space-y-6">
-      {!selectedBooking && (
+      {!props.selectedBooking && (
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
           <div className="text-center">
             <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -245,21 +86,21 @@ const BookingForm: React.FC<Props> = ({
             />
             <Button
               onClick={() => fileInputRef.current?.click()}
-              disabled={isProcessing}
-              icon={isProcessing ? Loader : Upload}
+              disabled={ui.isProcessing}
+              icon={ui.isProcessing ? Loader : Upload}
             >
-              {isProcessing ? "Processing..." : "Choose File"}
+              {ui.isProcessing ? "Processing..." : "Choose File"}
             </Button>
-            {uploadedFile && (
+            {ui.uploadedFileName && (
               <p className="text-sm text-gray-600 mt-2">
-                Uploaded: {uploadedFile.name}
+                Uploaded: {ui.uploadedFileName}
               </p>
             )}
           </div>
         </div>
       )}
 
-      {isProcessing && (
+      {ui.isProcessing && (
         <div className="bg-blue-50 rounded-lg p-4">
           <div className="flex items-center space-x-3">
             <Loader className="w-6 h-6 text-blue-600 animate-spin" />
@@ -275,121 +116,84 @@ const BookingForm: React.FC<Props> = ({
         </div>
       )}
 
-      {!selectedBooking && (
+      {!props.selectedBooking && (
         <div className="border border-gray-200 rounded-lg p-6">
           <div className="flex items-center space-x-2 mb-4">
             <Bot className="w-5 h-5 text-blue-600" />
             <h4 className="font-semibold text-gray-900">
               AI Extracted Data (Editable)
             </h4>
-            {processingComplete && (
+            {ui.processingComplete && (
               <CheckCircle className="w-5 h-5 text-green-600" />
             )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                PNR
-              </label>
+            <Labeled label="PNR">
               <input
                 type="text"
                 value={aiData.pnr}
-                onChange={(e) => setAiData({ ...aiData, pnr: e.target.value })}
+                onChange={(e) => setAiData({ pnr: e.target.value })}
                 placeholder="Enter PNR"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Route
-              </label>
+            </Labeled>
+            <Labeled label="Route">
               <input
                 type="text"
                 value={aiData.route}
-                onChange={(e) =>
-                  setAiData({ ...aiData, route: e.target.value })
-                }
+                onChange={(e) => setAiData({ route: e.target.value })}
                 placeholder="e.g., DEL-BOM"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Airline
-              </label>
+            </Labeled>
+            <Labeled label="Airline">
               <input
                 type="text"
                 value={aiData.airline}
-                onChange={(e) =>
-                  setAiData({ ...aiData, airline: e.target.value })
-                }
+                onChange={(e) => setAiData({ airline: e.target.value })}
                 placeholder="e.g., Air India"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Flight Number
-              </label>
+            </Labeled>
+            <Labeled label="Flight Number">
               <input
                 type="text"
                 value={aiData.flightNumber}
-                onChange={(e) =>
-                  setAiData({ ...aiData, flightNumber: e.target.value })
-                }
+                onChange={(e) => setAiData({ flightNumber: e.target.value })}
                 placeholder="e.g., AI 131"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Journey Date
-              </label>
+            </Labeled>
+            <Labeled label="Journey Date">
               <input
                 type="date"
                 value={aiData.journeyDate}
-                onChange={(e) =>
-                  setAiData({ ...aiData, journeyDate: e.target.value })
-                }
+                onChange={(e) => setAiData({ journeyDate: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Journey Time
-              </label>
+            </Labeled>
+            <Labeled label="Journey Time">
               <input
                 type="time"
                 value={aiData.journeyTime}
-                onChange={(e) =>
-                  setAiData({ ...aiData, journeyTime: e.target.value })
-                }
+                onChange={(e) => setAiData({ journeyTime: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Return Date
-              </label>
+            </Labeled>
+            <Labeled label="Return Date">
               <input
                 type="date"
                 value={aiData.returnDate}
-                onChange={(e) =>
-                  setAiData({ ...aiData, returnDate: e.target.value })
-                }
+                onChange={(e) => setAiData({ returnDate: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Travel Category
-              </label>
+            </Labeled>
+            <Labeled label="Travel Category">
               <select
                 value={aiData.travelCategory}
                 onChange={(e) =>
                   setAiData({
-                    ...aiData,
                     travelCategory: e.target.value as TravelCategory,
                   })
                 }
@@ -401,24 +205,18 @@ const BookingForm: React.FC<Props> = ({
                 </option>
                 <option value={TravelCategory.Corporate}>Corporate</option>
               </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Booking Amount
-              </label>
+            </Labeled>
+            <Labeled label="Booking Amount">
               <input
                 type="number"
                 value={aiData.bookingAmount}
                 onChange={(e) =>
-                  setAiData({
-                    ...aiData,
-                    bookingAmount: parseFloat(e.target.value) || 0,
-                  })
+                  setAiData({ bookingAmount: parseFloat(e.target.value) || 0 })
                 }
                 placeholder="Enter amount"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
+            </Labeled>
           </div>
 
           <div className="mt-6">
@@ -470,8 +268,8 @@ const BookingForm: React.FC<Props> = ({
                     className="w-24 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Gender</option>
-                    <option value={Gender.Male}>Male</option>
-                    <option value={Gender.Female}>Female</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
                   </select>
                   <label className="flex items-center space-x-2">
                     <input
@@ -509,7 +307,7 @@ const BookingForm: React.FC<Props> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Customer *
               </label>
-              {!showAddCustomer ? (
+              {!ui.showAddCustomer ? (
                 <div className="flex space-x-2">
                   <select
                     required
@@ -518,7 +316,7 @@ const BookingForm: React.FC<Props> = ({
                     className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select Customer</option>
-                    {customers.map((c) => (
+                    {props.customers.map((c) => (
                       <option key={c.customer_id} value={c.customer_id}>
                         {c.full_name}
                       </option>
@@ -527,7 +325,7 @@ const BookingForm: React.FC<Props> = ({
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setShowAddCustomer(true)}
+                    onClick={ui.toggleAddCustomer}
                   >
                     Add New
                   </Button>
@@ -543,76 +341,52 @@ const BookingForm: React.FC<Props> = ({
                       variant="ghost"
                       size="sm"
                       icon={X}
-                      onClick={() => setShowAddCustomer(false)}
+                      onClick={ui.toggleAddCustomer}
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Full Name *
-                      </label>
+                    <Labeled label="Full Name *">
                       <input
                         type="text"
                         required
                         value={newCustomerData.full_name}
                         onChange={(e) =>
-                          setNewCustomerData({
-                            ...newCustomerData,
-                            full_name: e.target.value,
-                          })
+                          setNewCustomerField("full_name", e.target.value)
                         }
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email
-                      </label>
+                    </Labeled>
+                    <Labeled label="Email">
                       <input
                         type="email"
                         value={newCustomerData.email}
                         onChange={(e) =>
-                          setNewCustomerData({
-                            ...newCustomerData,
-                            email: e.target.value,
-                          })
+                          setNewCustomerField("email", e.target.value)
                         }
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone
-                      </label>
+                    </Labeled>
+                    <Labeled label="Phone">
                       <input
                         type="tel"
                         value={newCustomerData.phone}
                         onChange={(e) =>
-                          setNewCustomerData({
-                            ...newCustomerData,
-                            phone: e.target.value,
-                          })
+                          setNewCustomerField("phone", e.target.value)
                         }
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Passport Number
-                      </label>
+                    </Labeled>
+                    <Labeled label="Passport Number">
                       <input
                         type="text"
                         value={newCustomerData.passportNo}
                         onChange={(e) =>
-                          setNewCustomerData({
-                            ...newCustomerData,
-                            passportNo: e.target.value,
-                          })
+                          setNewCustomerField("passportNo", e.target.value)
                         }
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                    </div>
+                    </Labeled>
                   </div>
 
                   <div className="mt-3">
@@ -629,134 +403,94 @@ const BookingForm: React.FC<Props> = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Package Name *
-                </label>
+              <Labeled label="Package Name *">
                 <input
                   type="text"
                   required
                   value={formData.package_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, package_name: e.target.value })
-                  }
+                  onChange={(e) => setFormField("package_name", e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Booking Date *
-                </label>
+              </Labeled>
+              <Labeled label="Booking Date *">
                 <input
                   type="date"
                   required
                   value={formData.booking_date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, booking_date: e.target.value })
-                  }
+                  onChange={(e) => setFormField("booking_date", e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Travel Start Date *
-                </label>
+              </Labeled>
+              <Labeled label="Travel Start Date *">
                 <input
                   type="date"
                   required
                   value={formData.travel_start_date}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      travel_start_date: e.target.value,
-                    })
+                    setFormField("travel_start_date", e.target.value)
                   }
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Travel End Date *
-                </label>
+              </Labeled>
+              <Labeled label="Travel End Date *">
                 <input
                   type="date"
                   required
                   value={formData.travel_end_date}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      travel_end_date: e.target.value,
-                    })
+                    setFormField("travel_end_date", e.target.value)
                   }
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Number of Passengers *
-                </label>
+              </Labeled>
+              <Labeled label="Number of Passengers *">
                 <input
                   type="number"
                   required
                   min={1}
                   value={formData.pax_count}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      pax_count: parseInt(e.target.value),
-                    })
+                    setFormField("pax_count", parseInt(e.target.value))
                   }
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Total Amount *
-                </label>
+              </Labeled>
+              <Labeled label="Total Amount *">
                 <input
                   type="number"
                   required
                   min={0}
                   value={formData.total_amount}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      total_amount: parseFloat(e.target.value) || 0,
-                    })
+                    setFormField(
+                      "total_amount",
+                      parseFloat(e.target.value) || 0
+                    )
                   }
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Advance Received
-                </label>
+              </Labeled>
+              <Labeled label="Advance Received">
                 <input
                   type="number"
                   min={0}
                   max={formData.total_amount}
                   value={formData.advance_received}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      advance_received: parseFloat(e.target.value) || 0,
-                    })
+                    setFormField(
+                      "advance_received",
+                      parseFloat(e.target.value) || 0
+                    )
                   }
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status *
-                </label>
+              </Labeled>
+              <Labeled label="Status *">
                 <select
                   required
                   value={formData.status}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      status: e.target.value as BookingStatus,
-                    })
+                    setFormField("status", e.target.value as BookingStatus)
                   }
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
@@ -764,7 +498,7 @@ const BookingForm: React.FC<Props> = ({
                   <option value={BookingStatus.Confirmed}>Confirmed</option>
                   <option value={BookingStatus.Cancelled}>Cancelled</option>
                 </select>
-              </div>
+              </Labeled>
             </div>
           </div>
         </div>
@@ -788,10 +522,7 @@ const BookingForm: React.FC<Props> = ({
               <div>
                 <p className="text-gray-600">Balance Amount</p>
                 <p className="font-semibold text-red-600">
-                  ₹
-                  {(
-                    formData.total_amount - formData.advance_received
-                  ).toLocaleString()}
+                  ₹{balance.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -799,11 +530,20 @@ const BookingForm: React.FC<Props> = ({
         )}
 
         <div className="flex items-center justify-end space-x-3 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={props.onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={!formData.customer_id}>
-            {selectedBooking ? "Update Booking" : "Add Booking"}
+          <Button
+            type="submit"
+            disabled={!formData.customer_id || ui.isSubmitting}
+          >
+            {ui.isSubmitting
+              ? props.selectedBooking
+                ? "Updating..."
+                : "Saving..."
+              : props.selectedBooking
+              ? "Update Booking"
+              : "Add Booking"}
           </Button>
         </div>
       </form>

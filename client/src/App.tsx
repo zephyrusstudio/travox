@@ -1,20 +1,21 @@
+// src/App.tsx
 import React, { useState } from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import AuthPage from "./components/auth/AuthPage";
 import BookingManagement from "./components/bookings/BookingManagement";
 import CustomerManagement from "./components/customers/CustomerManagement";
 import PaymentManagement from "./components/payments/PaymentManagement";
 import TicketUploadManager from "./components/tickets/TicketUploadManager";
 import Layout from "./components/ui/Layout";
 import VendorManagement from "./components/vendors/VendorManagement";
+import PrivateRoute from "./routes/PrivateRoute";
+import PublicRoute from "./routes/PublicRoute";
 
 const AppContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState("dashboard");
 
-  // Show login form if user is not authenticated
-
   const renderCurrentPage = () => {
     switch (currentPage) {
-      // case "dashboard":
-      //   return <Dashboard />;
       case "customers":
         return <CustomerManagement />;
       case "vendors":
@@ -23,30 +24,6 @@ const AppContent: React.FC = () => {
         return <BookingManagement />;
       case "payments":
         return <PaymentManagement />;
-      // case "expenses":
-      //   return <ExpenseManagement />;
-      // case "refunds":
-      //   return <RefundManagement />;
-      // case "reports":
-      //   return <ReportsManagement />;
-      // case "settings":
-      //   return <UserSettings />;
-      // case "customer-ledger":
-      //   return <CustomerLedger />;
-      // case "vendor-ledger":
-      //   return <VendorLedger />;
-      // case "outstanding-payments":
-      //   return <OutstandingPayments />;
-      // case "monthly-summary":
-      //   return <MonthlyIncomeExpense />;
-      // case "gst-tax":
-      //   return <GSTTaxView />;
-      // case "calendar":
-      //   return <CalendarView />;
-      // case "revenue-details":
-      //   return <DetailedRevenueView />;
-      // case "bookings-details":
-      //   return <DetailedBookingsView />;
       case "tickets":
         return <TicketUploadManager />;
       default:
@@ -54,26 +31,29 @@ const AppContent: React.FC = () => {
     }
   };
 
-  // Listen for hash changes to update current page
   React.useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "");
-      if (hash) {
-        setCurrentPage(hash);
-      }
+      if (hash) setCurrentPage(hash);
     };
-
     window.addEventListener("hashchange", handleHashChange);
-    handleHashChange(); // Check initial hash
-
+    handleHashChange();
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
   return <Layout currentPage={currentPage}>{renderCurrentPage()}</Layout>;
 };
 
-function App() {
-  return <AppContent />;
-}
+const ProtectedAppContent = PrivateRoute(AppContent);
+const AuthOnly = PublicRoute(AuthPage);
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/auth" element={<AuthOnly />} />
+        <Route path="/*" element={<ProtectedAppContent />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

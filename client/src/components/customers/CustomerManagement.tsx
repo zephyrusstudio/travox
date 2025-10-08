@@ -1,83 +1,80 @@
-import axios from "axios";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// src/components/customers/CustomerManagement.tsx
 import { Plus, Upload } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Customer } from "../../types";
+
+import { ApiError, apiRequest } from "../../utils/apiConnector";
 import Button from "../ui/Button";
-import Card, { CardContent } from "../ui/Card";
+import Modal from "../ui/Modal";
 import CustomerFormModal, { CustomerFormState } from "./CustomerFormModal";
 import CustomerTable from "./CustomerTable";
 import TicketHistoryModal from "./TicketHistoryModal";
 import useCustomerSearch from "./useCustomerSearch";
 
 const CustomerManagement: React.FC = () => {
+  // ── State ────────────────────────────────────────────────────────────────────
   const [customers, setCustomers] = useState<Customer[]>([]);
-  // Local state
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerFormState | null>(null);
-  const [historyTickets, setHistoryTickets] = useState<any[]>([]);
 
-  // Search
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const [historyTickets, setHistoryTickets] = useState<any[]>([]);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // ── Derived ─────────────────────────────────────────────────────────────────
   const { searchTerm, setSearchTerm, filtered } = useCustomerSearch(customers);
 
-  // Stats
-  const stats = useMemo(
-    () => ({
-      total: customers.length,
-      business: customers.filter((c) => c.gstin).length,
-    }),
-    [customers]
-  );
-
-  // Handlers
-  const openForm = (customer?: Customer) => {
-    if (customer) {
-      setSelectedCustomer(customer);
-    } else {
-      setSelectedCustomer(null);
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  const fetchCustomers = async () => {
+    setErrorMsg(null);
+    try {
+      const res = await apiRequest<any>({ method: "GET", url: "/customers" });
+      setCustomers(res?.data ?? []);
+    } catch (e) {
+      const err = e as ApiError;
+      setErrorMsg(err.message || "Failed to fetch customers");
     }
+  };
+
+  const openForm = (customer?: Customer) => {
+    setSelectedCustomer(customer ?? null);
     setIsFormOpen(true);
   };
 
-  const fetchCustomers = async () => {
-    try {
-      const response = await axios.get("http://localhost:3000/customers", {
-        headers: {
-          Accept: "*/*",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionStorage?.getItem("token")}`,
-        },
-        withCredentials: true, // needed for refreshToken cookie
-      });
-      setCustomers(response.data?.data);
-    } catch (err) {
-      console.error("Error fetching customers:", err);
-    }
+  const askDelete = (customerId: string) => {
+    setDeleteTargetId(customerId);
+    setIsDeleteOpen(true);
   };
 
-  const confirmDelete = async (customerId: string) => {
-    if (window.confirm("Are you sure you want to delete this customer?")) {
-      const response = await axios.get(
-        `http://localhost:3000/customers/${customerId}`,
-        {
-          headers: {
-            Accept: "*/*",
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionStorage?.getItem("token")}`,
-          },
-          withCredentials: true, // needed for refreshToken cookie
-        }
-      );
-
-      if (response?.status === 200) {
-        fetchCustomers();
-      }
+  const doDelete = async () => {
+    if (!deleteTargetId) return;
+    setDeleting(true);
+    setErrorMsg(null);
+    try {
+      await apiRequest({
+        method: "DELETE",
+        url: `/customers/${deleteTargetId}`,
+      });
+      setIsDeleteOpen(false);
+      setDeleteTargetId(null);
+      fetchCustomers();
+    } catch (e) {
+      const err = e as ApiError;
+      setErrorMsg(err.message || "Failed to delete customer");
+    } finally {
+      setDeleting(false);
     }
   };
 
   const viewTicketHistory = (customer: Customer) => {
-    // Mock data. Replace with DB query.
+    // Replace with API integration when available
     const mockTickets = [
       {
         id: "1",
@@ -100,19 +97,20 @@ const CustomerManagement: React.FC = () => {
         linkedBookingId: "booking-2",
       },
     ];
-
     setSelectedCustomer(customer);
     setHistoryTickets(mockTickets);
     setIsHistoryOpen(true);
   };
 
   // placeholder until wired from context/store
-  const getBookingsByCustomer = (id: string) => [] as any[];
+  const getBookingsByCustomer = (_id: string) => [] as any[];
 
+  // ── Effects ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     fetchCustomers();
   }, []);
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -139,41 +137,33 @@ const CustomerManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Search and Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="md:col-span-2">
-          <div className="relative">
-            {/* Search icon preserved in input */}
-            <CustomerTable.SearchBox
-              value={searchTerm}
-              onChange={setSearchTerm}
-            />
-          </div>
+      {/* Inline error */}
+      {errorMsg && (
+        <div className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          {errorMsg}
         </div>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-blue-600">{stats.total}</p>
-            <p className="text-sm text-gray-600">Total Customers</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">
-              {stats.business}
-            </p>
-            <p className="text-sm text-gray-600">Business Customers</p>
-          </CardContent>
-        </Card>
+      )}
+
+      {/* Search */}
+      <div className="grid grid-cols-1">
+        <div className="relative">
+          <CustomerTable.SearchBox
+            value={searchTerm}
+            onChange={setSearchTerm}
+          />
+        </div>
       </div>
 
       {/* Table */}
-      <CustomerTable
-        customers={filtered}
-        onEdit={openForm}
-        onDelete={confirmDelete}
-        onViewTickets={viewTicketHistory}
-        getBookingsByCustomer={getBookingsByCustomer}
-      />
+      {customers.length > 0 && (
+        <CustomerTable
+          customers={filtered}
+          onEdit={openForm}
+          onDelete={askDelete}
+          onViewTickets={viewTicketHistory}
+          getBookingsByCustomer={getBookingsByCustomer}
+        />
+      )}
 
       {/* Ticket History Modal */}
       <TicketHistoryModal
@@ -192,6 +182,46 @@ const CustomerManagement: React.FC = () => {
         selectedCustomer={selectedCustomer}
         setSelectedCustomer={setSelectedCustomer}
       />
+
+      {/* Delete Confirm Modal */}
+      <Modal
+        isOpen={isDeleteOpen}
+        onClose={() => {
+          if (!deleting) {
+            setIsDeleteOpen(false);
+            setDeleteTargetId(null);
+          }
+        }}
+        title="Delete customer?"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-700">
+            This action will permanently remove the customer record.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              className="px-3 py-2 rounded-lg border border-gray-300 text-gray-800 text-sm"
+              onClick={() => {
+                setIsDeleteOpen(false);
+                setDeleteTargetId(null);
+              }}
+              disabled={deleting}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="px-3 py-2 rounded-lg bg-rose-600 text-white text-sm disabled:opacity-60"
+              onClick={doDelete}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

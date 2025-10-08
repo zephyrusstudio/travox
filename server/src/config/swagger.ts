@@ -8,12 +8,46 @@ const options: swaggerJSDoc.Options = {
     info: {
       title: 'Travox API',
       version: '0.1.0',
-      description: 'A comprehensive API for managing travel bookings, customers, vendors, and payments',
+      description: 'A comprehensive API for managing travel bookings, customers, vendors, and payments with AI-powered OCR capabilities',
       contact: {
         name: 'Travox Support',
         email: 'support@tms.com'
       }
     },
+    tags: [
+      {
+        name: 'Authentication',
+        description: 'User authentication and authorization'
+      },
+      {
+        name: 'Users',
+        description: 'User management operations'
+      },
+      {
+        name: 'Customers',
+        description: 'Customer management operations'
+      },
+      {
+        name: 'Vendors',
+        description: 'Vendor management operations'
+      },
+      {
+        name: 'Bookings',
+        description: 'Booking management and operations'
+      },
+      {
+        name: 'Payments',
+        description: 'Payment processing and management'
+      },
+      {
+        name: 'Files',
+        description: 'File upload and management'
+      },
+      {
+        name: 'OCR',
+        description: 'AI-powered OCR for extracting booking data from travel documents'
+      }
+    ],
     servers: [
       {
         url: 'http://localhost:3000',
@@ -653,6 +687,217 @@ const options: swaggerJSDoc.Options = {
             updated_at: {
               type: 'string',
               format: 'date-time'
+            }
+          }
+        },
+        OCRExtractedBooking: {
+          type: 'object',
+          description: 'Booking data extracted from travel documents using OCR',
+          properties: {
+            packageName: {
+              type: 'string',
+              example: 'Dubai Holiday Package',
+              description: 'Name of travel package or booking'
+            },
+            pnrNo: {
+              type: 'string',
+              example: 'ABC123DEF',
+              description: 'PNR or booking reference number'
+            },
+            bookingDate: {
+              type: 'string',
+              format: 'date',
+              example: '2024-01-15',
+              description: 'Booking date in ISO format'
+            },
+            totalAmount: {
+              type: 'number',
+              example: 75000,
+              description: 'Total booking amount'
+            },
+            currency: {
+              type: 'string',
+              example: 'INR',
+              description: 'Currency code'
+            },
+            modeOfJourney: {
+              type: 'string',
+              example: 'FLIGHT',
+              description: 'Primary travel mode'
+            },
+            pax: {
+              type: 'array',
+              description: 'Passenger information',
+              items: {
+                type: 'object',
+                properties: {
+                  paxName: {
+                    type: 'string',
+                    example: 'John Doe'
+                  },
+                  paxType: {
+                    type: 'string',
+                    enum: ['ADT', 'CHD', 'INF'],
+                    example: 'ADT'
+                  },
+                  passportNo: {
+                    type: 'string',
+                    example: 'A1234567'
+                  },
+                  dob: {
+                    type: 'string',
+                    format: 'date',
+                    example: '1990-01-15'
+                  }
+                }
+              }
+            },
+            itineraries: {
+              type: 'array',
+              description: 'Travel itinerary information',
+              items: {
+                type: 'object',
+                properties: {
+                  name: {
+                    type: 'string',
+                    example: 'Dubai Trip - Outbound'
+                  },
+                  seqNo: {
+                    type: 'integer',
+                    example: 1
+                  },
+                  segments: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        seqNo: {
+                          type: 'integer',
+                          example: 1
+                        },
+                        modeOfJourney: {
+                          type: 'string',
+                          enum: ['FLIGHT', 'TRAIN', 'BUS', 'HOTEL', 'CAB', 'OTHER'],
+                          example: 'FLIGHT'
+                        },
+                        carrierCode: {
+                          type: 'string',
+                          example: 'EK'
+                        },
+                        serviceNumber: {
+                          type: 'string',
+                          example: 'EK512'
+                        },
+                        depCode: {
+                          type: 'string',
+                          example: 'DEL'
+                        },
+                        arrCode: {
+                          type: 'string',
+                          example: 'DXB'
+                        },
+                        depAt: {
+                          type: 'string',
+                          format: 'date-time',
+                          example: '2024-02-15T14:30:00Z'
+                        },
+                        arrAt: {
+                          type: 'string',
+                          format: 'date-time',
+                          example: '2024-02-15T18:45:00Z'
+                        },
+                        classCode: {
+                          type: 'string',
+                          example: 'Y'
+                        },
+                        baggage: {
+                          type: 'string',
+                          example: '30KG'
+                        },
+                        hotelName: {
+                          type: 'string',
+                          example: 'Burj Al Arab'
+                        },
+                        hotelAddress: {
+                          type: 'string',
+                          example: 'Jumeirah Beach Road, Dubai'
+                        },
+                        checkIn: {
+                          type: 'string',
+                          format: 'date-time',
+                          example: '2024-02-15T15:00:00Z'
+                        },
+                        checkOut: {
+                          type: 'string',
+                          format: 'date-time',
+                          example: '2024-02-20T12:00:00Z'
+                        },
+                        roomType: {
+                          type: 'string',
+                          example: 'Deluxe Suite'
+                        },
+                        mealPlan: {
+                          type: 'string',
+                          example: 'Half Board'
+                        },
+                        operatorName: {
+                          type: 'string',
+                          example: 'Dubai Tours LLC'
+                        },
+                        boardingPoint: {
+                          type: 'string',
+                          example: 'Hotel Lobby'
+                        },
+                        dropPoint: {
+                          type: 'string',
+                          example: 'Dubai Mall'
+                        },
+                        misc: {
+                          type: 'object',
+                          description: 'Additional segment data'
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            vendorInfo: {
+              type: 'object',
+              description: 'Vendor/agency information',
+              properties: {
+                name: {
+                  type: 'string',
+                  example: 'Travel Agency XYZ'
+                },
+                contact: {
+                  type: 'string',
+                  example: '+91 9876543210'
+                },
+                email: {
+                  type: 'string',
+                  example: 'info@travelagency.com'
+                }
+              }
+            },
+            extractionConfidence: {
+              type: 'string',
+              enum: ['HIGH', 'MEDIUM', 'LOW'],
+              example: 'HIGH',
+              description: 'Confidence level of OCR extraction'
+            },
+            extractedFields: {
+              type: 'array',
+              items: {
+                type: 'string'
+              },
+              example: ['paxName', 'pnrNo', 'flightNumber', 'departureDate'],
+              description: 'List of successfully extracted field names'
+            },
+            notes: {
+              type: 'string',
+              example: 'All passenger and flight details extracted successfully',
+              description: 'Additional notes or warnings from OCR'
             }
           }
         }

@@ -202,5 +202,37 @@ export class Booking {
     this.travelStartAt = departureDates.length > 0 ? new Date(Math.min(...departureDates.map(d => d.getTime()))) : undefined;
     this.travelEndAt = arrivalDates.length > 0 ? new Date(Math.max(...arrivalDates.map(d => d.getTime()))) : undefined;
   }
+
+  // Get booking data for API response with optional unmasking of sensitive fields
+  toApiResponse(unmask: boolean = false): any {
+    return {
+      id: this.id,
+      orgId: this.orgId,
+      customerId: this.customerId,
+      bookingDate: this.bookingDate,
+      currency: this.currency,
+      totalAmount: this.totalAmount,
+      paidAmount: this.paidAmount,
+      pax: this.pax.map(p => p.toApiResponse(unmask)),
+      itineraries: this.itineraries,
+      packageName: this.packageName,
+      pnrNo: this.pnrNo,
+      modeOfJourney: this.modeOfJourney,
+      advanceAmount: this.advanceAmount,
+      status: this.status,
+      paxCount: this.paxCount,
+      primaryPaxName: this.primaryPaxName,
+      travelStartAt: this.travelStartAt,
+      travelEndAt: this.travelEndAt,
+      dueAmount: this.dueAmount,
+      createdBy: this.createdBy,
+      updatedBy: this.updatedBy,
+      isDeleted: this.isDeleted,
+      archivedAt: this.archivedAt,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+      ticketId: this.ticketId
+    };
+  }
 }
 

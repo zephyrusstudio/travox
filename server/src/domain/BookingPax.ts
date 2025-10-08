@@ -37,4 +37,26 @@ export class BookingPax {
       now
     );
   }
+
+  // Data masking method for passport
+  getMaskedPassport(): string | undefined {
+    if (!this.passportNo) return undefined;
+    if (this.passportNo.length <= 4) return 'XXXX';
+    return `${this.passportNo.slice(0, 2)}XXXX${this.passportNo.slice(-2)}`;
+  }
+
+  // Get pax data for API response with optional unmasking of sensitive fields
+  toApiResponse(unmask: boolean = false): any {
+    return {
+      id: this.id,
+      orgId: this.orgId,
+      bookingId: this.bookingId,
+      paxName: this.paxName,
+      paxType: this.paxType,
+      passportNo: unmask ? this.passportNo : this.getMaskedPassport(),
+      dob: this.dob,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt
+    };
+  }
 }

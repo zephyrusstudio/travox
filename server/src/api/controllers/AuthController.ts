@@ -5,6 +5,7 @@ import { LogoutUser } from '../../application/useCases/auth/LogoutUser';
 import { IJwtService } from '../../application/services/IJwtService';
 import { IRefreshTokenRepository } from '../../application/repositories/IRefreshTokenRepository';
 import { IUserRepository } from '../../application/repositories/IUserRepository';
+import { shouldUnmask } from '../../utils/unmask';
 
 export class AuthController {
     async googleLogin(req: Request, res: Response) {

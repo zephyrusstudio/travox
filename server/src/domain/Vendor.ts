@@ -96,4 +96,34 @@ export class Vendor {
     this.updatedBy = updatedBy;
     this.updatedAt = new Date();
   }
+
+  // Data masking method for GSTIN
+  getMaskedGstin(): string | undefined {
+    if (!this.gstin) return undefined;
+    if (this.gstin.length <= 4) return 'XXXX';
+    return `${this.gstin.slice(0, 2)}XXXX${this.gstin.slice(-4)}`;
+  }
+
+  // Get vendor data for API response with optional unmasking of sensitive fields
+  toApiResponse(unmask: boolean = false): any {
+    return {
+      id: this.id,
+      orgId: this.orgId,
+      name: this.name,
+      serviceType: this.serviceType,
+      pocName: this.pocName,
+      phone: this.phone,
+      email: this.email,
+      gstin: unmask ? this.gstin : this.getMaskedGstin(),
+      accountId: this.accountId,
+      totalExpense: this.totalExpense,
+      totalBookings: this.totalBookings,
+      createdBy: this.createdBy,
+      updatedBy: this.updatedBy,
+      isDeleted: this.isDeleted,
+      archivedAt: this.archivedAt,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt
+    };
+  }
 }

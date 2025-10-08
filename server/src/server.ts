@@ -4,6 +4,7 @@ import cors from "cors";
 import express from "express";
 import path from "path";
 import { registerRoutes } from "./api/routes";
+import { setupSwagger } from "./config/swagger";
 import { dateParserMiddleware } from "./middleware/dateParser";
 import { errorHandler } from "./middleware/errorHandler";
 import { loggerMiddleware } from "./middleware/loggerMiddleware";
@@ -46,6 +47,9 @@ export async function startServer() {
     res.status(200).json({ message: "pong" });
   });
 
+  // Setup Swagger documentation
+  setupSwagger(app);
+
   // API routes
   registerRoutes(app);
 
@@ -57,5 +61,6 @@ export async function startServer() {
     console.log(`TMS API running on http://localhost:${PORT}`);
     console.log(`Health check available at http://localhost:${PORT}/health`);
     console.log(`Ping endpoint available at http://localhost:${PORT}/ping`);
+    console.log(`API Documentation available at http://localhost:${PORT}/docs`);
   });
 }

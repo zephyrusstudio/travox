@@ -14,6 +14,7 @@ It follows **Clean/Hexagonal Architecture**, best practices for Node.js and Type
 - **Payment Tracking** - Financial transaction management
 - **Account Management** - Banking and payment account setup
 - **File Management** - Document upload/download with Google Drive integration
+- **AI-Powered OCR** - Extract booking data from travel documents using Gemini AI
 - **Audit Logging** - Complete activity tracking
 - **Multi-tenancy** - Organization-based data isolation
 

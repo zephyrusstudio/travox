@@ -111,4 +111,20 @@ export class User {
 
         return false;
     }
+
+    // Get user data for API response with optional unmasking of sensitive fields
+    toApiResponse(unmask: boolean = false): any {
+        return {
+            id: this.id,
+            name: this.name,
+            email: this.email,
+            phone: this.phone,
+            role: this.role,
+            isActive: this.isActive,
+            preferences: unmask ? this.preferences : undefined,
+            lastLoginAt: unmask ? this.lastLoginAt : undefined,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt
+        };
+    }
 }

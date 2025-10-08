@@ -3,6 +3,7 @@ import { container } from '../../config/container';
 import { ManageUserRoles } from '../../application/useCases/user/ManageUserRoles';
 import { IUserRepository } from '../../application/repositories/IUserRepository';
 import { UserRole } from '../../models/FirestoreTypes';
+import { shouldUnmask } from '../../utils/unmask';
 
 export class UserController {
   async changeRole(req: Request, res: Response) {
@@ -47,22 +48,11 @@ export class UserController {
     try {
       const userRepo = container.resolve<IUserRepository>('IUserRepository');
       const users = await userRepo.findByOrganizationId(req.user?.orgId!);
-      
-      // Remove sensitive information
-      const sanitizedUsers = users.map(user => ({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        isActive: user.isActive,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }));
+      const unmask = shouldUnmask(req);
       
       res.json({
         status: 'success',
-        data: sanitizedUsers
+        data: users.map(user => user.toApiResponse(unmask))
       });
     } catch (error: any) {
       res.status(500).json({
@@ -76,6 +66,7 @@ export class UserController {
     try {
       const userRepo = container.resolve<IUserRepository>('IUserRepository');
       const user = await userRepo.findById(req.user?.id!);
+      const unmask = shouldUnmask(req);
       
       if (!user) {
         return res.status(404).json({
@@ -84,23 +75,9 @@ export class UserController {
         });
       }
       
-      // Remove sensitive information
-      const sanitizedUser = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        isActive: user.isActive,
-        preferences: user.preferences,
-        lastLoginAt: user.lastLoginAt,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      };
-      
       res.json({
         status: 'success',
-        data: sanitizedUser
+        data: user.toApiResponse(unmask)
       });
     } catch (error: any) {
       res.status(500).json({
@@ -146,6 +123,7 @@ export class UserController {
     try {
       const userRepo = container.resolve<IUserRepository>('IUserRepository');
       const user = await userRepo.findById(req.params.id);
+      const unmask = shouldUnmask(req);
       
       if (!user) {
         return res.status(404).json({
@@ -162,23 +140,9 @@ export class UserController {
         });
       }
       
-      // Remove sensitive information
-      const sanitizedUser = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        isActive: user.isActive,
-        preferences: user.preferences,
-        lastLoginAt: user.lastLoginAt,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      };
-      
       res.json({
         status: 'success',
-        data: sanitizedUser
+        data: user.toApiResponse(unmask)
       });
     } catch (error: any) {
       res.status(500).json({

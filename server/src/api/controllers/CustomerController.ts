@@ -6,6 +6,7 @@ import { GetCustomers } from '../../application/useCases/customer/GetCustomers';
 import { DeleteCustomer } from '../../application/useCases/customer/DeleteCustomer';
 import { GetBookings } from '../../application/useCases/booking/GetBookings';
 import { GetAccount } from '../../application/useCases/account/GetAccount';
+import { shouldUnmask } from '../../utils/unmask';
 
 export class CustomerController {
   async create(req: Request, res: Response) {
@@ -13,12 +14,13 @@ export class CustomerController {
       const useCase = container.resolve(CreateCustomer);
       const orgId = req.user?.orgId!;
       const createdBy = req.user?.id!;
+      const unmask = shouldUnmask(req);
       
       const customer = await useCase.execute(req.body, orgId, createdBy);
       
       res.status(201).json({
         status: 'success',
-        data: customer.toApiResponse() // Use masked data
+        data: customer.toApiResponse(unmask)
       });
     } catch (error: any) {
       res.status(400).json({
@@ -34,12 +36,13 @@ export class CustomerController {
       const orgId = req.user?.orgId!;
       const updatedBy = req.user?.id!;
       const { id } = req.params;
+      const unmask = shouldUnmask(req);
 
       const customer = await useCase.execute(id, req.body, orgId, updatedBy);
 
       res.json({
         status: 'success',
-        data: customer.toApiResponse() // Use masked data
+        data: customer.toApiResponse(unmask)
       });
     } catch (error: any) {
       res.status(400).json({
@@ -54,6 +57,7 @@ export class CustomerController {
       const useCase = container.resolve(GetCustomers);
       const orgId = req.user?.orgId!;
       const { id } = req.params;
+      const unmask = shouldUnmask(req);
       
       const customer = await useCase.findById(id, orgId);
       
@@ -66,7 +70,7 @@ export class CustomerController {
       
       res.json({
         status: 'success',
-        data: customer.toApiResponse() // Use masked data
+        data: customer.toApiResponse(unmask)
       });
     } catch (error: any) {
       res.status(500).json({
@@ -80,12 +84,13 @@ export class CustomerController {
     try {
       const useCase = container.resolve(GetCustomers);
       const orgId = req.user?.orgId!;
+      const unmask = shouldUnmask(req);
       
       const customers = await useCase.getAllActive(orgId);
       
       res.json({
         status: 'success',
-        data: customers.map(c => c.toApiResponse()) // Use masked data
+        data: customers.map(c => c.toApiResponse(unmask))
       });
     } catch (error: any) {
       res.status(500).json({
@@ -100,6 +105,7 @@ export class CustomerController {
       const useCase = container.resolve(GetCustomers);
       const orgId = req.user?.orgId!;
       const { q, limit } = req.query;
+      const unmask = shouldUnmask(req);
       
       if (!q || typeof q !== 'string') {
         return res.status(400).json({
@@ -112,7 +118,7 @@ export class CustomerController {
       
       res.json({
         status: 'success',
-        data: customers.map(c => c.toApiResponse()) // Use masked data
+        data: customers.map(c => c.toApiResponse(unmask))
       });
     } catch (error: any) {
       res.status(500).json({

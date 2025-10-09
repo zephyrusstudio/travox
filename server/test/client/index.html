@@ -215,7 +215,7 @@
             <input type="text" id="apiBase" value="http://localhost:3000" placeholder="http://localhost:3000">
             
             <label for="clientId">Google Client ID:</label>
-            <input type="text" id="clientId" value="1051736670580-js75do52hu715meq3nip5b1l0mqguicf.apps.googleusercontent.com" placeholder="Your Google Client ID (e.g., 123456789-xxx.apps.googleusercontent.com)">
+            <input type="text" id="clientId" value="869290483445-6v0mdlne9cgiv1eatgi7gap34s51gj3t.apps.googleusercontent.com" placeholder="Your Google Client ID">
             <button onclick="updateConfig()">Update Config</button>
         </div>
 
@@ -478,7 +478,7 @@
                 // Reinitialize Google Sign-In
                 if (window.google) {
                     google.accounts.id.initialize({
-                        client_id: googleClientId,
+                        client_id: googleClientId || '869290483445-6v0mdlne9cgiv1eatgi7gap34s51gj3t.apps.googleusercontent.com',
                         callback: handleCredentialResponse
                     });
                     google.accounts.id.renderButton(

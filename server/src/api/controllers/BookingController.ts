@@ -5,15 +5,17 @@ import { GetBookings } from '../../application/useCases/booking/GetBookings';
 import { UpdateBooking } from '../../application/useCases/booking/UpdateBooking';
 import { DeleteBooking } from '../../application/useCases/booking/DeleteBooking';
 import { BookingStatus } from '../../models/FirestoreTypes';
+import { shouldUnmask } from '../../utils/unmask';
 
 export class BookingController {
   async create(req: Request, res: Response) {
     try {
       const useCase = container.resolve(CreateBooking);
+      const unmask = shouldUnmask(req);
       const booking = await useCase.execute(req.body, req.user?.orgId!, req.user?.id!);
       res.status(201).json({
         status: 'success',
-        data: booking
+        data: booking.toApiResponse(unmask)
       });
     } catch (error: any) {
       res.status(400).json({
@@ -26,6 +28,7 @@ export class BookingController {
   async getAll(req: Request, res: Response) {
     try {
       const useCase = container.resolve(GetBookings);
+      const unmask = shouldUnmask(req);
       
       const filters = {
         customerId: req.query.customerId as string,
@@ -39,7 +42,7 @@ export class BookingController {
       const bookings = await useCase.execute(filters, req.user?.orgId!);
       res.json({
         status: 'success',
-        data: bookings
+        data: bookings.map(b => b.toApiResponse(unmask))
       });
     } catch (error: any) {
       res.status(500).json({
@@ -52,6 +55,7 @@ export class BookingController {
   async getById(req: Request, res: Response) {
     try {
       const useCase = container.resolve(GetBookings);
+      const unmask = shouldUnmask(req);
       const booking = await useCase.getById(req.params.id, req.user?.orgId!);
       
       if (!booking) {
@@ -63,7 +67,7 @@ export class BookingController {
 
       res.json({
         status: 'success',
-        data: booking
+        data: booking.toApiResponse(unmask)
       });
     } catch (error: any) {
       res.status(500).json({
@@ -76,10 +80,11 @@ export class BookingController {
   async getByCustomerId(req: Request, res: Response) {
     try {
       const useCase = container.resolve(GetBookings);
+      const unmask = shouldUnmask(req);
       const bookings = await useCase.getByCustomerId(req.params.customerId, req.user?.orgId!);
       res.json({
         status: 'success',
-        data: bookings
+        data: bookings.map(b => b.toApiResponse(unmask))
       });
     } catch (error: any) {
       res.status(500).json({
@@ -92,10 +97,11 @@ export class BookingController {
   async update(req: Request, res: Response) {
     try {
       const useCase = container.resolve(UpdateBooking);
+      const unmask = shouldUnmask(req);
       const booking = await useCase.execute(req.params.id, req.body, req.user?.orgId!, req.user?.id!);
       res.json({
         status: 'success',
-        data: booking
+        data: booking.toApiResponse(unmask)
       });
     } catch (error: any) {
       res.status(400).json({

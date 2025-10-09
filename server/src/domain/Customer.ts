@@ -110,16 +110,16 @@ export class Customer {
     return `${this.passportNo.slice(0, 2)}XXXX${this.passportNo.slice(-2)}`;
   }
 
-  // Get customer data for API response with masked sensitive fields
-  toApiResponse(): any {
+  // Get customer data for API response with optional unmasking of sensitive fields
+  toApiResponse(unmask: boolean = false): any {
     return {
       id: this.id,
       orgId: this.orgId,
       name: this.name,
       phone: this.phone,
       email: this.email,
-      passportNo: this.getMaskedPassport(),
-      aadhaarNo: this.getMaskedAadhaar(),
+      passportNo: unmask ? this.passportNo : this.getMaskedPassport(),
+      aadhaarNo: unmask ? this.aadhaarNo : this.getMaskedAadhaar(),
       visaNo: this.visaNo,
       gstin: this.gstin,
       accountId: this.accountId,

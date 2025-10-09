@@ -6,6 +6,7 @@ import { DeleteVendor } from '../../application/useCases/vendor/DeleteVendor';
 import { GetVendors } from '../../application/useCases/vendor/GetVendors';
 import { GetAccount } from '../../application/useCases/account/GetAccount';
 import { ServiceType } from '../../models/FirestoreTypes';
+import { shouldUnmask } from '../../utils/unmask';
 
 export class VendorController {
   async create(req: Request, res: Response) {
@@ -13,12 +14,13 @@ export class VendorController {
       const useCase = container.resolve(CreateVendor);
       const orgId = req.user?.orgId!;
       const createdBy = req.user?.id!;
+      const unmask = shouldUnmask(req);
 
       const vendor = await useCase.execute(req.body, orgId, createdBy);
 
       res.status(201).json({
         status: 'success',
-        data: vendor
+        data: vendor.toApiResponse(unmask)
       });
     } catch (error: any) {
       res.status(400).json({
@@ -33,11 +35,12 @@ export class VendorController {
       const useCase = container.resolve(GetVendors);
       const orgId = req.user?.orgId!;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const unmask = shouldUnmask(req);
 
       const vendors = await useCase.execute(orgId, { limit });
       res.json({
         status: 'success',
-        data: vendors
+        data: vendors.map(v => v.toApiResponse(unmask))
       });
     } catch (error: any) {
       res.status(500).json({
@@ -54,6 +57,7 @@ export class VendorController {
       const query = req.query.q as string;
       const serviceType = req.query.serviceType as string;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const unmask = shouldUnmask(req);
 
       const vendors = await useCase.search(query, orgId, { 
         serviceType: serviceType as ServiceType, 
@@ -61,7 +65,7 @@ export class VendorController {
       });
       res.json({
         status: 'success',
-        data: vendors
+        data: vendors.map(v => v.toApiResponse(unmask))
       });
     } catch (error: any) {
       res.status(500).json({
@@ -76,6 +80,7 @@ export class VendorController {
       const useCase = container.resolve(GetVendors);
       const orgId = req.user?.orgId!;
       const vendorId = req.params.id;
+      const unmask = shouldUnmask(req);
 
       const vendor = await useCase.findById(vendorId, orgId);
       if (!vendor) {
@@ -87,7 +92,7 @@ export class VendorController {
 
       res.json({
         status: 'success',
-        data: vendor
+        data: vendor.toApiResponse(unmask)
       });
     } catch (error: any) {
       res.status(500).json({
@@ -164,12 +169,13 @@ export class VendorController {
       const orgId = req.user?.orgId!;
       const updatedBy = req.user?.id!;
       const { id } = req.params;
+      const unmask = shouldUnmask(req);
 
       const vendor = await useCase.execute(id, req.body, orgId, updatedBy);
 
       res.json({
         status: 'success',
-        data: vendor
+        data: vendor.toApiResponse(unmask)
       });
     } catch (error: any) {
       res.status(400).json({

@@ -110,7 +110,7 @@ const VendorGrid: React.FC<VendorGridProps> = ({
                       }
                     </p>
                     <Button
-                      variant="outline"
+                      variant={vendor.accountId ? "primary" : "secondary"}
                       size="sm"
                       icon={CreditCard}
                       onClick={() => onManageAccount(vendor)}

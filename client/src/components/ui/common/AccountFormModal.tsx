@@ -28,7 +28,6 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
   onClose,
   entityId,
   entityType,
-  entityName,
   existingAccount,
   onAccountLinked,
 }) => {
@@ -42,7 +41,6 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
   
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Pre-fill form with existing account data
   useEffect(() => {
     if (existingAccount) {
       setFormData({
@@ -70,13 +68,7 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      const url = existingAccount 
-        ? `/${entityType}s/${entityId}/account/${existingAccount.id}`
-        : `/${entityType}s/${entityId}/account`;
-      
-      const method = existingAccount ? "PUT" : "POST";
-      
-      const payload = {
+      const accountPayload = {
         bankName: formData.bankName.trim(),
         ifscCode: formData.ifscCode.trim().toUpperCase(),
         branchName: formData.branchName.trim(),
@@ -84,22 +76,52 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
         upiId: formData.upiId.trim(),
       };
 
-      const response = await apiRequest({
-        method,
-        url,
-        data: payload,
-        headers: { Accept: "*/*", "Content-Type": "application/json" },
-      });
+      if (existingAccount) {
+        const updateResponse = await apiRequest({
+          method: "PUT",
+          url: `/accounts/${existingAccount.id}`,
+          data: accountPayload,
+          headers: { Accept: "*/*", "Content-Type": "application/json" },
+        });
 
-      if (response?.status === "success") {
-        successToast(existingAccount ? "Account updated successfully" : "Account linked successfully");
-        onAccountLinked();
+        if (updateResponse?.status === "success") {
+          successToast("Account updated");
+          onAccountLinked();
+        } else {
+          throw new Error("Update failed");
+        }
       } else {
-        throw new Error("Failed to save account");
+        // Create new account
+        const createResponse = await apiRequest({
+          method: "POST",
+          url: "/accounts",
+          data: accountPayload,
+          headers: { Accept: "*/*", "Content-Type": "application/json" },
+        });
+
+        if (createResponse?.status === "success" && createResponse?.data?.id) {
+          const accountId = createResponse.data.id;
+          
+          const updateEntityResponse = await apiRequest({
+            method: "PUT",
+            url: `/${entityType}s/${entityId}`,
+            data: { accountId },
+            headers: { Accept: "*/*", "Content-Type": "application/json" },
+          });
+
+          if (updateEntityResponse?.status === "success") {
+            successToast("Account linked");
+            onAccountLinked();
+          } else {
+            throw new Error("Linking failed");
+          }
+        } else {
+          throw new Error("Creation failed");
+        }
       }
     } catch (error) {
       const err = error as { message?: string };
-      errorToast(err?.message || "Failed to save account");
+      errorToast(err?.message || "Operation failed");
     } finally {
       setIsSubmitting(false);
     }
@@ -127,7 +149,7 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={`${existingAccount ? "Edit" : "Link"} Account - ${entityName}`}
+      title={`${existingAccount ? "Edit" : "Link"} Account`}
       size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">

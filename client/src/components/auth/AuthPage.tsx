@@ -1,3 +1,5 @@
+import { apiRequest } from "../../utils/apiConnector";
+
 // src/pages/AuthPage.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +24,6 @@ if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
 }
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
 const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY || "token";
 
 const AuthPage: React.FC = () => {
@@ -83,17 +84,11 @@ const AuthPage: React.FC = () => {
     try {
       setLoading(true);
       setErr(null);
-      const r = await fetch(`${API_BASE}/auth/google`, {
+      const data = await apiRequest<AuthResponse>({
+        url: "/auth/google",
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "*/*" },
-        credentials: "include", // receive refresh cookie
-        body: JSON.stringify({ idToken }),
+        data: { idToken },
       });
-      if (!r.ok) {
-        const t = await r.text();
-        throw new Error(t || `HTTP ${r.status}`);
-      }
-      const data = (await r.json()) as AuthResponse;
       const accessToken = data?.data?.accessToken;
       const user = data?.data?.user;
 

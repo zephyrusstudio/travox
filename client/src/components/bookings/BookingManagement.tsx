@@ -58,17 +58,6 @@ const BookingManagement: React.FC = () => {
         url: "/bookings",
         params: { limit: 50, unmask: true },
       });
-
-      const isHttpError = typeof res?.status === "number" && res.status >= 400;
-      const isFailureStatus =
-        typeof res?.status === "string" && res.status !== "success";
-
-      if (!res || isHttpError || isFailureStatus) {
-        const message =
-          res?.data?.message || res?.message || "Failed to load bookings";
-        throw new Error(message);
-      }
-
       const items: any[] = Array.isArray(res?.data) ? res.data : [];
       const normalizeStatus = (status: string): BookingStatus => {
         const normalized = (status || "").toLowerCase();
@@ -117,11 +106,8 @@ const BookingManagement: React.FC = () => {
 
       setBookings(mapped);
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to load bookings. Please try again.";
-      setBookingsError(message);
+      const apiError = error as ApiError;
+      setBookingsError(apiError.message);
     } finally {
       setBookingsLoading(false);
     }
@@ -173,16 +159,12 @@ const BookingManagement: React.FC = () => {
           gstin: customer.gstin || undefined,
         };
 
-        const response = await apiRequest<any>({
+        await apiRequest<any>({
           method: "POST",
           url: "/customers",
           data: payload,
           headers: { Accept: "*/*", "Content-Type": "application/json" },
         });
-
-        if (response?.status !== "success") {
-          throw new Error(response?.message || "Unable to add customer");
-        }
 
         successToast("Customer added");
         await fetchCustomers();
@@ -291,29 +273,22 @@ const BookingManagement: React.FC = () => {
 
   const submitBooking = useCallback(
     async (payload: any) => {
-      const response = await apiRequest<any>({
-        method: "POST",
-        url: "/bookings",
-        data: payload,
-        headers: { Accept: "*/*", "Content-Type": "application/json" },
-      });
+      try {
+        const response = await apiRequest<any>({
+          method: "POST",
+          url: "/bookings",
+          data: payload,
+          headers: { Accept: "*/*", "Content-Type": "application/json" },
+        });
 
-      const isHttpError =
-        typeof response?.status === "number" && response.status >= 400;
-      const isFailureStatus =
-        typeof response?.status === "string" && response.status !== "success";
-
-      if (!response || isHttpError || isFailureStatus) {
-        const message =
-          response?.data?.message ||
-          response?.message ||
-          "Failed to create booking";
-        throw new Error(message);
+        successToast("Booking added");
+        await fetchBookings();
+        return response;
+      } catch (error) {
+        const apiError = error as ApiError;
+        errorToast(apiError.message);
+        throw apiError;
       }
-
-      successToast("Booking added");
-      await fetchBookings();
-      return response;
     },
     [fetchBookings]
   );

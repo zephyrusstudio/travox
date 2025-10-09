@@ -147,16 +147,12 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       gstin: formData.gstin || undefined,
     };
 
-    const data = await apiRequest<any>({
+    await apiRequest<any>({
       method: "POST",
       url: "/customers",
       data: payload,
       headers: { Accept: "*/*", "Content-Type": "application/json" },
     });
-
-    if (!data?.status || data.status !== "success") {
-      throw new Error("Unable to save customer");
-    }
   }
 
   async function updateCustomer() {
@@ -171,16 +167,12 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       gstin: formData.gstin || undefined,
     };
 
-    const data = await apiRequest<any>({
+    await apiRequest<any>({
       method: "PUT",
       url: `/customers/${formData.id}`,
       data: payload,
       headers: { Accept: "*/*", "Content-Type": "application/json" },
     });
-
-    if (!data?.status || data.status !== "success") {
-      throw new Error("Unable to update customer");
-    }
   }
 
   // Submit

@@ -114,16 +114,12 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
       accountId: formData.accountId || undefined,
     };
 
-    const data = await apiRequest<any>({
+    await apiRequest<any>({
       method: "POST",
       url: "/vendors",
       data: payload,
       headers: { Accept: "*/*", "Content-Type": "application/json" },
     });
-
-    if (!data?.status || data.status !== "success") {
-      throw new Error("Unable to save vendor");
-    }
   }
 
   async function updateVendor() {
@@ -137,16 +133,12 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
       accountId: formData.accountId || undefined,
     };
 
-    const data = await apiRequest<any>({
+    await apiRequest<any>({
       method: "PUT",
       url: `/vendors/${formData.id}`,
       data: payload,
       headers: { Accept: "*/*", "Content-Type": "application/json" },
     });
-
-    if (!data?.status || data.status !== "success") {
-      throw new Error("Unable to update vendor");
-    }
   }
 
   // Submit

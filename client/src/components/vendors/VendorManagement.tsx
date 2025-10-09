@@ -119,18 +119,17 @@ const VendorManagement: React.FC = () => {
           method: "GET",
           url: `/vendors/${vendor.id}/account`,
         });
-        if (response?.status === "success" && response?.data) {
-          setExistingAccountData({
-            id: response.data.id,
-            bankName: response.data.bankName || "",
-            ifscCode: response.data.ifscCode || "",
-            branchName: response.data.branchName || "",
-            accountNo: response.data.accountNo || "",
-            upiId: response.data.upiId || "",
-          });
-        }
+        setExistingAccountData({
+          id: response.data.id,
+          bankName: response.data.bankName || "",
+          ifscCode: response.data.ifscCode || "",
+          branchName: response.data.branchName || "",
+          accountNo: response.data.accountNo || "",
+          upiId: response.data.upiId || "",
+        });
       } catch (error) {
-        console.error("Failed to fetch account data:", error);
+        const apiError = error as ApiError;
+        setErrorMsg(apiError.message);
         setExistingAccountData(null);
       }
     } else {

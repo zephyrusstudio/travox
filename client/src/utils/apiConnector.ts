@@ -3,7 +3,7 @@
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import { errorToast } from "./toasts";
 
-const API_BASE = "http://localhost:3000";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
 const TOKEN_KEY = "token";
 
 export const api = axios.create({

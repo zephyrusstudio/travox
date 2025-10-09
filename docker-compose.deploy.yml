@@ -1,0 +1,23 @@
+services:
+  server:
+    image: tms-server:latest
+    container_name: tms-server
+    platform: linux/amd64
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - ./.env
+    volumes:
+      - type: bind
+        source: ./firestore-creds.json
+        target: /app/firestore-creds.json
+        read_only: true
+    restart: always
+    networks:
+      - network
+
+networks:
+  network:
+    driver: bridge

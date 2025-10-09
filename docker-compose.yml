@@ -1,0 +1,21 @@
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - ./server/.env
+    volumes:
+      - ./server/firestore-creds.json:/app/firestore-creds.json:ro
+    restart: unless-stopped
+    networks:
+      - network
+
+networks:
+  network:
+    driver: bridge

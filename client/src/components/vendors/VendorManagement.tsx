@@ -1,22 +1,24 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// src/components/vendors/VendorManagement.tsx
 import { Plus, Search } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Vendor } from "../../types";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
-import { errorToast } from "../../utils/toasts";
 import Button from "../ui/Button";
-import VendorFormModal from "./VendorFormModal";
+import Modal from "../ui/Modal";
+import AccountFormModal, { AccountFormState } from "../ui/common/AccountFormModal";
+import VendorFormModal, { VendorFormState } from "./VendorFormModal";
 import VendorGrid from "./VendorGrid";
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Constants
 // ───────────────────────────────────────────────────────────────────────────────
 const SERVICE_TYPES = [
-  "Flight",
-  "Hotel",
+  "Airline",
+  "Hotel", 
+  "Rail",
+  "Bus",
+  "Cab",
+  "DMC",
   "Visa",
-  "Transport",
   "Insurance",
   "Other",
 ] as const;
@@ -30,27 +32,20 @@ type Expense = { vendor_id: string; amount: number };
 const VendorManagement: React.FC = () => {
   // State
   const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState<VendorFormState | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  const [formData, setFormData] = useState<{
-    name: string;
-    serviceType: string;
-    pocName: string;
-    phone: string;
-    email: string;
-    gstin: string;
-    accountId: string;
-  }>({
-    name: "",
-    serviceType: "",
-    pocName: "",
-    phone: "",
-    email: "",
-    gstin: "",
-    accountId: "",
-  });
+  // Account management state
+  const [isAccountFormOpen, setIsAccountFormOpen] = useState(false);
+  const [selectedVendorForAccount, setSelectedVendorForAccount] = useState<Vendor | null>(null);
+  const [existingAccountData, setExistingAccountData] = useState<AccountFormState | null>(null);
+  
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Replace with API/selector
   const expenses: Expense[] = [];
@@ -73,26 +68,84 @@ const VendorManagement: React.FC = () => {
   );
 
   // Helpers
-  const resetForm = useCallback(() => {
-    setFormData({
-      name: "",
-      serviceType: "",
-      pocName: "",
-      phone: "",
-      email: "",
-      gstin: "",
-      accountId: "",
-    });
-  }, []);
-
   const fetchVendors = async () => {
+    setErrorMsg(null);
     try {
-      const res = await apiRequest<any>({ method: "GET", url: "/vendors" });
+      const res = await apiRequest<any>({ method: "GET", url: "/vendors?unmask=true" });
       setVendors(res?.data ?? []);
     } catch (e) {
       const err = e as ApiError;
-      errorToast("Failed to fetch vendors");
+      setErrorMsg(err.message || "Failed to fetch vendors");
     }
+  };
+
+  const openForm = (vendor?: Vendor) => {
+    setSelectedVendor(vendor ?? null);
+    setIsFormOpen(true);
+  };
+
+  const askDelete = (vendorId: string) => {
+    setDeleteTargetId(vendorId);
+    setIsDeleteOpen(true);
+  };
+
+  const doDelete = async () => {
+    if (!deleteTargetId) return;
+    setDeleting(true);
+    setErrorMsg(null);
+    try {
+      await apiRequest({
+        method: "DELETE",
+        url: `/vendors/${deleteTargetId}`,
+      });
+      setIsDeleteOpen(false);
+      setDeleteTargetId(null);
+      fetchVendors();
+    } catch (e) {
+      const err = e as ApiError;
+      setErrorMsg(err.message || "Failed to delete vendor");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const manageAccount = async (vendor: Vendor) => {
+    setSelectedVendorForAccount(vendor);
+    
+    if (vendor.accountId) {
+      // Fetch existing account data
+      try {
+        const response = await apiRequest<any>({
+          method: "GET",
+          url: `/vendors/${vendor.id}/account`,
+        });
+        if (response?.status === "success" && response?.data) {
+          setExistingAccountData({
+            id: response.data.id,
+            bankName: response.data.bankName || "",
+            ifscCode: response.data.ifscCode || "",
+            branchName: response.data.branchName || "",
+            accountNo: response.data.accountNo || "",
+            upiId: response.data.upiId || "",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch account data:", error);
+        setExistingAccountData(null);
+      }
+    } else {
+      setExistingAccountData(null);
+    }
+    
+    setIsAccountFormOpen(true);
+  };
+
+  const handleAccountLinked = () => {
+    // Refresh vendors list to get updated accountId
+    fetchVendors();
+    setIsAccountFormOpen(false);
+    setSelectedVendorForAccount(null);
+    setExistingAccountData(null);
   };
 
   const getVendorExpenseTotal = useCallback(
@@ -103,56 +156,8 @@ const VendorManagement: React.FC = () => {
     [expenses]
   );
 
-  // Handlers
-  const handleOpenModal = useCallback(
-    (vendor?: Vendor) => {
-      if (vendor) {
-        setSelectedVendor(vendor);
-        setFormData({
-          name: vendor.name || "",
-          serviceType: vendor.serviceType || "",
-          pocName: vendor.pocName || "",
-          email: vendor.email || "",
-          phone: vendor.phone || "",
-          gstin: vendor.gstin || "",
-          accountId: vendor.accountId || "",
-        });
-      } else {
-        setSelectedVendor(null);
-        resetForm();
-      }
-      setIsModalOpen(true);
-    },
-    [resetForm]
-  );
-
-  const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false);
-    setSelectedVendor(null);
-    resetForm();
-  }, [resetForm]);
-
-  const handleSubmit: React.FormEventHandler = useCallback(
-    (e) => {
-      e.preventDefault();
-      // TODO: wire to API
-      // if (selectedVendor) {
-      //   updateVendor(selectedVendor.id, formData)
-      //     .then(() => refreshList());
-      // } else {
-      //   createVendor(formData)
-      //     .then(() => refreshList());
-      // }
-      handleCloseModal();
-    },
-    [handleCloseModal /*, selectedVendor, formData */]
-  );
-
-  const handleDelete = useCallback((vendorId: string) => {
-    if (!window.confirm("Delete this vendor?")) return;
-    // TODO: wire to API
-    // deleteVendor(vendorId).then(() => refreshList());
-  }, []);
+  // placeholder until wired from context/store
+  const getExpensesByVendor = (_id: string) => [] as any[];
 
   useEffect(() => {
     fetchVendors();
@@ -171,10 +176,17 @@ const VendorManagement: React.FC = () => {
             Manage your travel service providers and suppliers
           </p>
         </div>
-        <Button onClick={() => handleOpenModal()} icon={Plus}>
+        <Button onClick={() => openForm()} icon={Plus}>
           Add Vendor
         </Button>
       </div>
+
+      {/* Inline error */}
+      {errorMsg && (
+        <div className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Search and Stats */}
       <div className="grid grid-cols-1  gap-6">
@@ -193,23 +205,82 @@ const VendorManagement: React.FC = () => {
       </div>
 
       {/* Grid */}
-      <VendorGrid
-        vendors={filteredVendors}
-        onEdit={handleOpenModal}
-        onDelete={handleDelete}
-        getVendorExpenseTotal={getVendorExpenseTotal}
+      {vendors.length > 0 && (
+        <VendorGrid
+          vendors={filteredVendors}
+          onEdit={openForm}
+          onDelete={askDelete}
+          onManageAccount={manageAccount}
+          getVendorExpenseTotal={getVendorExpenseTotal}
+        />
+      )}
+
+      {/* Add/Edit Vendor Modal */}
+      <VendorFormModal
+        isOpen={isFormOpen}
+        setIsFormOpen={setIsFormOpen}
+        title={selectedVendor ? "Edit Vendor" : "Add New Vendor"}
+        isEditing={Boolean(selectedVendor)}
+        selectedVendor={selectedVendor}
+        setSelectedVendor={setSelectedVendor}
+        serviceTypes={[...SERVICE_TYPES] as unknown as string[]}
+        onVendorSaved={fetchVendors}
       />
 
-      {/* Modal */}
-      <VendorFormModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        title={selectedVendor ? "Edit Vendor" : "Add New Vendor"}
-        formData={formData}
-        setFormData={setFormData}
-        onSubmit={handleSubmit}
-        serviceTypes={[...SERVICE_TYPES] as unknown as string[]}
+      {/* Account Management Modal */}
+      <AccountFormModal
+        isOpen={isAccountFormOpen}
+        onClose={() => {
+          setIsAccountFormOpen(false);
+          setSelectedVendorForAccount(null);
+          setExistingAccountData(null);
+        }}
+        entityId={selectedVendorForAccount?.id || ""}
+        entityType="vendor"
+        entityName={selectedVendorForAccount?.name || ""}
+        existingAccount={existingAccountData}
+        onAccountLinked={handleAccountLinked}
       />
+
+      {/* Delete Confirm Modal */}
+      <Modal
+        isOpen={isDeleteOpen}
+        onClose={() => {
+          if (!deleting) {
+            setIsDeleteOpen(false);
+            setDeleteTargetId(null);
+          }
+        }}
+        title="Delete vendor?"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-700">
+            This action will permanently remove the vendor record.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              className="px-3 py-2 rounded-lg border border-gray-300 text-gray-800 text-sm"
+              onClick={() => {
+                setIsDeleteOpen(false);
+                setDeleteTargetId(null);
+              }}
+              disabled={deleting}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="px-3 py-2 rounded-lg bg-rose-600 text-white text-sm disabled:opacity-60"
+              onClick={doDelete}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

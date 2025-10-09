@@ -17,10 +17,13 @@ type AuthResponse = {
   data: { accessToken: string; user: AuthUser };
 };
 
-const GOOGLE_CLIENT_ID =
-  "277785594096-9fim90bhmtkd9ksj8e58i94qcvp6a9en.apps.googleusercontent.com";
-const API_BASE = "http://localhost:3000";
-const TOKEN_KEY = "token";
+if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+  throw new Error("Missing VITE_GOOGLE_CLIENT_ID env variable");
+}
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
+const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY || "token";
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();

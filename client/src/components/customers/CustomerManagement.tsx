@@ -8,6 +8,7 @@ import { Customer } from "../../types";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
+import AccountFormModal, { AccountFormState } from "../ui/common/AccountFormModal";
 import CustomerFormModal, { CustomerFormState } from "./CustomerFormModal";
 import CustomerTable from "./CustomerTable";
 import TicketHistoryModal from "./TicketHistoryModal";
@@ -28,6 +29,11 @@ const CustomerManagement: React.FC = () => {
   const [historyTickets, setHistoryTickets] = useState<any[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Account management state
+  const [isAccountFormOpen, setIsAccountFormOpen] = useState(false);
+  const [selectedCustomerForAccount, setSelectedCustomerForAccount] = useState<Customer | null>(null);
+  const [existingAccountData, setExistingAccountData] = useState<AccountFormState | null>(null);
+
   // ── Derived ─────────────────────────────────────────────────────────────────
   const { searchTerm, setSearchTerm, filtered } = useCustomerSearch(customers);
 
@@ -35,7 +41,7 @@ const CustomerManagement: React.FC = () => {
   const fetchCustomers = async () => {
     setErrorMsg(null);
     try {
-      const res = await apiRequest<any>({ method: "GET", url: "/customers" });
+      const res = await apiRequest<any>({ method: "GET", url: "/customers?unmask=true" });
       setCustomers(res?.data ?? []);
     } catch (e) {
       const err = e as ApiError;
@@ -102,6 +108,45 @@ const CustomerManagement: React.FC = () => {
     setIsHistoryOpen(true);
   };
 
+  const manageAccount = async (customer: Customer) => {
+    setSelectedCustomerForAccount(customer);
+    
+    if (customer.accountId) {
+      // Fetch existing account data
+      try {
+        const response = await apiRequest<any>({
+          method: "GET",
+          url: `/customers/${customer.id}/account`,
+        });
+        if (response?.status === "success" && response?.data) {
+          setExistingAccountData({
+            id: response.data.id,
+            bankName: response.data.bankName || "",
+            ifscCode: response.data.ifscCode || "",
+            branchName: response.data.branchName || "",
+            accountNo: response.data.accountNo || "",
+            upiId: response.data.upiId || "",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch account data:", error);
+        setExistingAccountData(null);
+      }
+    } else {
+      setExistingAccountData(null);
+    }
+    
+    setIsAccountFormOpen(true);
+  };
+
+  const handleAccountLinked = () => {
+    // Refresh customers list to get updated accountId
+    fetchCustomers();
+    setIsAccountFormOpen(false);
+    setSelectedCustomerForAccount(null);
+    setExistingAccountData(null);
+  };
+
   // placeholder until wired from context/store
   const getBookingsByCustomer = (_id: string) => [] as any[];
 
@@ -161,6 +206,7 @@ const CustomerManagement: React.FC = () => {
           onEdit={openForm}
           onDelete={askDelete}
           onViewTickets={viewTicketHistory}
+          onManageAccount={manageAccount}
           getBookingsByCustomer={getBookingsByCustomer}
         />
       )}
@@ -181,6 +227,21 @@ const CustomerManagement: React.FC = () => {
         isEditing={Boolean(selectedCustomer)}
         selectedCustomer={selectedCustomer}
         setSelectedCustomer={setSelectedCustomer}
+      />
+
+      {/* Account Management Modal */}
+      <AccountFormModal
+        isOpen={isAccountFormOpen}
+        onClose={() => {
+          setIsAccountFormOpen(false);
+          setSelectedCustomerForAccount(null);
+          setExistingAccountData(null);
+        }}
+        entityId={selectedCustomerForAccount?.id || ""}
+        entityType="customer"
+        entityName={selectedCustomerForAccount?.name || ""}
+        existingAccount={existingAccountData}
+        onAccountLinked={handleAccountLinked}
       />
 
       {/* Delete Confirm Modal */}

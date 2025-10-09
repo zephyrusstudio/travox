@@ -18,11 +18,7 @@ export type CustomerFormState = {
   aadhaarNo?: string;
   visaNo?: string;
   gstin?: string;
-  bank_name?: string;
-  ifsc_code?: string;
-  branch_name?: string;
-  account_no?: string;
-  upi_id?: string;
+  accountId?: string;
   totalBookings?: number;
   createdBy?: string;
   updatedBy?: string;
@@ -45,7 +41,6 @@ export type CustomerFormModalProps = {
 const MAX_PHONE = 10;
 const AADHAAR_LEN = 12;
 const GSTIN_LEN = 15;
-const IFSC_LEN = 11;
 const PASSPORT_LEN = 8;
 
 /* Component */
@@ -69,11 +64,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     aadhaarNo: "",
     visaNo: "",
     gstin: "",
-    bank_name: "",
-    ifsc_code: "",
-    branch_name: "",
-    account_no: "",
-    upi_id: "",
+    accountId: "",
     createdAt: "",
     totalBookings: 0,
     createdBy: "",
@@ -81,33 +72,18 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     isDeleted: false,
     updatedAt: "",
   });
-  const [showBank, setShowBank] = useState(false);
+  
+  const [isdCode, setIsdCode] = useState("+91");
 
   // Validation
-  const isPhoneValid = !formData.phone || /^[0-9]{10}$/.test(formData.phone);
+  const isPhoneValid = !formData.phone || /^[0-9]{10}$/.test(formData.phone.replace(/^\+\d{1,4}-/, ""));
   const isAadhaarValid =
     !formData.aadhaarNo || /^[0-9]{12}$/.test(formData.aadhaarNo);
   const isGstinValid = !formData.gstin || /^[0-9A-Z]{15}$/.test(formData.gstin);
-  const isIfscValid =
-    !formData.ifsc_code || /^[A-Z]{4}0[A-Z0-9]{6}$/.test(formData.ifsc_code);
   const isPassportValid =
     !formData.passportNo || /^[A-Z0-9]{1,8}$/.test(formData.passportNo);
   const isEmailValid =
     !formData.email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
-
-  // Bank requirements when open (UPI optional)
-  const hasBankName = !!formData.bank_name?.trim();
-  const hasBranchName = !!formData.branch_name?.trim();
-  const hasAccountNo = !!formData.account_no?.trim();
-  const isIfscPresentValid = !!formData.ifsc_code && isIfscValid;
-  const isBankSectionValid = !showBank
-    ? true
-    : hasBankName && hasBranchName && hasAccountNo && isIfscPresentValid;
-
-  // Core customer details rule to open bank section
-  const hasCoreDetails =
-    Boolean(formData.name?.trim()) &&
-    ((formData.phone && isPhoneValid) || (formData.email && isEmailValid));
 
   const canSubmit = useMemo(
     () =>
@@ -116,27 +92,26 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       isPhoneValid &&
       isAadhaarValid &&
       isGstinValid &&
-      isIfscValid && // format check only; presence enforced by isBankSectionValid
-      isPassportValid &&
-      isBankSectionValid,
+      isPassportValid,
     [
       formData.name,
       isEmailValid,
       isPhoneValid,
       isAadhaarValid,
       isGstinValid,
-      isIfscValid,
       isPassportValid,
-      isBankSectionValid,
     ]
   );
 
   // Sanitize helpers
-  const setPhone = (v: string) =>
+  const setPhone = (v: string) => {
+    const cleanNumber = v.replace(/\D/g, "").slice(0, MAX_PHONE);
+    const formattedPhone = cleanNumber ? `${isdCode}-${cleanNumber}` : "";
     setFormData((s) => ({
       ...s,
-      phone: v.replace(/\D/g, "").slice(0, MAX_PHONE),
+      phone: formattedPhone,
     }));
+  };
   const setAadhaar = (v: string) =>
     setFormData((s) => ({
       ...s,
@@ -150,14 +125,6 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
         .replace(/[^0-9A-Z]/g, "")
         .slice(0, GSTIN_LEN),
     }));
-  const setIfsc = (v: string) =>
-    setFormData((s) => ({
-      ...s,
-      ifsc_code: v
-        .toUpperCase()
-        .replace(/[^0-9A-Z]/g, "")
-        .slice(0, IFSC_LEN),
-    }));
   const setPassport = (v: string) =>
     setFormData((s) => ({
       ...s,
@@ -168,27 +135,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     }));
 
   // API helpers
-  async function createBankAccount(): Promise<string> {
-    const payload = {
-      bankName: formData.bank_name?.trim(),
-      ifscCode: formData.ifsc_code?.trim(),
-      branchName: formData.branch_name?.trim(),
-      accountNo: formData.account_no?.trim(),
-      upiId: formData.upi_id?.trim() || undefined,
-      isActive: true,
-    };
-    const resp = await apiRequest<any>({
-      method: "POST",
-      url: "/accounts",
-      data: payload,
-      headers: { Accept: "*/*", "Content-Type": "application/json" },
-    });
-    const id = resp?.data?.id as string | undefined;
-    if (!id) throw new Error("Bank account creation failed");
-    return id;
-  }
-
-  async function createCustomer(accountId?: string) {
+  async function createCustomer() {
     const payload: Record<string, unknown> = {
       name: formData.name?.trim(),
       email: formData.email || undefined,
@@ -198,9 +145,6 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       aadhaarNo: formData.aadhaarNo || undefined,
       visaNo: formData.visaNo || undefined,
       gstin: formData.gstin || undefined,
-      // link bank account when provided
-      accountId: accountId || undefined,
-      // keep the legacy bank fields out of the customer payload
     };
 
     const data = await apiRequest<any>({
@@ -215,15 +159,38 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     }
   }
 
+  async function updateCustomer() {
+    const payload: Record<string, unknown> = {
+      name: formData.name?.trim(),
+      email: formData.email || undefined,
+      phone: formData.phone || undefined,
+      address: formData.address || undefined,
+      passportNo: formData.passportNo || undefined,
+      aadhaarNo: formData.aadhaarNo || undefined,
+      visaNo: formData.visaNo || undefined,
+      gstin: formData.gstin || undefined,
+    };
+
+    const data = await apiRequest<any>({
+      method: "PUT",
+      url: `/customers/${formData.id}`,
+      data: payload,
+      headers: { Accept: "*/*", "Content-Type": "application/json" },
+    });
+
+    if (!data?.status || data.status !== "success") {
+      throw new Error("Unable to update customer");
+    }
+  }
+
   // Submit
   const submitForm: React.FormEventHandler = async (e) => {
     e.preventDefault();
     if (!canSubmit) return;
 
     try {
-      if (showBank) {
-        const accountId = await createBankAccount();
-        await createCustomer(accountId);
+      if (isEditing) {
+        await updateCustomer();
       } else {
         await createCustomer();
       }
@@ -247,11 +214,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       aadhaarNo: "",
       visaNo: "",
       gstin: "",
-      bank_name: "",
-      ifsc_code: "",
-      branch_name: "",
-      account_no: "",
-      upi_id: "",
+      accountId: "",
       createdAt: "",
       totalBookings: 0,
       createdBy: "",
@@ -259,7 +222,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       isDeleted: false,
       updatedAt: "",
     });
-    setShowBank(false);
+    setIsdCode("+91");
     setIsFormOpen(false);
     setSelectedCustomer(null);
   };
@@ -267,12 +230,16 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
   // Pre-fill on edit
   useEffect(() => {
     if (!selectedCustomer) return;
+    const existingPhone = selectedCustomer.phone || "";
+    const phoneMatch = existingPhone.match(/^(\+\d{1,4})-(.+)$/);
+    if (phoneMatch) {
+      setIsdCode(phoneMatch[1]);
+    }
+    
     setFormData({
       name: selectedCustomer.name || "",
       email: selectedCustomer.email || "",
-      phone: (selectedCustomer.phone || "")
-        .replace(/\D/g, "")
-        .slice(0, MAX_PHONE),
+      phone: existingPhone,
       address: selectedCustomer.address || "",
       passportNo: (selectedCustomer.passportNo || "")
         .toUpperCase()
@@ -282,13 +249,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
         .slice(0, AADHAAR_LEN),
       visaNo: selectedCustomer.visaNo || "",
       gstin: (selectedCustomer.gstin || "").toUpperCase().slice(0, GSTIN_LEN),
-      bank_name: selectedCustomer.bank_name || "",
-      ifsc_code: (selectedCustomer.ifsc_code || "")
-        .toUpperCase()
-        .slice(0, IFSC_LEN),
-      branch_name: selectedCustomer.branch_name || "",
-      account_no: selectedCustomer.account_no || "",
-      upi_id: selectedCustomer.upi_id || "",
+      accountId: selectedCustomer.accountId || "",
       id: selectedCustomer.id || "",
       orgId: selectedCustomer.orgId || "",
       createdAt: selectedCustomer.createdAt || "",
@@ -344,14 +305,36 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Phone
             </label>
-            <input
-              type="tel"
-              inputMode="numeric"
-              maxLength={MAX_PHONE}
-              value={formData.phone || ""}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="flex">
+              <input
+                type="text"
+                value={isdCode}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Only allow + at the beginning and numbers
+                  const cleanValue = value.replace(/[^+\d]/g, "");
+                  if (cleanValue.startsWith("+") || cleanValue === "") {
+                    setIsdCode(cleanValue || "+");
+                    if (formData.phone) {
+                      const phoneNumber = formData.phone.replace(/^\+\d{1,4}-/, "");
+                      setPhone(phoneNumber);
+                    }
+                  }
+                }}
+                placeholder="+91"
+                maxLength={5}
+                className="w-20 border border-gray-300 rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-center"
+              />
+              <input
+                type="tel"
+                inputMode="numeric"
+                maxLength={MAX_PHONE}
+                value={formData.phone ? formData.phone.replace(/^\+\d{1,4}-/, "") : ""}
+                onChange={(e) => setPhone(e.target.value)}
+                className="flex-1 border border-l-0 border-gray-300 rounded-r-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter phone number"
+              />
+            </div>
             {!isPhoneValid && (
               <p className="mt-1 text-xs text-rose-600">
                 Enter exactly 10 digits.
@@ -432,116 +415,6 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
             />
           </div>
         </div>
-
-        {/* Bank toggle */}
-        <div className="pt-4">
-          <button
-            type="button"
-            onClick={() => {
-              if (!hasCoreDetails) {
-                errorToast("Please fill in the customer details first.");
-                return;
-              }
-              setShowBank((s) => !s);
-            }}
-            className="w-full md:w-auto px-3 py-2 rounded-lg border border-gray-300 text-gray-800 text-sm"
-          >
-            {showBank ? "Hide Bank Account" : "Link Bank Account"}
-          </button>
-        </div>
-
-        {/* Bank accordion */}
-        {showBank && (
-          <div className="pt-4 border rounded-lg border-gray-200">
-            <div className="px-4 pt-4 flex items-baseline justify-between">
-              <h3 className="text-lg font-bold text-gray-900">Bank Account</h3>
-              <span className="text-xs text-gray-500">Required when open</span>
-            </div>
-
-            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Bank Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.bank_name || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, bank_name: e.target.value })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required={showBank}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Branch Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.branch_name || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, branch_name: e.target.value })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required={showBank}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Account Number
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={formData.account_no || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      account_no: e.target.value.trim(),
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  autoComplete="off"
-                  required={showBank}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  IFSC Code
-                </label>
-                <input
-                  type="text"
-                  value={formData.ifsc_code || ""}
-                  placeholder="HDFC0XXXXXX"
-                  maxLength={IFSC_LEN}
-                  onChange={(e) => setIfsc(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  autoCapitalize="characters"
-                  required={showBank}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  UPI ID (optional)
-                </label>
-                <input
-                  type="text"
-                  value={formData.upi_id || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, upi_id: e.target.value })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  autoComplete="off"
-                />
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="flex items-center justify-end space-x-3 pt-4">
           <Button type="button" variant="outline" onClick={onClose}>

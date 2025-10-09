@@ -1,4 +1,4 @@
-import { Edit, FileText, Search, Trash2 } from "lucide-react";
+import { CreditCard, Edit, FileText, Search, Trash2 } from "lucide-react";
 import React from "react";
 import { CustomerTableProps } from "../../types";
 import { formatDate } from "../../utils/misc";
@@ -14,7 +14,7 @@ import Table, {
 
 const CustomerTable: React.FC<CustomerTableProps> & {
   SearchBox: React.FC<SearchBoxProps>;
-} = ({ customers, onEdit, onDelete, onViewTickets, getBookingsByCustomer }) => {
+} = ({ customers, onEdit, onDelete, onViewTickets, onManageAccount, getBookingsByCustomer }) => {
   return (
     <Card>
       <CardHeader>
@@ -94,18 +94,29 @@ const CustomerTable: React.FC<CustomerTableProps> & {
                         icon={FileText}
                         onClick={() => onViewTickets(customer)}
                         title="View Ticket History"
+                        className="h-9"
                       />
                       <Button
                         variant="outline"
                         size="sm"
                         icon={Edit}
                         onClick={() => onEdit(customer)}
+                        className="h-9"
+                      />
+                      <Button
+                        variant={customer.accountId ? "primary" : "secondary"}
+                        size="sm"
+                        icon={CreditCard}
+                        onClick={() => onManageAccount(customer)}
+                        title={customer.accountId ? "Edit Account" : "Link Account"}
+                        className="h-9"
                       />
                       <Button
                         variant="danger"
                         size="sm"
                         icon={Trash2}
                         onClick={() => onDelete(customer.id)}
+                        className="h-9"
                       />
                     </div>
                   </TableCell>

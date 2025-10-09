@@ -9,6 +9,7 @@ export interface Customer {
   aadhaarNo?: string;
   visaNo?: string;
   gstin?: string;
+  accountId?: string;
   totalBookings?: number;
   createdBy?: string;
   updatedBy?: string;
@@ -22,7 +23,8 @@ export type CustomerTableProps = {
   onEdit: (c: Customer) => void;
   onDelete: (id: string) => void;
   onViewTickets: (c: Customer) => void;
-  getBookingsByCustomer: (id: string) => any[];
+  onManageAccount: (c: Customer) => void;
+  getBookingsByCustomer: (id: string) => Booking[];
 };
 
 export interface Vendor {

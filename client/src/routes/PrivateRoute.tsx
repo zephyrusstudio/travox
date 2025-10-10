@@ -13,10 +13,10 @@ const PrivateRoute = <P extends object>(
   Component: React.ComponentType<P>
 ): React.FC<P> => {
   const WrappedComponent: React.FC<P> = (props) => {
-    const token = sessionStorage.getItem("token");
+    const token = localStorage.getItem("token") ?? sessionStorage.getItem("token");
 
     if (!token) {
-      return <Navigate to="/auth" />;
+      return <Navigate to="/auth" replace />;
     }
 
     return <Component {...props} />;

@@ -8,6 +8,8 @@ import PaymentManagement from "./components/payments/PaymentManagement";
 import TicketUploadManager from "./components/tickets/TicketUploadManager";
 import Layout from "./components/ui/Layout";
 import VendorManagement from "./components/vendors/VendorManagement";
+import AuditLogsManagement from "./components/logs/ActivityLogsManagement";
+import Dashboard from "./components/dashboard/Dashboard";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
 
@@ -16,6 +18,8 @@ const AppContent: React.FC = () => {
 
   const renderCurrentPage = () => {
     switch (currentPage) {
+      case "dashboard":
+        return <Dashboard />;
       case "customers":
         return <CustomerManagement />;
       case "vendors":
@@ -26,8 +30,10 @@ const AppContent: React.FC = () => {
         return <PaymentManagement />;
       case "tickets":
         return <TicketUploadManager />;
+      case "logs":
+        return <AuditLogsManagement />;
       default:
-        return <TicketUploadManager />;
+        return <Dashboard />;
     }
   };
 

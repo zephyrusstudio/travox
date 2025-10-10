@@ -110,6 +110,26 @@ export interface LogEntry {
   timestamp: string;
 }
 
+export interface AuditLog {
+  id: string;
+  orgId: string;
+  actorId: string;
+  entity: string;
+  entityId: string;
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW';
+  diff: {
+    before?: Record<string, unknown> | string | null;
+    after?: Record<string, unknown> | string | null;
+    accessed?: boolean;
+  };
+  ip: string;
+  userAgent: string;
+  createdAt: string; // Will be converted from Firestore timestamp
+  // Additional computed fields for UI
+  actorName?: string;
+  timestamp?: string; // Alias for createdAt for backward compatibility
+}
+
 export interface TicketData {
   ticket_id: string;
   file_name: string;

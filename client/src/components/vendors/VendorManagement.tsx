@@ -1,4 +1,4 @@
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, RefreshCw, Building2 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Vendor } from "../../types";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
@@ -32,6 +32,7 @@ type Expense = { vendor_id: string; amount: number };
 const VendorManagement: React.FC = () => {
   // State
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [loading, setLoading] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<VendorFormState | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -69,6 +70,7 @@ const VendorManagement: React.FC = () => {
 
   // Helpers
   const fetchVendors = async () => {
+    setLoading(true);
     setErrorMsg(null);
     try {
       const res = await apiRequest<any>({ method: "GET", url: "/vendors?unmask=true" });
@@ -76,6 +78,8 @@ const VendorManagement: React.FC = () => {
     } catch (e) {
       const err = e as ApiError;
       setErrorMsg(err.message || "Failed to fetch vendors");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -204,7 +208,56 @@ const VendorManagement: React.FC = () => {
       </div>
 
       {/* Grid */}
-      {vendors.length > 0 && (
+      {loading ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="bg-white rounded-lg shadow border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-24 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+                    </div>
+                  </div>
+                  <div className="h-6 bg-gray-200 rounded-full animate-pulse w-16"></div>
+                </div>
+
+                <div className="space-y-3 mb-4">
+                  <div className="flex justify-between">
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-12"></div>
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-20"></div>
+                  </div>
+                  <div className="flex justify-between">
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-24"></div>
+                  </div>
+                  <div className="flex justify-between">
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-14"></div>
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-28"></div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                  <div className="flex space-x-2">
+                    <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
+                    <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
+                    <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
+                  </div>
+                  <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : vendors.length === 0 ? (
+        <div className="text-center py-12">
+          <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Vendors Found</h3>
+          <p className="text-gray-500">Get started by adding your first vendor.</p>
+        </div>
+      ) : (
         <VendorGrid
           vendors={filteredVendors}
           onEdit={openForm}

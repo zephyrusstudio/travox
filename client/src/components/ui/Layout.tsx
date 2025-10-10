@@ -53,7 +53,7 @@ const sidebarItems = [
   { id: "expenses", label: "Expenses", icon: Receipt },
   { id: "refunds", label: "Refunds", icon: RefreshCw },
   { id: "reports", label: "Reports", icon: FileText },
-  { id: "logs", label: "Activity Logs", icon: Clock },
+  { id: "logs", label: "Audit Logs", icon: Clock },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -270,7 +270,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
                   {currentPage === "gst-tax" &&
                     "Tax compliance and GST reports"}
                   {currentPage === "calendar" && "Schedule and reminders"}
-                  {currentPage === "logs" && "System activity tracking"}
+                  {currentPage === "logs" && "Audit logs and system activity tracking"}
                 </p>
               </div>
             </div>

@@ -1,15 +1,16 @@
 // src/App.tsx
 import React, { useState } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import AuditLogsManagement from "./components/auditLogs/AuditLogsManagement";
 import AuthPage from "./components/auth/AuthPage";
 import BookingManagement from "./components/bookings/BookingManagement";
 import CustomerManagement from "./components/customers/CustomerManagement";
+import Dashboard from "./components/dashboard/Dashboard";
+import ExpenseManagement from "./components/expenses/ExpenseManagement";
 import PaymentManagement from "./components/payments/PaymentManagement";
 import TicketUploadManager from "./components/tickets/TicketUploadManager";
 import Layout from "./components/ui/Layout";
 import VendorManagement from "./components/vendors/VendorManagement";
-import AuditLogsManagement from "./components/auditLogs/AuditLogsManagement";
-import Dashboard from "./components/dashboard/Dashboard";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
 
@@ -28,6 +29,8 @@ const AppContent: React.FC = () => {
         return <BookingManagement />;
       case "payments":
         return <PaymentManagement />;
+      case "expenses":
+        return <ExpenseManagement />;
       case "tickets":
         return <TicketUploadManager />;
       case "logs":

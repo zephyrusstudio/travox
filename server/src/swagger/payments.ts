@@ -186,6 +186,10 @@
  *               toAccountId:
  *                 type: string
  *                 example: "acc_vendor_123"
+ *               bookingId:
+ *                 type: string
+ *                 example: "booking_123456"
+ *                 description: "Optional booking ID to associate the expense with a specific booking"
  *               vendorId:
  *                 type: string
  *                 example: "vendor_123456"

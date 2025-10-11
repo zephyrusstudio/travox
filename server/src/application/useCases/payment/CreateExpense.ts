@@ -9,6 +9,7 @@ interface CreateExpenseDTO {
   currency: string;
   paymentMode: PaymentMode;
   toAccountId: string;
+  bookingId?: string;
   category?: string;
   notes?: string;
   receiptNo?: string;
@@ -41,10 +42,11 @@ export class CreateExpense {
       data.amount,
       data.currency,
       data.paymentMode,
-  createdBy,
-  data.toAccountId,
-  vendor.id,
+      createdBy,
+      data.toAccountId,
+      vendor.id,
       {
+        bookingId: data.bookingId,
         category: data.category,
         notes: data.notes,
         receiptNo: data.receiptNo,

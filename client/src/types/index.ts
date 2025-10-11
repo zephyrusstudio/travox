@@ -65,7 +65,16 @@ export interface Payment {
   booking_id: string;
   payment_date: string;
   amount: number;
-  payment_mode: "cash" | "upi" | "credit_card" | "bank_transfer";
+  payment_mode:
+    | "cash"
+    | "upi"
+    | "card"
+    | "credit_card"
+    | "bank_transfer"
+    | "netbanking"
+    | "cheque"
+    | "wallet"
+    | "other";
   receipt_number: string;
   notes?: string;
 }

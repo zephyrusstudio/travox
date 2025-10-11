@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Bell,
   Building2,
@@ -5,21 +6,19 @@ import {
   ChevronDown,
   Clock,
   CreditCard,
-  FileText,
   LayoutDashboard,
   LogOut,
   Menu,
-  Receipt,
-  RefreshCw,
   Search,
-  Settings,
   Upload,
   User,
   Users,
   X,
 } from "lucide-react";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApp } from "../../contexts/AppContext";
+import { successToast } from "../../utils/toasts";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -27,7 +26,7 @@ interface LayoutProps {
 }
 
 const sidebarItems = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  // { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "tickets", label: "Ticket Upload", icon: Upload },
   // {
   //   id: "ledgers",
@@ -50,18 +49,19 @@ const sidebarItems = [
   { id: "vendors", label: "Vendors", icon: Building2 },
   { id: "bookings", label: "Bookings", icon: Calendar },
   { id: "payments", label: "Payments", icon: CreditCard },
-  { id: "expenses", label: "Expenses", icon: Receipt },
-  { id: "refunds", label: "Refunds", icon: RefreshCw },
-  { id: "reports", label: "Reports", icon: FileText },
+  // { id: "expenses", label: "Expenses", icon: Receipt },
+  // { id: "refunds", label: "Refunds", icon: RefreshCw },
+  // { id: "reports", label: "Reports", icon: FileText },
   { id: "logs", label: "Audit Logs", icon: Clock },
-  { id: "settings", label: "Settings", icon: Settings },
+  // { id: "settings", label: "Settings", icon: Settings },
 ];
 
 const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["ledgers"]);
-  const { currentUser, authUser, logout } = useApp();
+  const navigate = useNavigate();
+  const { currentUser, authUser } = useApp();
 
   const toggleSubmenu = (menuId: string) => {
     setExpandedMenus((prev) =>
@@ -220,7 +220,15 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
               </div>
             </div>
             <button
-              onClick={logout}
+              onClick={() => {
+                localStorage?.clear();
+                sessionStorage?.clear();
+                successToast("Logged out successfully");
+                navigate("/");
+                setTimeout(() => {
+                  window.location.reload();
+                }, 500);
+              }}
               className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
               title="Logout"
             >
@@ -270,7 +278,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
                   {currentPage === "gst-tax" &&
                     "Tax compliance and GST reports"}
                   {currentPage === "calendar" && "Schedule and reminders"}
-                  {currentPage === "logs" && "Audit logs and system activity tracking"}
+                  {currentPage === "logs" &&
+                    "Audit logs and system activity tracking"}
                 </p>
               </div>
             </div>
@@ -321,7 +330,16 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
                       Profile Settings
                     </a>
                     <button
-                      onClick={logout}
+                      onClick={() => {
+                        localStorage?.clear();
+                        sessionStorage?.clear();
+                        successToast("Logged out successfully");
+                        navigate("/");
+
+                        setTimeout(() => {
+                          window.location.reload();
+                        }, 500);
+                      }}
                       className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                     >
                       <LogOut className="w-4 h-4 mr-2" />

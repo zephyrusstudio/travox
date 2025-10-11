@@ -18,6 +18,7 @@ export type PaymentFormProps = {
   setFormData: (next: PaymentFormState) => void;
   onSubmit: (data: PaymentFormState) => void;
   onBookingSelect?: (bookingId: string) => void; // optional: parent can auto-generate receipt
+  isSubmitting?: boolean;
 };
 
 const PaymentForm: React.FC<PaymentFormProps> = ({
@@ -29,6 +30,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   setFormData,
   onSubmit,
   onBookingSelect,
+  isSubmitting = false,
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +48,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
             <select
               required
               value={formData.booking_id}
+              disabled={isSubmitting}
               onChange={(e) => {
                 const id = e.target.value;
                 setFormData({ ...formData, booking_id: id });
@@ -82,6 +85,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
               type="date"
               required
               value={formData.payment_date || todayISO()}
+              disabled={isSubmitting}
               onChange={(e) =>
                 setFormData({ ...formData, payment_date: e.target.value })
               }
@@ -99,6 +103,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
               min="0"
               step="0.01"
               value={formData.amount}
+              disabled={isSubmitting}
               onChange={(e) =>
                 setFormData({
                   ...formData,
@@ -116,6 +121,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
             <select
               required
               value={formData.payment_mode}
+              disabled={isSubmitting}
               onChange={(e) =>
                 setFormData({
                   ...formData,
@@ -140,6 +146,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
               type="text"
               required
               value={formData.receipt_number}
+              disabled={isSubmitting}
               onChange={(e) =>
                 setFormData({ ...formData, receipt_number: e.target.value })
               }
@@ -155,6 +162,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           <textarea
             rows={3}
             value={formData.notes}
+            disabled={isSubmitting}
             onChange={(e) =>
               setFormData({ ...formData, notes: e.target.value })
             }
@@ -164,10 +172,17 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         </div>
 
         <div className="flex items-center justify-end space-x-3 pt-4">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
-          <Button type="submit">Record Payment</Button>
+          <Button type="submit" disabled={isSubmitting} loading={isSubmitting}>
+            Record Payment
+          </Button>
         </div>
       </form>
     </Modal>

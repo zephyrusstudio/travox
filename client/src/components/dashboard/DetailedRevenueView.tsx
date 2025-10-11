@@ -39,15 +39,23 @@ const DetailedRevenueView: React.FC = () => {
   };
 
   const getPaymentModeVariant = (mode: string) => {
-    switch (mode) {
+    const normalized = mode.toLowerCase();
+    switch (normalized) {
       case 'cash':
         return 'success';
       case 'upi':
         return 'info';
+      case 'card':
       case 'credit_card':
         return 'warning';
       case 'bank_transfer':
         return 'default';
+      case 'netbanking':
+        return 'info';
+      case 'cheque':
+        return 'default';
+      case 'wallet':
+        return 'info';
       default:
         return 'default';
     }
@@ -148,7 +156,7 @@ const DetailedRevenueView: React.FC = () => {
               <div key={mode} className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <Badge variant={getPaymentModeVariant(mode) as any} size="sm">
-                    {mode.replace('_', ' ').toUpperCase()}
+                    {mode.replace(/_/g, ' ').toUpperCase()}
                   </Badge>
                   <span className="text-sm text-gray-500">
                     {((amount / totalRevenue) * 100).toFixed(1)}%
@@ -221,7 +229,7 @@ const DetailedRevenueView: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Badge variant={getPaymentModeVariant(payment.payment_mode) as any} size="sm">
-                        {payment.payment_mode.replace('_', ' ').toUpperCase()}
+                        {payment.payment_mode.replace(/_/g, ' ').toUpperCase()}
                       </Badge>
                     </TableCell>
                   </TableRow>

@@ -48,6 +48,15 @@ const BookingManagement: React.FC = () => {
   const [customers, setCustomers] = useState<CustomerLite[]>([]);
   const [customersLoading, setCustomersLoading] = useState(false);
   const [customersError, setCustomersError] = useState<string | null>(null);
+  const customersMap = useMemo(() => {
+    const map = new Map<string, string>();
+    customers.forEach((customer) => {
+      if (customer?.customer_id) {
+        map.set(String(customer.customer_id), customer.full_name ?? "");
+      }
+    });
+    return map;
+  }, [customers]);
 
   const fetchBookings = useCallback(async () => {
     setBookingsLoading(true);
@@ -81,11 +90,7 @@ const BookingManagement: React.FC = () => {
         const booking: BookingRow = {
           booking_id: record?.id ? String(record.id) : "",
           customer_id: record?.customerId ? String(record.customerId) : "",
-          customer_name:
-            record?.customerName ||
-            record?.primaryPaxName ||
-            record?.customer?.name ||
-            "",
+          customer_name: record?.customerName || record?.customer?.name || "",
           package_name: record?.packageName || "Untitled Package",
           booking_date: bookingDate,
           travel_start_date: travelStart,
@@ -179,10 +184,25 @@ const BookingManagement: React.FC = () => {
   );
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
+  const hydratedBookings = useMemo<BookingRow[]>(() => {
+    if (!bookings.length) return bookings;
+    return bookings.map((booking) => {
+      const mappedName =
+        customersMap.get(booking.customer_id) ||
+        booking.customer_name ||
+        (booking as any).primaryPaxName ||
+        "";
+      if (mappedName && mappedName !== booking.customer_name) {
+        return { ...booking, customer_name: mappedName };
+      }
+      return booking;
+    });
+  }, [bookings, customersMap]);
 
   const filteredBookings = useMemo(() => {
-    if (!normalizedSearch) return bookings;
-    return bookings.filter((b) => {
+    const source = hydratedBookings;
+    if (!normalizedSearch) return source;
+    return source.filter((b) => {
       const packageName = (b.package_name || "").toLowerCase();
       const customerName = (b.customer_name || "").toLowerCase();
       const status = (b.status || "").toLowerCase();
@@ -194,7 +214,7 @@ const BookingManagement: React.FC = () => {
         pnr.includes(normalizedSearch)
       );
     });
-  }, [bookings, normalizedSearch]);
+  }, [hydratedBookings, normalizedSearch]);
 
   const handleViewTicket = (booking: BookingRow) => {
     const mock: TicketData = {

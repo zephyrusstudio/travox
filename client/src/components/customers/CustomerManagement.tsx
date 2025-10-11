@@ -120,36 +120,6 @@ const CustomerManagement: React.FC = () => {
     setIsHistoryOpen(true);
   };
 
-  const manageAccount = async (customer: Customer) => {
-    setSelectedCustomerForAccount(customer);
-
-    if (customer.accountId) {
-      // Fetch existing account data
-      try {
-        const response = await apiRequest<any>({
-          method: "GET",
-          url: `/customers/${customer.id}/account`,
-        });
-        setExistingAccountData({
-          id: response.data.id,
-          bankName: response.data.bankName || "",
-          ifscCode: response.data.ifscCode || "",
-          branchName: response.data.branchName || "",
-          accountNo: response.data.accountNo || "",
-          upiId: response.data.upiId || "",
-        });
-      } catch (error) {
-        const apiError = error as ApiError;
-        setErrorMsg(apiError.message);
-        setExistingAccountData(null);
-      }
-    } else {
-      setExistingAccountData(null);
-    }
-
-    setIsAccountFormOpen(true);
-  };
-
   const handleAccountLinked = () => {
     // Refresh customers list to get updated accountId
     fetchCustomers();
@@ -311,7 +281,6 @@ const CustomerManagement: React.FC = () => {
           onEdit={openForm}
           onDelete={askDelete}
           onViewTickets={viewTicketHistory}
-          onManageAccount={manageAccount}
           getBookingsByCustomer={getBookingsByCustomer}
         />
       )}

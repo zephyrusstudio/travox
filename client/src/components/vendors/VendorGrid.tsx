@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Building2, CreditCard, Edit, Trash2 } from "lucide-react";
+import { Building2, Edit, Trash2 } from "lucide-react";
 import React from "react";
 import { Vendor } from "../../types";
 import Badge from "../ui/Badge";
@@ -93,7 +93,7 @@ const VendorGrid: React.FC<VendorGridProps> = ({
                     <span className="font-medium">Phone:</span> {vendor.phone}
                   </p>
                 )}
-                
+
                 <div className="pt-2 border-t border-gray-200 space-y-2">
                   <p className="text-sm text-gray-600">
                     <span className="font-medium">Total Expenses:</span>
@@ -101,22 +101,18 @@ const VendorGrid: React.FC<VendorGridProps> = ({
                       ₹{totalExpenses.toLocaleString()}
                     </span>
                   </p>
-                  
+
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-gray-500">
-                      Account: {vendor.accountId ? 
-                        <span className="text-green-600 font-medium">Linked</span> : 
+                      Account:{" "}
+                      {vendor.accountId ? (
+                        <span className="text-green-600 font-medium">
+                          Linked
+                        </span>
+                      ) : (
                         <span className="text-gray-400">Not linked</span>
-                      }
+                      )}
                     </p>
-                    <Button
-                      variant={vendor.accountId ? "primary" : "secondary"}
-                      size="sm"
-                      icon={CreditCard}
-                      onClick={() => onManageAccount(vendor)}
-                    >
-                      {vendor.accountId ? "Edit Account" : "Link Account"}
-                    </Button>
                   </div>
                 </div>
               </div>

@@ -218,7 +218,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
     return vendorId;
   }
 
-  async function createBankAccount(): Promise<string> {
+  async function saveBankAccount(): Promise<{ id: string; isNew: boolean }> {
     const trimmedAccount = {
       bankName: accountForm.bankName.trim(),
       ifscCode: accountForm.ifscCode.trim().toUpperCase(),
@@ -236,6 +236,17 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
       throw new Error("Please complete all required bank account fields.");
     }
 
+    if (accountForm.id) {
+      await apiRequest<any>({
+        method: "PUT",
+        url: `/accounts/${accountForm.id}`,
+        data: trimmedAccount,
+        headers: { Accept: "*/*", "Content-Type": "application/json" },
+      });
+
+      return { id: accountForm.id, isNew: false };
+    }
+
     const createResponse = await apiRequest<any>({
       method: "POST",
       url: "/accounts",
@@ -244,7 +255,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
     });
 
     if (createResponse?.status === "success" && createResponse?.data?.id) {
-      return createResponse.data.id as string;
+      return { id: createResponse.data.id as string, isNew: true };
     }
 
     throw new Error("Failed to create bank account.");
@@ -275,9 +286,12 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
       }
 
       if (isLinkingAccount) {
-        const accountId = await createBankAccount();
-        await linkAccountToVendor(vendorId, accountId);
+        const { id: accountId, isNew } = await saveBankAccount();
+        if (isNew || formData.accountId !== accountId) {
+          await linkAccountToVendor(vendorId, accountId);
+        }
         setFormData((prev) => ({ ...prev, accountId }));
+        setAccountForm((prev) => ({ ...prev, id: accountId }));
       }
       successToast(isEditing ? "Vendor updated" : "Vendor added");
       onVendorSaved();
@@ -310,15 +324,14 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
   // Pre-fill on edit
   useEffect(() => {
     if (!selectedVendor) return;
+
+    let isActive = true;
     const existingPhone = selectedVendor.phone || "";
     const phoneMatch = existingPhone.match(/^(\+\d{1,4})-(.+)$/);
     if (phoneMatch) {
       setIsdCode(phoneMatch[1]);
     }
-    setIsLinkingAccount(false);
-    resetAccountForm();
-    setIsSubmitting(false);
-    
+
     setFormData({
       id: selectedVendor.id || "",
       name: selectedVendor.name || "",
@@ -329,6 +342,51 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
       gstin: (selectedVendor.gstin || "").toUpperCase().slice(0, GSTIN_LEN),
       accountId: selectedVendor.accountId || "",
     });
+
+    if (selectedVendor.accountId) {
+      setIsLinkingAccount(true);
+      setAccountForm({ ...ACCOUNT_INITIAL_STATE });
+
+      const fetchAccount = async () => {
+        try {
+          const response = await apiRequest<any>({
+            method: "GET",
+            url: `/vendors/${selectedVendor.id}/account`,
+          });
+
+          if (!isActive) return;
+
+          const accountData = response?.data;
+          if (accountData) {
+            setAccountForm({
+              id: accountData.id || selectedVendor.accountId || "",
+              bankName: accountData.bankName || "",
+              ifscCode: (accountData.ifscCode || "").toUpperCase(),
+              branchName: accountData.branchName || "",
+              accountNo: accountData.accountNo || "",
+              upiId: accountData.upiId || "",
+            });
+          }
+        } catch (error: any) {
+          if (!isActive) return;
+          errorToast(
+            error?.message || "Failed to load linked bank account details."
+          );
+          setAccountForm({ ...ACCOUNT_INITIAL_STATE });
+        }
+      };
+
+      fetchAccount();
+    } else {
+      setIsLinkingAccount(false);
+      setAccountForm({ ...ACCOUNT_INITIAL_STATE });
+    }
+
+    setIsSubmitting(false);
+
+    return () => {
+      isActive = false;
+    };
   }, [selectedVendor]);
 
   // Render

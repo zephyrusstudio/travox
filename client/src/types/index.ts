@@ -23,7 +23,6 @@ export type CustomerTableProps = {
   onEdit: (c: Customer) => void;
   onDelete: (id: string) => void;
   onViewTickets: (c: Customer) => void;
-  onManageAccount: (c: Customer) => void;
   getBookingsByCustomer: (id: string) => Booking[];
 };
 
@@ -125,7 +124,7 @@ export interface AuditLog {
   actorId: string;
   entity: string;
   entityId: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW';
+  action: "CREATE" | "UPDATE" | "DELETE" | "VIEW";
   diff: {
     before?: Record<string, unknown> | string | null;
     after?: Record<string, unknown> | string | null;

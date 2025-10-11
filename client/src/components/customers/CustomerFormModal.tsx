@@ -264,7 +264,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     resetAccountForm();
   };
 
-  async function createBankAccount(): Promise<string> {
+  async function saveBankAccount(): Promise<{ id: string; isNew: boolean }> {
     const trimmedAccount = {
       bankName: accountForm.bankName.trim(),
       ifscCode: accountForm.ifscCode.trim().toUpperCase(),
@@ -282,6 +282,17 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       throw new Error("Please complete all required bank account fields.");
     }
 
+    if (accountForm.id) {
+      await apiRequest<any>({
+        method: "PUT",
+        url: `/accounts/${accountForm.id}`,
+        data: trimmedAccount,
+        headers: { Accept: "*/*", "Content-Type": "application/json" },
+      });
+
+      return { id: accountForm.id, isNew: false };
+    }
+
     const createResponse = await apiRequest<any>({
       method: "POST",
       url: "/accounts",
@@ -293,7 +304,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       createResponse?.status === "success" &&
       createResponse?.data?.id
     ) {
-      return createResponse.data.id as string;
+      return { id: createResponse.data.id as string, isNew: true };
     }
 
     throw new Error("Failed to create bank account.");
@@ -328,9 +339,12 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       }
 
       if (isLinkingAccount) {
-        const accountId = await createBankAccount();
-        await linkAccountToCustomer(customerId, accountId);
+        const { id: accountId, isNew } = await saveBankAccount();
+        if (isNew || formData.accountId !== accountId) {
+          await linkAccountToCustomer(customerId, accountId);
+        }
         setFormData((prev) => ({ ...prev, accountId }));
+        setAccountForm((prev) => ({ ...prev, id: accountId }));
       }
 
       successToast(isEditing ? "Customer updated" : "Customer added");
@@ -374,8 +388,8 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
   // Pre-fill on edit
   useEffect(() => {
     if (!selectedCustomer) return;
-    setIsLinkingAccount(false);
-    resetAccountForm();
+
+    let isActive = true;
     const existingPhone = selectedCustomer.phone || "";
     const phoneMatch = existingPhone.match(/^(\+\d{1,4})-(.+)$/);
     if (phoneMatch) {
@@ -405,6 +419,49 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       isDeleted: selectedCustomer.isDeleted || false,
       updatedAt: selectedCustomer.updatedAt || "",
     });
+
+    if (selectedCustomer.accountId) {
+      setIsLinkingAccount(true);
+      setAccountForm({ ...ACCOUNT_INITIAL_STATE });
+
+      const fetchAccount = async () => {
+        try {
+          const response = await apiRequest<any>({
+            method: "GET",
+            url: `/customers/${selectedCustomer.id}/account`,
+          });
+
+          if (!isActive) return;
+
+          const accountData = response?.data;
+          if (accountData) {
+            setAccountForm({
+              id: accountData.id || selectedCustomer.accountId || "",
+              bankName: accountData.bankName || "",
+              ifscCode: (accountData.ifscCode || "").toUpperCase(),
+              branchName: accountData.branchName || "",
+              accountNo: accountData.accountNo || "",
+              upiId: accountData.upiId || "",
+            });
+          }
+        } catch (error: any) {
+          if (!isActive) return;
+          errorToast(
+            error?.message || "Failed to load linked bank account details."
+          );
+          setAccountForm({ ...ACCOUNT_INITIAL_STATE });
+        }
+      };
+
+      fetchAccount();
+    } else {
+      setIsLinkingAccount(false);
+      setAccountForm({ ...ACCOUNT_INITIAL_STATE });
+    }
+
+    return () => {
+      isActive = false;
+    };
   }, [selectedCustomer]);
 
   // Render

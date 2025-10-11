@@ -85,6 +85,7 @@ export class Payment {
     toAccountId: string,
     vendorId?: string,
     options?: {
+      bookingId?: string;
       category?: string;
       notes?: string;
       receiptNo?: string;
@@ -108,7 +109,7 @@ export class Payment {
       false,
       now,
       now,
-      undefined,
+      options?.bookingId,
       undefined,
       vendorId, 
       undefined,

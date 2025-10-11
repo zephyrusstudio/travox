@@ -1,10 +1,12 @@
 // src/components/vendors/VendorFormModal.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { ChevronDown } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
+import type { AccountFormState as BankAccountFormState } from "../ui/common/AccountFormModal";
 
 /* Types */
 export type VendorFormState = {
@@ -33,6 +35,14 @@ export type VendorFormModalProps = {
 /* Constants */
 const MAX_PHONE = 10;
 const GSTIN_LEN = 15;
+const ACCOUNT_INITIAL_STATE: BankAccountFormState = {
+  bankName: "",
+  ifscCode: "",
+  branchName: "",
+  accountNo: "",
+  upiId: "",
+};
+type AccountFieldKey = Exclude<keyof BankAccountFormState, "id">;
 
 /* Component */
 const VendorFormModal: React.FC<VendorFormModalProps> = ({
@@ -57,29 +67,48 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
   });
   
   const [isdCode, setIsdCode] = useState("+91");
+  const [isLinkingAccount, setIsLinkingAccount] = useState(false);
+  const [accountForm, setAccountForm] = useState<BankAccountFormState>({
+    ...ACCOUNT_INITIAL_STATE,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Validation
   const isPhoneValid = !formData.phone || /^[0-9]{10}$/.test(formData.phone.replace(/^\+\d{1,4}-/, ""));
   const isGstinValid = !formData.gstin || /^[0-9A-Z]{15}$/.test(formData.gstin);
   const isEmailValid =
     !formData.email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
+  const phoneDigits = formData.phone?.replace(/^\+\d{1,4}-/, "") ?? "";
+  const hasName = Boolean(formData.name?.trim());
+  const hasServiceType = Boolean(formData.serviceType);
+  const hasEmail = Boolean(formData.email?.trim());
+  const hasPhone = Boolean(phoneDigits);
+  const hasAllMandatoryFields =
+    hasName && hasServiceType && hasEmail && hasPhone;
+  const hasValidMandatoryFields =
+    hasAllMandatoryFields && isEmailValid && isPhoneValid;
+  const isAccountDetailsValid =
+    !isLinkingAccount ||
+    Boolean(
+      accountForm.bankName.trim() &&
+        accountForm.ifscCode.trim() &&
+        accountForm.branchName.trim() &&
+        accountForm.accountNo.trim()
+    );
 
   const canSubmit = useMemo(
     () =>
-      Boolean(formData.name?.trim()) &&
-      Boolean(formData.serviceType) &&
-      (Boolean(formData.phone?.trim()) || Boolean(formData.email?.trim())) &&
+      hasAllMandatoryFields &&
       isEmailValid &&
       isPhoneValid &&
-      isGstinValid,
+      isGstinValid &&
+      isAccountDetailsValid,
     [
-      formData.name,
-      formData.serviceType,
-      formData.phone,
-      formData.email,
+      hasAllMandatoryFields,
       isEmailValid,
       isPhoneValid,
       isGstinValid,
+      isAccountDetailsValid,
     ]
   );
 
@@ -101,9 +130,41 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
         .replace(/[^0-9A-Z]/g, "")
         .slice(0, GSTIN_LEN),
     }));
+  const setAccountField = (field: AccountFieldKey, value: string) => {
+    setAccountForm((prev) => {
+      let nextValue = value;
+      if (field === "ifscCode") {
+        nextValue = value.toUpperCase().replace(/[^0-9A-Z]/g, "");
+      } else if (field === "accountNo") {
+        nextValue = value.replace(/\D/g, "");
+      }
+
+      return {
+        ...prev,
+        [field]: nextValue,
+      };
+    });
+  };
+  const resetAccountForm = () =>
+    setAccountForm({ ...ACCOUNT_INITIAL_STATE });
 
   // API helpers
-  async function createVendor() {
+  const toggleBankSection = () => {
+    if (!isLinkingAccount && !hasValidMandatoryFields) {
+      errorToast(
+        "Please complete vendor name, service type, email, and phone before linking a bank account."
+      );
+      return;
+    }
+    setIsLinkingAccount((prev) => !prev);
+  };
+
+  const removeBankDetails = () => {
+    setIsLinkingAccount(false);
+    resetAccountForm();
+  };
+
+  async function createVendor(): Promise<string> {
     const payload: Record<string, unknown> = {
       name: formData.name?.trim(),
       serviceType: formData.serviceType,
@@ -111,18 +172,25 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
       phone: formData.phone?.trim() || undefined,
       email: formData.email?.trim() || undefined,
       gstin: formData.gstin?.trim() || undefined,
-      accountId: formData.accountId || undefined,
     };
 
-    await apiRequest<any>({
+    const response = await apiRequest<any>({
       method: "POST",
       url: "/vendors",
       data: payload,
       headers: { Accept: "*/*", "Content-Type": "application/json" },
     });
+    const vendorId = response?.data?.id;
+    if (!vendorId) {
+      throw new Error("Vendor was created but no id was returned.");
+    }
+    return vendorId as string;
   }
 
-  async function updateVendor() {
+  async function updateVendor(
+    accountId?: string,
+    overrideId?: string
+  ): Promise<string> {
     const payload: Record<string, unknown> = {
       name: formData.name?.trim(),
       serviceType: formData.serviceType,
@@ -130,13 +198,63 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
       phone: formData.phone?.trim() || undefined,
       email: formData.email?.trim() || undefined,
       gstin: formData.gstin?.trim() || undefined,
-      accountId: formData.accountId || undefined,
     };
+    const resolvedAccountId = accountId ?? formData.accountId;
+    if (resolvedAccountId) {
+      payload.accountId = resolvedAccountId;
+    }
+
+    const vendorId = overrideId ?? formData.id;
+    if (!vendorId) {
+      throw new Error("Vendor id is required to update the vendor.");
+    }
 
     await apiRequest<any>({
       method: "PUT",
-      url: `/vendors/${formData.id}`,
+      url: `/vendors/${vendorId}`,
       data: payload,
+      headers: { Accept: "*/*", "Content-Type": "application/json" },
+    });
+    return vendorId;
+  }
+
+  async function createBankAccount(): Promise<string> {
+    const trimmedAccount = {
+      bankName: accountForm.bankName.trim(),
+      ifscCode: accountForm.ifscCode.trim().toUpperCase(),
+      branchName: accountForm.branchName.trim(),
+      accountNo: accountForm.accountNo.trim(),
+      upiId: accountForm.upiId.trim(),
+    };
+
+    if (
+      !trimmedAccount.bankName ||
+      !trimmedAccount.ifscCode ||
+      !trimmedAccount.branchName ||
+      !trimmedAccount.accountNo
+    ) {
+      throw new Error("Please complete all required bank account fields.");
+    }
+
+    const createResponse = await apiRequest<any>({
+      method: "POST",
+      url: "/accounts",
+      data: trimmedAccount,
+      headers: { Accept: "*/*", "Content-Type": "application/json" },
+    });
+
+    if (createResponse?.status === "success" && createResponse?.data?.id) {
+      return createResponse.data.id as string;
+    }
+
+    throw new Error("Failed to create bank account.");
+  }
+
+  async function linkAccountToVendor(vendorId: string, accountId: string) {
+    await apiRequest<any>({
+      method: "PUT",
+      url: `/vendors/${vendorId}`,
+      data: { accountId },
       headers: { Accept: "*/*", "Content-Type": "application/json" },
     });
   }
@@ -144,20 +262,30 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
   // Submit
   const submitForm: React.FormEventHandler = async (e) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
+      let vendorId: string;
       if (isEditing) {
-        await updateVendor();
+        vendorId = await updateVendor();
       } else {
-        await createVendor();
+        vendorId = await createVendor();
+        setFormData((prev) => ({ ...prev, id: vendorId }));
+      }
+
+      if (isLinkingAccount) {
+        const accountId = await createBankAccount();
+        await linkAccountToVendor(vendorId, accountId);
+        setFormData((prev) => ({ ...prev, accountId }));
       }
       successToast(isEditing ? "Vendor updated" : "Vendor added");
-      setSelectedVendor(null);
       onVendorSaved();
       onClose();
     } catch (err: any) {
       errorToast(err?.message || "Failed to save");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -172,6 +300,9 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
       accountId: "",
     });
     setIsdCode("+91");
+    setIsLinkingAccount(false);
+    resetAccountForm();
+    setIsSubmitting(false);
     setIsFormOpen(false);
     setSelectedVendor(null);
   };
@@ -184,6 +315,9 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
     if (phoneMatch) {
       setIsdCode(phoneMatch[1]);
     }
+    setIsLinkingAccount(false);
+    resetAccountForm();
+    setIsSubmitting(false);
     
     setFormData({
       id: selectedVendor.id || "",
@@ -260,10 +394,11 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email {!formData.phone?.trim() && "*"}
+              Email *
             </label>
             <input
               type="email"
+              required
               value={formData.email || ""}
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
@@ -279,7 +414,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
           {/* Phone */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone {!formData.email?.trim() && "*"}
+              Phone *
             </label>
             <div className="flex">
               <input
@@ -305,6 +440,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
                 type="tel"
                 inputMode="numeric"
                 maxLength={MAX_PHONE}
+                required
                 value={formData.phone ? formData.phone.replace(/^\+\d{1,4}-/, "") : ""}
                 onChange={(e) => setPhone(e.target.value)}
                 className="flex-1 border border-l-0 border-gray-300 rounded-r-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -339,11 +475,135 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
           </div>
         </div>
 
+        <div className="rounded-lg border border-gray-200">
+          <button
+            type="button"
+            onClick={toggleBankSection}
+            className="flex w-full items-center justify-between px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                Bank Account
+              </p>
+              <p className="text-xs text-gray-500">
+                {isLinkingAccount
+                  ? "Bank details will be linked when you save this vendor."
+                  : "Add bank account details for this vendor."}
+              </p>
+            </div>
+            <ChevronDown
+              className={`h-4 w-4 text-gray-500 transition-transform ${
+                isLinkingAccount ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {isLinkingAccount && (
+            <div className="space-y-4 border-t border-gray-200 bg-gray-50 px-4 py-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Bank Name *
+                </label>
+                <input
+                  type="text"
+                  value={accountForm.bankName}
+                  onChange={(e) => setAccountField("bankName", e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter bank name"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    IFSC Code *
+                  </label>
+                  <input
+                    type="text"
+                    value={accountForm.ifscCode}
+                    onChange={(e) =>
+                      setAccountField("ifscCode", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter IFSC code"
+                    maxLength={11}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Branch Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={accountForm.branchName}
+                    onChange={(e) =>
+                      setAccountField("branchName", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter branch name"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Account Number *
+                  </label>
+                  <input
+                    type="text"
+                    value={accountForm.accountNo}
+                    onChange={(e) =>
+                      setAccountField("accountNo", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter account number"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    UPI ID
+                  </label>
+                  <input
+                    type="text"
+                    value={accountForm.upiId}
+                    onChange={(e) => setAccountField("upiId", e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter UPI ID (optional)"
+                  />
+                </div>
+              </div>
+
+              {!isAccountDetailsValid && (
+                <p className="text-xs text-rose-600">
+                  Please fill all required bank account fields.
+                </p>
+              )}
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={removeBankDetails}
+                  className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                >
+                  Remove bank details
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="flex items-center justify-end space-x-3 pt-4">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" disabled={!canSubmit}>
+          <Button
+            type="submit"
+            disabled={!canSubmit || isSubmitting}
+            loading={isSubmitting}
+          >
             {isEditing ? "Update Vendor" : "Save Vendor"}
           </Button>
         </div>

@@ -14,7 +14,14 @@ import Table, {
 
 const CustomerTable: React.FC<CustomerTableProps> & {
   SearchBox: React.FC<SearchBoxProps>;
-} = ({ customers, onEdit, onDelete, onViewTickets, onManageAccount, getBookingsByCustomer }) => {
+} = ({
+  customers,
+  onEdit,
+  onDelete,
+  onViewTickets,
+  onManageAccount,
+  getBookingsByCustomer,
+}) => {
   return (
     <Card>
       <CardHeader>
@@ -108,7 +115,9 @@ const CustomerTable: React.FC<CustomerTableProps> & {
                         size="sm"
                         icon={CreditCard}
                         onClick={() => onManageAccount(customer)}
-                        title={customer.accountId ? "Edit Account" : "Link Account"}
+                        title={
+                          customer.accountId ? "Edit Account" : "Link Account"
+                        }
                         className="h-9"
                       />
                       <Button

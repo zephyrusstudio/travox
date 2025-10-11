@@ -1,15 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/components/customers/CustomerManagement.tsx
-import { Plus, Upload, RefreshCw, Users } from "lucide-react";
+import { Plus, RefreshCw, Upload, Users } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Customer } from "../../types";
 
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import Button from "../ui/Button";
-import Card, { CardHeader, CardContent } from "../ui/Card";
+import Card, { CardContent, CardHeader } from "../ui/Card";
 import Modal from "../ui/Modal";
-import AccountFormModal, { AccountFormState } from "../ui/common/AccountFormModal";
+import AccountFormModal, {
+  AccountFormState,
+} from "../ui/common/AccountFormModal";
 import CustomerFormModal, { CustomerFormState } from "./CustomerFormModal";
 import CustomerTable from "./CustomerTable";
 import TicketHistoryModal from "./TicketHistoryModal";
@@ -33,8 +35,10 @@ const CustomerManagement: React.FC = () => {
 
   // Account management state
   const [isAccountFormOpen, setIsAccountFormOpen] = useState(false);
-  const [selectedCustomerForAccount, setSelectedCustomerForAccount] = useState<Customer | null>(null);
-  const [existingAccountData, setExistingAccountData] = useState<AccountFormState | null>(null);
+  const [selectedCustomerForAccount, setSelectedCustomerForAccount] =
+    useState<Customer | null>(null);
+  const [existingAccountData, setExistingAccountData] =
+    useState<AccountFormState | null>(null);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const { searchTerm, setSearchTerm, filtered } = useCustomerSearch(customers);
@@ -44,7 +48,10 @@ const CustomerManagement: React.FC = () => {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await apiRequest<any>({ method: "GET", url: "/customers?unmask=true" });
+      const res = await apiRequest<any>({
+        method: "GET",
+        url: "/customers?unmask=true",
+      });
       setCustomers(res?.data ?? []);
     } catch (e) {
       const err = e as ApiError;
@@ -115,7 +122,7 @@ const CustomerManagement: React.FC = () => {
 
   const manageAccount = async (customer: Customer) => {
     setSelectedCustomerForAccount(customer);
-    
+
     if (customer.accountId) {
       // Fetch existing account data
       try {
@@ -139,7 +146,7 @@ const CustomerManagement: React.FC = () => {
     } else {
       setExistingAccountData(null);
     }
-    
+
     setIsAccountFormOpen(true);
   };
 
@@ -209,14 +216,18 @@ const CustomerManagement: React.FC = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">All Customers</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  All Customers
+                </h3>
                 <p className="text-sm text-gray-600">
                   Manage customer information and view booking history
                 </p>
               </div>
               <div className="flex items-center">
                 <RefreshCw className="w-5 h-5 animate-spin text-blue-500 mr-2" />
-                <span className="text-sm text-gray-600">Loading customers...</span>
+                <span className="text-sm text-gray-600">
+                  Loading customers...
+                </span>
               </div>
             </div>
           </CardHeader>
@@ -225,12 +236,24 @@ const CustomerManagement: React.FC = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Name</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Contact</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">GSTIN</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Bookings</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Created</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Actions</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      Name
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      Contact
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      GSTIN
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      Bookings
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      Created
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -275,8 +298,12 @@ const CustomerManagement: React.FC = () => {
       ) : customers.length === 0 ? (
         <div className="text-center py-12">
           <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Customers Found</h3>
-          <p className="text-gray-500">Get started by adding your first customer.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Customers Found
+          </h3>
+          <p className="text-gray-500">
+            Get started by adding your first customer.
+          </p>
         </div>
       ) : (
         <CustomerTable

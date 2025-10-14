@@ -367,11 +367,19 @@ const PaymentManagement: React.FC = () => {
     notes: "",
   });
 
+  const receivablePayments = useMemo(
+    () =>
+      payments.filter(
+        (payment) => payment.payment_type?.toUpperCase() === "RECEIVABLE"
+      ),
+    [payments]
+  );
+
   const filteredPayments = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    if (!q) return payments;
+    if (!q) return receivablePayments;
 
-    return payments.filter((payment) => {
+    return receivablePayments.filter((payment) => {
       const booking = bookingsMap.get(payment.booking_id);
       const receiptMatch =
         payment.receipt_number?.toLowerCase().includes(q) ?? false;
@@ -382,7 +390,7 @@ const PaymentManagement: React.FC = () => {
 
       return receiptMatch || packageMatch || customerMatch;
     });
-  }, [payments, bookingsMap, searchTerm]);
+  }, [receivablePayments, bookingsMap, searchTerm]);
 
   const isLoading = loadingPayments || loadingBookings || loadingCustomers;
 
@@ -435,11 +443,14 @@ const PaymentManagement: React.FC = () => {
   };
 
   const stats = useMemo(() => {
-    const totalPayments = payments.length;
-    const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
+    const totalPayments = receivablePayments.length;
+    const totalAmount = receivablePayments.reduce(
+      (sum, p) => sum + p.amount,
+      0
+    );
 
     const now = new Date();
-    const thisMonthAmount = payments
+    const thisMonthAmount = receivablePayments
       .filter((p) => {
         const d = new Date(p.payment_date);
         return (
@@ -450,7 +461,7 @@ const PaymentManagement: React.FC = () => {
       .reduce((sum, p) => sum + p.amount, 0);
 
     return { totalPayments, totalAmount, thisMonthAmount };
-  }, [payments]);
+  }, [receivablePayments]);
 
   return (
     <div className="space-y-6">

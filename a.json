@@ -1,0 +1,84 @@
+{
+  "packageName": null,
+  "customerId": "{{customer_id}}",
+  "pnrNo": "TJ2043109742289",
+  "bookingDate": null,
+  "totalAmount": 41545.64,
+  "currency": "INR",
+  "modeOfJourney": "HOTEL",
+  "pax": [
+    {
+      "paxName": "Mr AYANAKSHA MALLICK",
+      "paxType": "ADT",
+      "passportNo": null,
+      "dob": null
+    }
+  ],
+  "itineraries": [
+    {
+      "name": "Keys Select by Lemon Tree Hotels, Whitefield, Bengaluru Stay",
+      "seqNo": 1,
+      "segments": [
+        {
+          "seqNo": 1,
+          "modeOfJourney": "HOTEL",
+          "carrierCode": null,
+          "serviceNumber": null,
+          "depCode": null,
+          "arrCode": null,
+          "depAt": null,
+          "arrAt": null,
+          "classCode": null,
+          "baggage": null,
+          "hotelName": "Keys Select by Lemon Tree Hotels, Whitefield, Bengaluru",
+          "hotelAddress": "Plot No-6, 1st Phase Industrial Area ITPL Road, Opp Graphite, 560068 Bangalore, India Bangalore, Karnataka, India. Postal Code: 560048",
+          "checkIn": "2024-12-04",
+          "checkOut": "2024-12-08",
+          "roomType": "Standard Room",
+          "mealPlan": "BREAKFAST",
+          "operatorName": null,
+          "boardingPoint": null,
+          "dropPoint": null,
+          "misc": {
+            "totalRooms": 1,
+            "totalGuests": "2 Adult, 2 Children (4yr, 1yr)",
+            "totalNights": 4
+          }
+        }
+      ]
+    }
+  ],
+  "vendorInfo": {
+    "name": "ESANCHAR",
+    "contact": "+91-9332100485",
+    "email": "esanchar@gmail.com"
+  },
+  "status": "Draft",
+  "extractionMetadata": {
+    "confidence": "HIGH",
+    "extractedFields": [
+      "pnrNo",
+      "totalAmount",
+      "currency",
+      "modeOfJourney",
+      "pax.paxName",
+      "pax.paxType",
+      "itineraries.name",
+      "itineraries.seqNo",
+      "itineraries.segments.seqNo",
+      "itineraries.segments.modeOfJourney",
+      "itineraries.segments.hotelName",
+      "itineraries.segments.hotelAddress",
+      "itineraries.segments.checkIn",
+      "itineraries.segments.checkOut",
+      "itineraries.segments.roomType",
+      "itineraries.segments.mealPlan",
+      "itineraries.segments.misc",
+      "vendorInfo.name",
+      "vendorInfo.contact",
+      "vendorInfo.email"
+    ],
+    "notes": "Booking for '2 Adult, 2 Children (4yr, 1yr)' but only one passenger name (Mr AYANAKSHA MALLICK) was explicitly provided in the document.",
+    "schemaVersion": "v52ccbbe1"
+  }
+}

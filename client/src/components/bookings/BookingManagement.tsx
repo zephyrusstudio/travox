@@ -48,6 +48,10 @@ const BookingManagement: React.FC = () => {
   const [customers, setCustomers] = useState<CustomerLite[]>([]);
   const [customersLoading, setCustomersLoading] = useState(false);
   const [customersError, setCustomersError] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const customersMap = useMemo(() => {
     const map = new Map<string, string>();
     customers.forEach((customer) => {
@@ -250,8 +254,31 @@ const BookingManagement: React.FC = () => {
   };
 
   const handleDelete = (bookingId: string) => {
-    if (window.confirm("Are you sure you want to delete this booking?")) {
-      // deleteBooking(bookingId);
+    setDeleteTargetId(bookingId);
+    setDeleteError(null);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTargetId) return;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      await apiRequest({
+        method: "DELETE",
+        url: `/bookings/${deleteTargetId}`,
+      });
+      successToast("Booking deleted");
+      setIsDeleteModalOpen(false);
+      setDeleteTargetId(null);
+      await fetchBookings();
+    } catch (error) {
+      const apiError = error as ApiError;
+      const message = apiError.message ?? "Failed to delete booking";
+      setDeleteError(message);
+      errorToast(message);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -600,6 +627,53 @@ const BookingManagement: React.FC = () => {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Delete Confirm Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          if (!deleteLoading) {
+            setIsDeleteModalOpen(false);
+            setDeleteTargetId(null);
+            setDeleteError(null);
+          }
+        }}
+        title="Delete booking?"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-700">
+            Are you sure you want to delete this booking?
+          </p>
+          {deleteError && (
+            <div className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+              {deleteError}
+            </div>
+          )}
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              className="px-3 py-2 rounded-lg border border-gray-300 text-gray-800 text-sm"
+              onClick={() => {
+                setIsDeleteModalOpen(false);
+                setDeleteTargetId(null);
+                setDeleteError(null);
+              }}
+              disabled={deleteLoading}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="px-3 py-2 rounded-lg bg-rose-600 text-white text-sm disabled:opacity-60"
+              onClick={confirmDelete}
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? "Deleting..." : "Yes, delete"}
+            </button>
+          </div>
+        </div>
       </Modal>
 
       {/* Add / Edit Modal */}

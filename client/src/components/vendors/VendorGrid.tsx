@@ -12,6 +12,7 @@ export type VendorGridProps = {
   onDelete: (vendorId: string) => void;
   onManageAccount: (v: Vendor) => void;
   getVendorExpenseTotal: (vendorId: string) => number;
+  totalExpense: number;
 };
 
 const getServiceTypeVariant = (serviceType: string) => {
@@ -39,7 +40,6 @@ const VendorGrid: React.FC<VendorGridProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {vendors.map((vendor) => {
-        const totalExpenses = getVendorExpenseTotal(vendor.id);
         return (
           <Card key={vendor.id} hover>
             <CardContent className="p-6">
@@ -98,7 +98,7 @@ const VendorGrid: React.FC<VendorGridProps> = ({
                   <p className="text-sm text-gray-600">
                     <span className="font-medium">Total Expenses:</span>
                     <span className="text-green-600 font-semibold ml-2">
-                      ₹{totalExpenses.toLocaleString()}
+                      ₹{vendor?.totalExpense}
                     </span>
                   </p>
 

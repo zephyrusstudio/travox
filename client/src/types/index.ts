@@ -33,6 +33,7 @@ export interface Vendor {
   pocName?: string;
   email?: string;
   phone?: string;
+  totalExpense: number;
   gstin?: string;
   accountId?: string;
 }

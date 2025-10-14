@@ -98,19 +98,23 @@ export const auditLogService = {
   },
 
   exportToCSV(logs: AuditLog[]): void {
-    const headers = ['Timestamp', 'Entity', 'Entity ID', 'Action', 'Actor ID', 'IP Address', 'User Agent', 'Changes'];
+    const sanitize = (value: string | number | null | undefined): string => {
+      const stringValue = value === null || value === undefined ? '' : String(value);
+      const escaped = stringValue.replace(/"/g, '""');
+      return `"${escaped}"`;
+    };
+
+    const headers = ['Timestamp', 'Action', 'Entity', 'Actor'];
     const csvContent = [
       headers.join(','),
-      ...logs.map(log => [
-        log.createdAt,
-        log.entity,
-        log.entityId,
-        log.action,
-        log.actorId,
-        log.ip,
-        `"${log.userAgent.replace(/"/g, '""')}"`, // Escape quotes in user agent
-        `"${JSON.stringify(log.diff).replace(/"/g, '""')}"` // Escape quotes in diff
-      ].join(','))
+      ...logs.map(log =>
+        [
+          sanitize(log.createdAt),
+          sanitize(log.action),
+          sanitize(log.entity),
+          sanitize(log.actorName || log.actorId)
+        ].join(',')
+      )
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

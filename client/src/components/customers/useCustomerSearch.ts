@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Customer } from "../../types";
 
 const useCustomerSearch = (customers: Customer[]) => {
-  console.log("🚀 ~ useCustomerSearch ~ customers:", customers);
   const [searchTerm, setSearchTerm] = useState("");
   const filtered = useMemo(() => {
     const q = searchTerm.toLowerCase();

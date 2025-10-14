@@ -15,7 +15,7 @@ import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
 
 const AppContent: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState("dashboard");
+  const [currentPage, setCurrentPage] = useState("customers");
 
   const renderCurrentPage = () => {
     switch (currentPage) {
@@ -36,7 +36,7 @@ const AppContent: React.FC = () => {
       case "logs":
         return <AuditLogsManagement />;
       default:
-        return <Dashboard />;
+        return <CustomerManagement />;
     }
   };
 

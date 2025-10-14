@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { apiRequest } from "../../utils/apiConnector";
 
 // src/pages/AuthPage.tsx
@@ -173,9 +174,53 @@ const AuthPage: React.FC = () => {
 
         {/* Google renders the real button here */}
         <div
-          ref={btnRef}
-          style={{ display: "grid", placeItems: "center", minHeight: 44 }}
-        />
+          style={{
+            position: "relative",
+            display: "grid",
+            placeItems: "center",
+            minHeight: 44,
+          }}
+        >
+          <div
+            ref={btnRef}
+            style={{
+              display: "grid",
+              placeItems: "center",
+              minHeight: 44,
+              opacity: loading ? 0.65 : 1,
+            }}
+          />
+          {loading && (
+            <>
+              <style>
+                {`@keyframes authSpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}`}
+              </style>
+              <div
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  borderRadius: 12,
+                  background: "rgba(15,20,26,0.55)",
+                  display: "grid",
+                  placeItems: "center",
+                  pointerEvents: "all",
+                }}
+              >
+                <div
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: "50%",
+                    border: "3px solid rgba(156,169,191,0.45)",
+                    borderTopColor: "#f9fafb",
+                    animation: "authSpin 0.75s linear infinite",
+                  }}
+                />
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Fallback if GIS failed to load */}
         {/* {!(window as any).google?.accounts?.id && (

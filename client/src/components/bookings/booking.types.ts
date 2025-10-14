@@ -17,11 +17,77 @@ export enum Gender {
   Female = "Female",
 }
 
+export enum PaxTypeOption {
+  ADT = "ADT",
+  CHD = "CHD",
+  INF = "INF",
+}
+
+export enum ModeOfJourneyOption {
+  FLIGHT = "FLIGHT",
+  TRAIN = "TRAIN",
+  BUS = "BUS",
+  HOTEL = "HOTEL",
+  CAB = "CAB",
+  OTHER = "OTHER",
+}
+
 export interface Pax {
   name: string;
+  paxType: PaxTypeOption | "";
+  passportNo?: string;
+  dob?: string;
   age?: number;
   gender?: Gender | string;
   isPrimary: boolean;
+}
+
+export interface SegmentMiscForm {
+  totalRooms: number | "";
+  totalGuests: string;
+  totalNights: number | "";
+}
+
+export interface SegmentForm {
+  seqNo: number;
+  modeOfJourney: ModeOfJourneyOption | string;
+  carrierCode: string;
+  serviceNumber: string;
+  depCode: string;
+  arrCode: string;
+  depAt: string;
+  arrAt: string;
+  classCode: string;
+  baggage: string;
+  hotelName: string;
+  hotelAddress: string;
+  checkIn: string;
+  checkOut: string;
+  roomType: string;
+  mealPlan: string;
+  operatorName: string;
+  boardingPoint: string;
+  dropPoint: string;
+  misc: SegmentMiscForm;
+}
+
+export interface ItineraryForm {
+  name: string;
+  seqNo: number;
+  segments: SegmentForm[];
+}
+
+export interface VendorInfoForm {
+  name: string;
+  contact: string;
+  email: string;
+}
+
+export interface ExtractionMetadataForm {
+  confidence: string;
+  extractedFields: string[];
+  notes: string;
+  schemaVersion: string;
 }
 
 export interface ExtractedData {
@@ -49,19 +115,27 @@ export interface AIDataState {
   bookingAmount: number;
   travelCategory: TravelCategory;
   paxList: Pax[];
+  currency: string;
+  modeOfJourney: ModeOfJourneyOption | string;
+  itineraries: ItineraryForm[];
+  vendorInfo: VendorInfoForm;
+  extractionMetadata: ExtractionMetadataForm;
 }
 
 export interface BookingFormState {
   customer_id: string;
   customer_name: string;
   package_name: string;
+  pnr_no: string;
   booking_date: string; // yyyy-mm-dd
   travel_start_date: string; // yyyy-mm-dd
   travel_end_date: string; // yyyy-mm-dd
   pax_count: number;
   total_amount: number;
   advance_received: number;
-  status: BookingStatus;
+  currency: string;
+  mode_of_journey: ModeOfJourneyOption | string;
+  status: string;
 }
 
 export interface NewCustomerData {

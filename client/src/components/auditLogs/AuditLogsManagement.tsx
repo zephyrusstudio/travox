@@ -1,21 +1,26 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Filter, 
-  Download, 
-  RefreshCw, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Eye,
-  Calendar,
+import {
   Activity,
-  User
-} from 'lucide-react';
-import Card, { CardHeader, CardContent } from '../ui/Card';
-import Button from '../ui/Button';
-import Badge from '../ui/Badge';
-import { AuditLog } from '../../types';
-import { auditLogService, AuditLogFilters, userService, User as UserType } from '../../services';
+  Calendar,
+  Download,
+  Edit,
+  Eye,
+  Filter,
+  Plus,
+  RefreshCw,
+  Trash2,
+  User,
+} from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  AuditLogFilters,
+  auditLogService,
+  userService,
+  User as UserType,
+} from "../../services";
+import { AuditLog } from "../../types";
+import Badge from "../ui/Badge";
+import Button from "../ui/Button";
+import Card, { CardContent, CardHeader } from "../ui/Card";
 
 const AuditLogsManagement: React.FC = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -41,13 +46,15 @@ const AuditLogsManagement: React.FC = () => {
       setTotal(response.total);
 
       // Dereference actor IDs to get user names
-      const actorIds = [...new Set(response.logs.map(log => log.actorId).filter(Boolean))];
+      const actorIds = [
+        ...new Set(response.logs.map((log) => log.actorId).filter(Boolean)),
+      ];
       if (actorIds.length > 0) {
         const userMap = await userService.getUsersByIds(actorIds);
         setUsers(userMap);
       }
     } catch (error) {
-      console.error('Failed to fetch audit logs:', error);
+      console.error("Failed to fetch audit logs:", error);
     } finally {
       setLoading(false);
     }
@@ -59,44 +66,61 @@ const AuditLogsManagement: React.FC = () => {
       // Get all audit logs for export (without pagination)
       const response = await auditLogService.getAuditLogs({
         ...filters,
-        limit: 1000 // Export up to 1000 records
+        limit: 1000, // Export up to 1000 records
       });
       auditLogService.exportToCSV(response.logs);
     } catch (error) {
-      console.error('Failed to export audit logs:', error);
+      console.error("Failed to export audit logs:", error);
     }
   };
 
   // Get action icon
   const getActionIcon = (action: string) => {
     switch (action) {
-      case 'CREATE': return Plus;
-      case 'UPDATE': return Edit;
-      case 'DELETE': return Trash2;
-      case 'VIEW': return Eye;
-      default: return Activity;
+      case "CREATE":
+        return Plus;
+      case "UPDATE":
+        return Edit;
+      case "DELETE":
+        return Trash2;
+      case "VIEW":
+        return Eye;
+      default:
+        return Activity;
     }
   };
 
   // Get action color
   const getActionColor = (action: string) => {
     switch (action) {
-      case 'CREATE': return 'bg-green-100 text-green-600';
-      case 'UPDATE': return 'bg-blue-100 text-blue-600';
-      case 'DELETE': return 'bg-red-100 text-red-600';
-      case 'VIEW': return 'bg-gray-100 text-gray-600';
-      default: return 'bg-gray-100 text-gray-600';
+      case "CREATE":
+        return "bg-green-100 text-green-600";
+      case "UPDATE":
+        return "bg-blue-100 text-blue-600";
+      case "DELETE":
+        return "bg-red-100 text-red-600";
+      case "VIEW":
+        return "bg-gray-100 text-gray-600";
+      default:
+        return "bg-gray-100 text-gray-600";
     }
   };
 
   // Get action variant for Badge
-  const getActionVariant = (action: string): 'default' | 'success' | 'info' | 'danger' => {
+  const getActionVariant = (
+    action: string
+  ): "default" | "success" | "info" | "danger" => {
     switch (action) {
-      case 'CREATE': return 'success';
-      case 'UPDATE': return 'info';
-      case 'DELETE': return 'danger';
-      case 'VIEW': return 'default';
-      default: return 'default';
+      case "CREATE":
+        return "success";
+      case "UPDATE":
+        return "info";
+      case "DELETE":
+        return "danger";
+      case "VIEW":
+        return "default";
+      default:
+        return "default";
     }
   };
 
@@ -107,22 +131,24 @@ const AuditLogsManagement: React.FC = () => {
   };
 
   // Get user display name
-  const getUserDisplayName = (actorId: string): { name: string; email?: string } => {
+  const getUserDisplayName = (
+    actorId: string
+  ): { name: string; email?: string } => {
     const user = users.get(actorId);
     if (user) {
       return {
-        name: user.name || user.email || 'Unknown User',
-        email: user.email
+        name: user.name || user.email || "Unknown User",
+        email: user.email,
       };
     }
-    return { name: 'Unknown User' };
+    return { name: "Unknown User" };
   };
 
   // Handle filter change
   const handleFilterChange = (key: keyof AuditLogFilters, value: string) => {
     setFilters((prev: AuditLogFilters) => ({
       ...prev,
-      [key]: value || undefined
+      [key]: value || undefined,
     }));
   };
 
@@ -156,6 +182,7 @@ const AuditLogsManagement: React.FC = () => {
         <div className="flex items-center space-x-4">
           <Button
             variant="outline"
+            className="flex gap-3"
             onClick={() => setShowFilters(!showFilters)}
             icon={Filter}
           >
@@ -163,16 +190,13 @@ const AuditLogsManagement: React.FC = () => {
           </Button>
           <Button
             variant="outline"
+            className="flex gap-3"
             onClick={exportToCSV}
             icon={Download}
           >
             Export CSV
           </Button>
-          <Button
-            onClick={fetchAuditLogs}
-            icon={RefreshCw}
-            disabled={loading}
-          >
+          <Button onClick={fetchAuditLogs} icon={RefreshCw} disabled={loading}>
             Refresh
           </Button>
         </div>
@@ -188,8 +212,8 @@ const AuditLogsManagement: React.FC = () => {
                   Entity
                 </label>
                 <select
-                  value={filters.entity || ''}
-                  onChange={(e) => handleFilterChange('entity', e.target.value)}
+                  value={filters.entity || ""}
+                  onChange={(e) => handleFilterChange("entity", e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Entities</option>
@@ -205,8 +229,8 @@ const AuditLogsManagement: React.FC = () => {
                   Action
                 </label>
                 <select
-                  value={filters.action || ''}
-                  onChange={(e) => handleFilterChange('action', e.target.value)}
+                  value={filters.action || ""}
+                  onChange={(e) => handleFilterChange("action", e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Actions</option>
@@ -223,8 +247,10 @@ const AuditLogsManagement: React.FC = () => {
                 </label>
                 <input
                   type="date"
-                  value={filters.startDate || ''}
-                  onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                  value={filters.startDate || ""}
+                  onChange={(e) =>
+                    handleFilterChange("startDate", e.target.value)
+                  }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -235,16 +261,15 @@ const AuditLogsManagement: React.FC = () => {
                 </label>
                 <input
                   type="date"
-                  value={filters.endDate || ''}
-                  onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                  value={filters.endDate || ""}
+                  onChange={(e) =>
+                    handleFilterChange("endDate", e.target.value)
+                  }
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div className="md:col-span-2 lg:col-span-4 flex items-center space-x-4">
-                <Button onClick={applyFilters} size="sm">
-                  Apply Filters
-                </Button>
                 <Button variant="outline" onClick={clearFilters} size="sm">
                   Clear All
                 </Button>
@@ -281,9 +306,6 @@ const AuditLogsManagement: React.FC = () => {
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actor
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Changes
                     </th>
                   </tr>
                 </thead>
@@ -328,8 +350,12 @@ const AuditLogsManagement: React.FC = () => {
           ) : auditLogs.length === 0 ? (
             <div className="text-center py-12">
               <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Audit Logs Found</h3>
-              <p className="text-gray-500">No audit logs match your current filters.</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No Audit Logs Found
+              </h3>
+              <p className="text-gray-500">
+                No audit logs match your current filters.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -348,14 +374,10 @@ const AuditLogsManagement: React.FC = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actor
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Changes
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {auditLogs.map((log) => {
-                    const ActionIcon = getActionIcon(log.action);
                     return (
                       <tr key={log.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -366,9 +388,6 @@ const AuditLogsManagement: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${getActionColor(log.action)}`}>
-                              <ActionIcon className="w-4 h-4" />
-                            </div>
                             <Badge variant={getActionVariant(log.action)}>
                               {log.action}
                             </Badge>
@@ -376,8 +395,14 @@ const AuditLogsManagement: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           <div>
-                            <div className="font-medium capitalize">{log.entity}</div>
-                            <div className="text-gray-500 text-xs">ID: {log.entityId}</div>
+                            <div className="font-medium capitalize">
+                              {log.entity}
+                            </div>
+                            {log.entityId && log.entityId !== "unknown" && (
+                              <div className="text-gray-500 text-xs">
+                                ID: {log.entityId}
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -385,28 +410,18 @@ const AuditLogsManagement: React.FC = () => {
                             <User className="w-4 h-4 text-gray-400 mr-2" />
                             <div>
                               {(() => {
-                                const userInfo = getUserDisplayName(log.actorId);
+                                const userInfo = getUserDisplayName(
+                                  log.actorId
+                                );
                                 return (
                                   <>
-                                    <div className="font-medium">{userInfo.name}</div>
-                                    <div className="text-gray-500 text-xs">
-                                      {userInfo.email && userInfo.email !== userInfo.name 
-                                        ? userInfo.email 
-                                        : `ID: ${log.actorId}`
-                                      }
+                                    <div className="font-medium">
+                                      {userInfo.name}
                                     </div>
                                   </>
                                 );
                               })()}
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          <div className="max-w-xs truncate">
-                            {log.diff && (log.diff.before || log.diff.after || log.diff.accessed) 
-                              ? `Changes recorded`
-                              : 'No changes recorded'
-                            }
                           </div>
                         </td>
                       </tr>
@@ -423,12 +438,13 @@ const AuditLogsManagement: React.FC = () => {
       {total > pageSize && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-700">
-            Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, total)} of {total} results
+            Showing {(currentPage - 1) * pageSize + 1} to{" "}
+            {Math.min(currentPage * pageSize, total)} of {total} results
           </div>
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
               size="sm"
             >
@@ -439,7 +455,11 @@ const AuditLogsManagement: React.FC = () => {
             </span>
             <Button
               variant="outline"
-              onClick={() => setCurrentPage(prev => Math.min(Math.ceil(total / pageSize), prev + 1))}
+              onClick={() =>
+                setCurrentPage((prev) =>
+                  Math.min(Math.ceil(total / pageSize), prev + 1)
+                )
+              }
               disabled={currentPage >= Math.ceil(total / pageSize)}
               size="sm"
             >

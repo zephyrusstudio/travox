@@ -138,118 +138,6 @@ const TicketUploadManager: React.FC = () => {
     }
   };
 
-  // Mock AI extraction function
-
-  // const handleFileUpload = async (
-  //   event: React.ChangeEvent<HTMLInputElement>
-  // ) => {
-  //   const files = event.target.files;
-  //   if (!files || files.length === 0) return;
-
-  //   setIsUploading(true);
-
-  //   for (const file of files) {
-  //     if (file.type !== "application/pdf") {
-  //       alert("Please upload only PDF files");
-  //       continue;
-  //     }
-
-  //     const ticketId = Math.random().toString(36);
-  //     const newTicket: TicketData = {
-  //       id: ticketId,
-  //       fileName: file.name,
-  //       uploadDate: new Date().toISOString(),
-  //       status: "processing",
-  //       pdfUrl: URL.createObjectURL(file),
-  //     };
-
-  //     setTickets((prev) => [...prev, newTicket]);
-
-  //     try {
-  //       const formData = new FormData();
-  //       formData.append("files", file);
-
-  //       const res = await axios.post<ApiResponse>(
-  //         "https://ai-pass-scan.onrender.com/scan",
-  //         formData,
-  //         {
-  //           headers: {
-  //             "Content-Type": "multipart/form-data",
-  //           },
-  //         }
-  //       );
-
-  //       const extractedData = res.data.results[0]?.data;
-  //       if (!extractedData) {
-  //         throw new Error("No data extracted");
-  //       }
-
-  //       setTickets((prev) =>
-  //         prev.map((ticket) =>
-  //           ticket.id === ticketId
-  //             ? {
-  //                 ...ticket,
-  //                 status: "extracted",
-  //                 responseData: extractedData,
-  //                 manualData: {
-  //                   customerId: "",
-  //                   customerName: "",
-  //                   packageName: `${extractedData.route} - ${extractedData.document_type} Trip`,
-  //                   finalAmount: extractedData.booking_amount,
-  //                   discount: 0,
-  //                   advanceReceived: 0,
-  //                   receivableAmount: extractedData.booking_amount,
-  //                   bookingStatus: "Generated",
-  //                 },
-  //               }
-  //             : ticket
-  //         )
-  //       );
-  //     } catch (error) {
-  //       setTickets((prev) =>
-  //         prev.map((ticket) =>
-  //           ticket.id === ticketId ? { ...ticket, status: "error" } : ticket
-  //         )
-  //       );
-  //     }
-
-  //     const extractedData = res.data.results[0]?.data;
-  //     if (!extractedData) throw new Error("No data extracted");
-
-  //     const updatedTicket: TicketData = {
-  //       ...newTicket,
-  //       status: "extracted",
-  //       responseData: extractedData,
-  //       manualData: {
-  //         customerId: "",
-  //         customerName: "",
-  //         packageName: `${extractedData.route} - ${extractedData.document_type} Trip`,
-  //         finalAmount: extractedData.booking_amount,
-  //         discount: 0,
-  //         advanceReceived: 0,
-  //         receivableAmount: extractedData.booking_amount,
-  //         bookingStatus: "Generated",
-  //       },
-  //     };
-
-  //     // Update UI state
-  //     setTickets((prev) =>
-  //       prev.map((ticket) => (ticket.id === ticketId ? updatedTicket : ticket))
-  //     );
-
-  //     // Save to Firebase
-  //     await saveTicketToFirebase(updatedTicket);
-  //   }
-
-  //   // // Save to Firebase
-  //   // await saveTicketToFirebase(updatedTicket);
-
-  //   // setIsUploading(false);
-  //   // if (fileInputRef.current) {
-  //   //   fileInputRef.current.value = "";
-  //   // }
-  // };
-
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -406,112 +294,6 @@ const TicketUploadManager: React.FC = () => {
   ) => {
     setEditData((prev) => ({ ...prev, [field]: value }));
   };
-
-  // const handleEditTicket = (ticket: TicketData) => {
-  //   setSelectedTicket(ticket);
-  //   setEditData(
-  //     ticket.manualData || {
-  //       customerId: "",
-  //       customerName: "",
-  //       packageName: "",
-  //       finalAmount: 0,
-  //       discount: 0,
-  //       advanceReceived: 0,
-  //       receivableAmount: 0,
-  //       bookingStatus: "Generated",
-  //     }
-  //   );
-  //   setIsEditModalOpen(true);
-  // };
-
-  // const handleSaveTicket = () => {
-  //   if (!selectedTicket) return;
-
-  //   const receivableAmount =
-  //     editData.finalAmount - editData.discount - editData.advanceReceived;
-
-  //   setTickets((prev) =>
-  //     prev.map((ticket) =>
-  //       ticket.id === selectedTicket.id
-  //         ? {
-  //             ...ticket,
-  //             status: "draft",
-  //             manualData: {
-  //               ...editData,
-  //               receivableAmount,
-  //             },
-  //           }
-  //         : ticket
-  //     )
-  //   );
-
-  //   setIsEditModalOpen(false);
-  // };
-
-  // const handleFinalizeBooking = (ticket: TicketData) => {
-  //   if (!ticket.extractedData || !ticket.manualData) return;
-
-  //   const customer = customers.find(
-  //     (c) => c.customer_id === ticket.manualData!.customerId
-  //   );
-  //   if (!customer) {
-  //     alert("Please select a customer");
-  //     return;
-  //   }
-
-  //   // Create booking
-  //   const bookingData = {
-  //     customer_id: ticket.manualData.customerId,
-  //     customer_name: customer.full_name,
-  //     package_name: ticket.manualData.packageName,
-  //     booking_date: ticket.extractedData.bookingDate,
-  //     travel_start_date: ticket.extractedData.journeyDate,
-  //     travel_end_date:
-  //       ticket.extractedData.returnDate || ticket.extractedData.journeyDate,
-  //     pax_count: ticket.extractedData.paxList.length,
-  //     total_amount: ticket.manualData.finalAmount,
-  //     advance_received: ticket.manualData.advanceReceived,
-  //     balance_amount: ticket.manualData.receivableAmount,
-  //     status: "confirmed" as const,
-  //     pnr: ticket.extractedData.pnr,
-  //     ticketId: ticket.id,
-  //   };
-
-  //   addBooking(bookingData);
-
-  //   setTickets((prev) =>
-  //     prev.map((t) =>
-  //       t.id === ticket.id
-  //         ? {
-  //             ...t,
-  //             status: "finalized",
-  //             linkedBookingId: "generated-booking-id",
-  //           }
-  //         : t
-  //     )
-  //   );
-
-  //   alert("Booking created successfully!");
-  // };
-
-  // const handleAddNewCustomer = () => {
-  //   addCustomer(newCustomerData);
-  //   setNewCustomerData({
-  //     full_name: "",
-  //     email: "",
-  //     phone: "",
-  //     address: "",
-  //     passportNo: "",
-  //     gstin: "",
-  //   });
-  //   setIsAddCustomerModalOpen(false);
-  // };
-
-  // const handleDeleteTicket = (ticketId: string) => {
-  //   if (window.confirm("Are you sure you want to delete this ticket?")) {
-  //     setTickets((prev) => prev.filter((t) => t.id !== ticketId));
-  //   }
-  // };
 
   const filteredTickets = tickets.filter((ticket) => {
     const matchesSearch =
@@ -777,22 +559,7 @@ const TicketUploadManager: React.FC = () => {
                       onClick={() => handleEditTicket(ticket)}
                     />
                   )}
-                  {/*
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    icon={Trash2}
-                    onClick={() => handleDeleteTicket(ticket.id)}
-                  /> */}
                 </div>
-                {/* {ticket.status === "draft" && (
-                  <Button
-                    size="sm"
-                    onClick={() => handleFinalizeBooking(ticket)}
-                  >
-                    Finalize Booking
-                  </Button>
-                )} */}
               </div>
             </CardContent>
           </Card>
@@ -818,12 +585,7 @@ const TicketUploadManager: React.FC = () => {
                     <span className="font-medium">PNR:</span>{" "}
                     {selectedTicket.responseData.pnr_booking_id}
                   </p>
-                  {/* <p>
-                    <span className="font-medium">Booking Date:</span>{" "}
-                    {new Date(
-                      selectedTicket.responseData.bookingDate
-                    ).toLocaleDateString()}
-                  </p> */}
+
                   <p>
                     <span className="font-medium">Journey Date:</span>{" "}
                     {new Date(
@@ -836,14 +598,6 @@ const TicketUploadManager: React.FC = () => {
                   </p>
                 </div>
                 <div>
-                  {/* <p>
-                    <span className="font-medium">Return Date:</span>{" "}
-                    {selectedTicket.responseData.returnDate
-                      ? new Date(
-                          selectedTicket.responseData.returnDate
-                        ).toLocaleDateString()
-                      : "N/A"}
-                  </p> */}
                   <p>
                     <span className="font-medium">Booking Amount:</span> ₹
                     {selectedTicket.responseData.booking_amount.toLocaleString()}

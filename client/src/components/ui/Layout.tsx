@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  Bell,
   Building2,
   Calendar,
   ChevronDown,
@@ -8,11 +7,7 @@ import {
   CreditCard,
   LayoutDashboard,
   LogOut,
-  Menu,
   Receipt,
-  Search,
-  Upload,
-  User,
   Users,
   X,
 } from "lucide-react";
@@ -28,7 +23,7 @@ interface LayoutProps {
 
 const sidebarItems = [
   // { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "tickets", label: "Ticket Upload", icon: Upload },
+  // { id: "tickets", label: "Ticket Upload", icon: Upload },
   // {
   //   id: "ledgers",
   //   label: "Ledgers & Reports",
@@ -242,7 +237,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Top header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+        {/* <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
           <div className="flex items-center justify-between h-16 px-6">
             <div className="flex items-center space-x-4">
               <button
@@ -351,7 +346,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
               </div>
             </div>
           </div>
-        </header>
+        </header> */}
 
         {/* Page content */}
         <main className="p-6 min-h-screen">{children}</main>

@@ -54,6 +54,7 @@ interface UpdateBookingDTO {
   modeOfJourney?: string;
   advanceAmount?: number;
   status?: BookingStatus;
+  vendorId?: string;
 }
 
 @injectable()
@@ -78,6 +79,11 @@ export class UpdateBooking {
     booking.pnrNo = data.pnrNo || booking.pnrNo;
     booking.modeOfJourney = data.modeOfJourney || booking.modeOfJourney;
     booking.advanceAmount = data.advanceAmount || booking.advanceAmount;
+    
+    // Update vendorId if provided (Note: this doesn't automatically manage vendor booking counts)
+    if (data.vendorId !== undefined) {
+      booking.vendorId = data.vendorId;
+    }
 
     if (data.totalAmount !== undefined) {
       booking.updateAmount(data.totalAmount, updatedBy);

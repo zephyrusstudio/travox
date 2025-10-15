@@ -26,6 +26,7 @@ export class Booking {
     public modeOfJourney?: string,
     public advanceAmount?: number,
     public status: BookingStatus = BookingStatus.DRAFT,
+    public vendorId?: string,
     public createdBy: string = '',
     public updatedBy: string = '',
     public isDeleted: boolean = false,
@@ -54,6 +55,7 @@ export class Booking {
       advanceAmount?: number;
       status?: BookingStatus;
       bookingDate?: Date;
+      vendorId?: string;
     }
   ): Booking {
     const now = new Date();
@@ -74,6 +76,7 @@ export class Booking {
       options?.modeOfJourney,
       options?.advanceAmount,
       options?.status || BookingStatus.DRAFT,
+      options?.vendorId,
       createdBy,
       createdBy,
       false,
@@ -84,7 +87,11 @@ export class Booking {
 
     // Ensure child objects have the correct bookingId
     booking.pax.forEach(p => p.bookingId = bookingId);
-    booking.itineraries.forEach(i => i.bookingId = bookingId);
+    booking.itineraries.forEach(i => {
+      i.bookingId = bookingId;
+      // Ensure all segments within each itinerary have the correct itinerary ID
+      i.segments.forEach(s => s.itineraryId = i.id);
+    });
     
     return booking;
   }
@@ -116,6 +123,9 @@ export class Booking {
   }
 
   addPax(pax: BookingPax, updatedBy: string = ''): void {
+    // Ensure the pax has the correct booking ID
+    pax.bookingId = this.id;
+    
     this.pax.push(pax);
     this.recalculatePaxFields();
     this.updatedBy = updatedBy;
@@ -123,6 +133,13 @@ export class Booking {
   }
 
   addItinerary(itinerary: BookingItinerary, updatedBy: string = ''): void {
+    // Ensure the itinerary has the correct booking ID
+    itinerary.bookingId = this.id;
+    // Ensure all segments have the correct itinerary ID
+    itinerary.segments.forEach(segment => {
+      segment.itineraryId = itinerary.id;
+    });
+    
     this.itineraries.push(itinerary);
     this.recalculateTravelDates();
     this.updatedBy = updatedBy;
@@ -225,6 +242,7 @@ export class Booking {
       travelStartAt: this.travelStartAt,
       travelEndAt: this.travelEndAt,
       dueAmount: this.dueAmount,
+      vendorId: this.vendorId,
       createdBy: this.createdBy,
       updatedBy: this.updatedBy,
       isDeleted: this.isDeleted,

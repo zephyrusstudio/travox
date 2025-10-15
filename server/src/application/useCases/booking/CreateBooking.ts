@@ -1,6 +1,7 @@
 import { injectable, inject } from 'tsyringe';
 import { IBookingRepository } from '../../repositories/IBookingRepository';
 import { ICustomerRepository } from '../../repositories/ICustomerRepository';
+import { IVendorRepository } from '../../repositories/IVendorRepository';
 import { Booking } from '../../../domain/Booking';
 import { BookingStatus, ModeOfJourney, PAXType } from '../../../models/FirestoreTypes';
 import { BookingPax } from '../../../domain/BookingPax';
@@ -57,13 +58,15 @@ interface CreateBookingDTO {
   modeOfJourney?: string;
   advanceAmount?: number;
   status?: BookingStatus;
+  vendorId?: string;
 }
 
 @injectable()
 export class CreateBooking {
   constructor(
     @inject('IBookingRepository') private bookingRepo: IBookingRepository,
-    @inject('ICustomerRepository') private customerRepo: ICustomerRepository
+    @inject('ICustomerRepository') private customerRepo: ICustomerRepository,
+    @inject('IVendorRepository') private vendorRepo: IVendorRepository
   ) {}
 
   async execute(data: CreateBookingDTO, orgId: string, createdBy: string): Promise<Booking> {
@@ -90,8 +93,9 @@ export class CreateBooking {
     const pax = data.pax.map(p => BookingPax.create(orgId, tempBookingId, p.paxName, p.paxType, { dob: p.dob, passportNo: p.passportNo }));
     
     const itineraries = (data.itineraries || []).map(i => {
-      const tempItineraryId = 'temp-itinerary-id'; // Will be replaced
-      const segments = i.segments.map(s => BookingSegment.create(orgId, tempItineraryId, s.seqNo, s.modeOfJourney, s));
+      // Create segments first with temporary itinerary ID
+      const segments = i.segments.map(s => BookingSegment.create(orgId, 'temp-itinerary-id', s.seqNo, s.modeOfJourney, s));
+      // Create itinerary which will update segment itinerary IDs to the real itinerary ID
       return BookingItinerary.create(orgId, tempBookingId, i.name, i.seqNo, segments);
     });
 
@@ -109,7 +113,8 @@ export class CreateBooking {
         modeOfJourney: data.modeOfJourney,
         advanceAmount: data.advanceAmount,
         status: data.status,
-        bookingDate: data.bookingDate
+        bookingDate: data.bookingDate,
+        vendorId: data.vendorId
       }
     );
 
@@ -125,6 +130,15 @@ export class CreateBooking {
     if (customer) {
       customer.incrementBookingCount();
       await this.customerRepo.update(customer, orgId);
+    }
+
+    // Update vendor's totalBookings if vendorId is provided
+    if (data.vendorId) {
+      const vendor = await this.vendorRepo.findById(data.vendorId, orgId);
+      if (vendor) {
+        vendor.incrementBookingCount();
+        await this.vendorRepo.update(vendor, orgId);
+      }
     }
 
     return createdBooking;

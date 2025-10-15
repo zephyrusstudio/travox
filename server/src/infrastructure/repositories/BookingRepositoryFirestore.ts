@@ -18,7 +18,20 @@ export class BookingRepositoryFirestore implements IBookingRepository {
   async create(booking: Booking, orgId: string): Promise<Booking> {
     const docData = this.toFirestore(booking);
     const docRef = await this.collection.add(docData);
+    
+    // Update the booking ID to the actual Firestore document ID
     booking.id = docRef.id;
+    
+    // Update all child entities to use the actual booking ID
+    booking.pax.forEach(pax => {
+      pax.bookingId = docRef.id;
+    });
+    
+    booking.itineraries.forEach(itinerary => {
+      itinerary.bookingId = docRef.id;
+      // Segments already have correct itinerary IDs from domain logic
+    });
+    
     return booking;
   }
 
@@ -232,6 +245,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       total_amount: booking.totalAmount,
       paid_amount: booking.paidAmount,
       status: booking.status,
+      vendor_id: booking.vendorId || null,
       created_by: booking.createdBy,
       updated_by: booking.updatedBy,
       is_deleted: booking.isDeleted,
@@ -370,6 +384,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       data.mode_of_journey,
       data.advance_amount,
       data.status || BookingStatus.DRAFT,
+      data.vendor_id,
       data.created_by || '',
       data.updated_by || '',
       data.is_deleted || false,

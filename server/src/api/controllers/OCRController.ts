@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
+import { container } from '../../config/container';
 import { GeminiOCRService, OCRExtractedBooking } from '../../services/GeminiOCRService';
 import { SchemaReflectionService } from '../../services/SchemaReflectionService';
-import { FileController } from './FileController';
+import { GetFiles } from '../../application/useCases/file/GetFiles';
+import { DownloadFile } from '../../application/useCases/file/DownloadFile';
 import { Booking } from '../../domain/Booking';
 import { BookingPax } from '../../domain/BookingPax';
 import { BookingItinerary } from '../../domain/BookingItinerary';
@@ -11,7 +13,6 @@ import logger from '../../config/logger';
 
 export class OCRController {
   private geminiService: GeminiOCRService;
-  private fileController: FileController;
 
   constructor() {
     const geminiApiKey = process.env.GEMINI_API_KEY;
@@ -23,8 +24,6 @@ export class OCRController {
       this.geminiService = null as any;
       console.warn('⚠️  GEMINI_API_KEY not found. OCR endpoints will return configuration errors.');
     }
-    
-    this.fileController = new FileController();
   }
 
   /**
@@ -99,61 +98,28 @@ export class OCRController {
         return;
       }
 
-      logger.info(`Starting OCR extraction for Google Drive file: ${fileId}`);
+      logger.info(`Starting OCR extraction for file: ${fileId}`);
       
-      // Use FileController to get file info and download content
-      let fileInfo: any;
-      let downloadResult: { fileBuffer: Buffer; fileName: string; mimeType: string };
+      // Use file use cases directly
+      const getFilesUseCase = container.resolve(GetFiles);
+      const downloadFileUseCase = container.resolve(DownloadFile);
+      
+      let fileInfo;
+      let downloadResult;
       
       try {
         // Get file metadata
-        const fileInfoPromise = new Promise<any>((resolve, reject) => {
-          const mockRes = {
-            json: (data: any) => {
-              if (data.status === 'success') {
-                resolve(data.data);
-              } else {
-                reject(new Error(data.data?.message || 'File not found'));
-              }
-            },
-            status: () => ({ 
-              json: (data: any) => reject(new Error(data.data?.message || 'File not found')) 
-            })
-          };
-          
-          this.fileController.getById(
-            { params: { id: fileId }, user } as any,
-            mockRes as any
-          );
-        });
-
-        fileInfo = await fileInfoPromise;
+        fileInfo = await getFilesUseCase.getById(fileId, user.orgId);
+        if (!fileInfo) {
+          res.status(404).json({
+            status: 'error',
+            message: 'File not found'
+          });
+          return;
+        }
 
         // Download file content
-        const downloadPromise = new Promise<{ fileBuffer: Buffer; fileName: string; mimeType: string }>((resolve, reject) => {
-          let buffer: Buffer;
-          const mockRes = {
-            setHeader: () => {},
-            send: (buf: Buffer) => {
-              buffer = buf;
-              resolve({
-                fileBuffer: buffer,
-                fileName: fileInfo.name,
-                mimeType: fileInfo.mimeType
-              });
-            },
-            status: () => ({ 
-              json: (data: any) => reject(new Error(data.data?.message || 'Download failed')) 
-            })
-          };
-          
-          this.fileController.download(
-            { params: { id: fileId }, user } as any,
-            mockRes as any
-          );
-        });
-
-        downloadResult = await downloadPromise;
+        downloadResult = await downloadFileUseCase.execute(fileId, user.orgId);
 
       } catch (error) {
         logger.error(`Failed to fetch file ${fileId}:`, error);
@@ -228,7 +194,7 @@ export class OCRController {
       });
 
     } catch (error) {
-      logger.error('OCR extraction from Google Drive file failed:', error);
+      logger.error('OCR extraction from file failed:', error);
       
       res.status(500).json({
         status: 'error',

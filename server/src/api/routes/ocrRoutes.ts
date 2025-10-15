@@ -29,10 +29,19 @@ const upload = multer({
 export function registerOCRRoutes(app: Express) {
   const ocrCtrl = new OCRController();
 
-  // OCR routes (protected)
+  // OCR extract endpoint - handles both file upload and fileId
+  // For file upload: POST /ocr/extract with multipart/form-data
+  // For fileId: POST /ocr/extract?fileId=FILE_ID (no multipart needed)
   app.post('/ocr/extract', 
     requireAuth(), 
-    upload.single('file'), 
+    (req, res, next) => {
+      // If fileId is provided in query params, skip multer middleware
+      if (req.query.fileId) {
+        return next();
+      }
+      // Otherwise, use multer for file upload
+      upload.single('file')(req, res, next);
+    },
     auditLogger('ocr'), 
     ocrCtrl.extract
   );

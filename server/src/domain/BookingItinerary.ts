@@ -22,8 +22,15 @@ export class BookingItinerary {
     segments: BookingSegment[] = []
   ): BookingItinerary {
     const now = new Date();
+    const itineraryId = uuidv4();
+    
+    // Update all segments to have the correct itinerary ID
+    segments.forEach(segment => {
+      segment.itineraryId = itineraryId;
+    });
+    
     return new BookingItinerary(
-      uuidv4(),
+      itineraryId,
       orgId,
       bookingId,
       name,
@@ -32,5 +39,19 @@ export class BookingItinerary {
       now,
       now
     );
+  }
+
+  // Helper method to update segment itinerary IDs
+  updateSegmentItineraryIds(): void {
+    this.segments.forEach(segment => {
+      segment.itineraryId = this.id;
+    });
+  }
+
+  // Helper method to add a segment with correct itinerary ID
+  addSegment(segment: BookingSegment): void {
+    segment.itineraryId = this.id;
+    this.segments.push(segment);
+    this.updatedAt = new Date();
   }
 }

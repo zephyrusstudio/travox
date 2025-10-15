@@ -12,7 +12,6 @@ import {
   Upload,
 } from "lucide-react";
 import React, { useRef, useState } from "react";
-import { mockData } from "../../data/mockData";
 import { db } from "../../firebaseconfig";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";

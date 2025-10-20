@@ -12,7 +12,11 @@ import {
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Booking, Customer } from "../../types";
-import { ApiError, apiRequest } from "../../utils/apiConnector";
+import {
+  ApiError,
+  apiRequest,
+  parseApiError,
+} from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
@@ -28,6 +32,7 @@ import BookingForm from "./BookingForm";
 import {
   BookingStatus,
   CustomerLite,
+  ModeOfJourneyOption,
   NewCustomerData,
   TicketData,
   TravelCategory,
@@ -38,7 +43,11 @@ type BookingRow = Booking & { pnr?: string };
 const BookingManagement: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [selectedBookingLoading, setSelectedBookingLoading] = useState(false);
+  const [selectedBookingError, setSelectedBookingError] = useState<
+    string | null
+  >(null);
   const [selectedTicketData, setSelectedTicketData] =
     useState<TicketData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -52,6 +61,175 @@ const BookingManagement: React.FC = () => {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const formatToDateInput = (value?: string | Date | null): string => {
+    if (!value) return "";
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toISOString().slice(0, 10);
+  };
+
+  const normalizeBookingForForm = (record: any) => {
+    if (!record) return null;
+
+    const itineraries = Array.isArray(record.itineraries)
+      ? record.itineraries
+      : [];
+    const firstItinerary = itineraries[0];
+    const segments = Array.isArray(firstItinerary?.segments)
+      ? firstItinerary.segments
+      : [];
+    const firstSegment = segments[0];
+
+    const bookingDateRaw = record.bookingDate ?? record.booking_date ?? null;
+    const travelStartRaw =
+      record.travelStartDate ??
+      record.travelStartAt ??
+      record.journeyDate ??
+      record.travel_start_date ??
+      firstSegment?.checkIn ??
+      firstSegment?.depAt ??
+      null;
+    const travelEndRaw =
+      record.travelEndDate ??
+      record.travelEndAt ??
+      record.returnDate ??
+      record.travel_end_date ??
+      firstSegment?.checkOut ??
+      firstSegment?.arrAt ??
+      null;
+
+    const totalAmount = Number(
+      record.totalAmount ?? record.total_amount ?? 0
+    );
+    const paidAmount = Number(
+      record.paidAmount ??
+        record.advanceAmount ??
+        record.advance_received ??
+        0
+    );
+    const dueAmount =
+      Number(
+        record.dueAmount ??
+          record.balance_amount ??
+          totalAmount - paidAmount
+      ) || 0;
+    const modeOfJourneyValue =
+      record.mode_of_journey ??
+      record.modeOfJourney ??
+      firstSegment?.modeOfJourney ??
+      firstSegment?.mode_of_journey ??
+      ModeOfJourneyOption.HOTEL;
+
+    const normalized = {
+      ...record,
+      id: record.id ?? record.booking_id ?? "",
+      booking_id: record.id ? String(record.id) : record.booking_id ?? "",
+      customer_id:
+        record.customerId !== undefined
+          ? String(record.customerId)
+          : record.customer_id ?? "",
+      customer_name:
+        record.customerName ??
+        record.customer_name ??
+        record.customer?.name ??
+        "",
+      package_name: record.packageName ?? record.package_name ?? "",
+      pnr: record.pnr ?? record.pnrNo ?? record.pnr_no ?? "",
+      pnrNo: record.pnrNo ?? record.pnr ?? record.pnr_no ?? "",
+      pnr_no: record.pnr_no ?? record.pnr ?? record.pnrNo ?? "",
+      booking_date:
+        record.booking_date ?? formatToDateInput(bookingDateRaw),
+      travel_start_date:
+        record.travel_start_date ?? formatToDateInput(travelStartRaw),
+      travel_end_date:
+        record.travel_end_date ?? formatToDateInput(travelEndRaw),
+      pax_count:
+        record.pax_count ??
+        record.paxCount ??
+        (Array.isArray(record.pax) ? record.pax.length : 0),
+      total_amount: totalAmount,
+      advance_received: paidAmount,
+      balance_amount: dueAmount,
+      currency:
+        record.currency ??
+        record.currencyCode ??
+        "INR",
+      mode_of_journey: modeOfJourneyValue,
+      status:
+        typeof record.status === "string"
+          ? record.status
+          : (record.status?.toString?.() ?? "Draft"),
+      pax: Array.isArray(record.pax)
+        ? record.pax
+        : Array.isArray(record.paxList)
+        ? record.paxList
+        : [],
+      itineraries: itineraries,
+      vendorInfo: record.vendorInfo ?? null,
+      extractionMetadata:
+        record.extractionMetadata ?? record.extraction_metadata ?? null,
+      customerId: record.customerId ?? record.customer_id ?? "",
+      totalAmount,
+      advanceAmount: record.advanceAmount ?? paidAmount,
+      paidAmount,
+      dueAmount,
+      bookingDate: bookingDateRaw,
+      travelStartDate: travelStartRaw,
+      travelEndDate: travelEndRaw,
+    };
+
+    return normalized;
+  };
+
+  const loadBookingDetails = useCallback(
+    async (bookingId: string) => {
+      setSelectedBookingLoading(true);
+      setSelectedBookingError(null);
+      try {
+        const res = await apiRequest<any>({
+          method: "GET",
+          url: `/bookings/${bookingId}`,
+          params: { unmask: true },
+        });
+
+        if (!res) {
+          throw new ApiError("Failed to load booking details");
+        }
+
+        if (typeof res.status === "number" && res.status >= 400) {
+          const message =
+            res.data?.data?.message ||
+            res.data?.message ||
+            "Failed to load booking details";
+          throw new ApiError(message, { status: res.status, data: res.data });
+        }
+
+        if (typeof res.status === "string" && res.status !== "success") {
+          const message =
+            res.data?.message || res.message || "Failed to load booking details";
+          throw new ApiError(message);
+        }
+
+        const rawBooking = res.data ?? res;
+        if (!rawBooking || (Array.isArray(rawBooking) && rawBooking.length === 0)) {
+          throw new ApiError("Booking not found");
+        }
+
+        const normalized = normalizeBookingForForm(rawBooking);
+        setSelectedBooking(normalized);
+      } catch (error) {
+        const apiError =
+          error instanceof ApiError ? error : parseApiError(error);
+        const message =
+          apiError.message || "Unable to load booking for editing.";
+        setSelectedBookingError(message);
+      } finally {
+        setSelectedBookingLoading(false);
+      }
+    },
+    [normalizeBookingForForm, parseApiError]
+  );
   const customersMap = useMemo(() => {
     const map = new Map<string, string>();
     customers.forEach((customer) => {
@@ -82,11 +260,23 @@ const BookingManagement: React.FC = () => {
       };
 
       const mapped: BookingRow[] = items.map((record) => {
-        const bookingDate: string = record?.bookingDate || "";
-        const travelStart: string =
-          record?.travelStartDate || record?.journeyDate || bookingDate || "";
-        const travelEnd: string =
-          record?.travelEndDate || record?.returnDate || bookingDate || "";
+        const bookingDateRaw: string | null =
+          record?.bookingDate ?? record?.booking_date ?? null;
+        const travelStartRaw: string | null =
+          record?.travelStartDate ??
+          record?.journeyDate ??
+          record?.travel_start_date ??
+          bookingDateRaw ??
+          null;
+        const travelEndRaw: string | null =
+          record?.travelEndDate ??
+          record?.returnDate ??
+          record?.travel_end_date ??
+          bookingDateRaw ??
+          null;
+        const bookingDate = formatToDateInput(bookingDateRaw);
+        const travelStart = formatToDateInput(travelStartRaw);
+        const travelEnd = formatToDateInput(travelEndRaw);
         const paxCount =
           record?.paxCount ??
           (Array.isArray(record?.pax) ? record.pax.length : 0);
@@ -100,8 +290,13 @@ const BookingManagement: React.FC = () => {
           travel_start_date: travelStart,
           travel_end_date: travelEnd,
           pax_count: paxCount,
-          total_amount: Number(record?.totalAmount) || 0,
-          advance_received: Number(record?.advanceAmount) || 0,
+          total_amount: Number(record?.totalAmount ?? record?.total_amount) || 0,
+          advance_received:
+            Number(
+              record?.advanceAmount ??
+                record?.paidAmount ??
+                record?.advance_received
+            ) || 0,
           balance_amount:
             Number(
               record?.dueAmount ??
@@ -246,11 +441,23 @@ const BookingManagement: React.FC = () => {
   const resetAndClose = () => {
     setIsModalOpen(false);
     setSelectedBooking(null);
+     setSelectedBookingError(null);
+     setSelectedBookingLoading(false);
   };
 
-  const handleOpenModal = (booking?: Booking) => {
-    setSelectedBooking(booking || null);
+  const handleOpenModal = (booking?: BookingRow) => {
+    if (!booking) {
+      setSelectedBooking(null);
+      setSelectedBookingError(null);
+      setSelectedBookingLoading(false);
+      setIsModalOpen(true);
+      return;
+    }
+
+    setSelectedBooking(null);
+    setSelectedBookingError(null);
     setIsModalOpen(true);
+    loadBookingDetails(booking.booking_id);
   };
 
   const handleDelete = (bookingId: string) => {
@@ -691,13 +898,30 @@ const BookingManagement: React.FC = () => {
             {customersError}
           </div>
         )}
-        <BookingForm
-          selectedBooking={selectedBooking}
-          customers={customers}
-          onAddCustomer={addCustomer}
-          onSubmitBooking={submitBooking}
-          onCancel={resetAndClose}
-        />
+        {selectedBookingLoading && (
+          <div className="mb-4 text-sm text-gray-500">
+            Loading booking details...
+          </div>
+        )}
+        {selectedBookingError && (
+          <div className="mb-4 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+            {selectedBookingError}
+          </div>
+        )}
+        {(!selectedBookingLoading || selectedBooking) && (
+          <BookingForm
+            key={
+              selectedBooking
+                ? selectedBooking.booking_id || selectedBooking.id
+                : "new"
+            }
+            selectedBooking={selectedBooking}
+            customers={customers}
+            onAddCustomer={addCustomer}
+            onSubmitBooking={submitBooking}
+            onCancel={resetAndClose}
+          />
+        )}
       </Modal>
     </div>
   );

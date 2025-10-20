@@ -106,7 +106,6 @@ const BookingForm: React.FC<Props> = (props) => {
     newCustomerData,
     passengers,
     itineraries,
-    vendorInfo,
     extractionMetadata,
     ui,
     // derived
@@ -117,7 +116,6 @@ const BookingForm: React.FC<Props> = (props) => {
     setAiData,
     setFormField,
     setNewCustomerField,
-    setVendorInfoField,
     setExtractionMetadataField,
     addExtractionField,
     updateExtractionField,
@@ -666,7 +664,7 @@ const BookingForm: React.FC<Props> = (props) => {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </Labeled>
-              <Labeled label="Advance Received">
+              <Labeled label="Paid Amount">
                 <input
                   type="number"
                   min={0}
@@ -1156,44 +1154,6 @@ const BookingForm: React.FC<Props> = (props) => {
           </div>
         </AccordionSection>
 
-        <AccordionSection
-          title="Vendor Information"
-          description="Keep supplier contact details handy for quick reference."
-          defaultOpen={Boolean(
-            vendorInfo.name || vendorInfo.contact || vendorInfo.email
-          )}
-        >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <Labeled label="Vendor Name">
-              <input
-                type="text"
-                value={vendorInfo.name}
-                onChange={(e) => setVendorInfoField("name", e.target.value)}
-                placeholder="Vendor name"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </Labeled>
-            <Labeled label="Contact">
-              <input
-                type="text"
-                value={vendorInfo.contact}
-                onChange={(e) => setVendorInfoField("contact", e.target.value)}
-                placeholder="+91-..."
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </Labeled>
-            <Labeled label="Email">
-              <input
-                type="email"
-                value={vendorInfo.email}
-                onChange={(e) => setVendorInfoField("email", e.target.value)}
-                placeholder="vendor@example.com"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </Labeled>
-          </div>
-        </AccordionSection>
-
         {formData.total_amount > 0 && (
           <AccordionSection
             title="Payment Summary"
@@ -1210,7 +1170,7 @@ const BookingForm: React.FC<Props> = (props) => {
                 </p>
               </div>
               <div>
-                <p className="text-gray-600">Advance Received</p>
+                <p className="text-gray-600">Paid Amount</p>
                 <p className="font-semibold text-green-600">
                   {(formData.currency || "INR") +
                     " " +

@@ -7,16 +7,13 @@ import {
   Eye,
   Plus,
   Search,
+  Ticket,
   Trash2,
   Users,
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Booking, Customer } from "../../types";
-import {
-  ApiError,
-  apiRequest,
-  parseApiError,
-} from "../../utils/apiConnector";
+import { ApiError, apiRequest, parseApiError } from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
@@ -61,6 +58,9 @@ const BookingManagement: React.FC = () => {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [formMode, setFormMode] = useState<"create" | "edit" | "view">(
+    "create"
+  );
 
   const formatToDateInput = (value?: string | Date | null): string => {
     if (!value) return "";
@@ -99,20 +99,13 @@ const BookingManagement: React.FC = () => {
       firstSegment?.arrAt ??
       null;
 
-    const totalAmount = Number(
-      record.totalAmount ?? record.total_amount ?? 0
-    );
+    const totalAmount = Number(record.totalAmount ?? record.total_amount ?? 0);
     const paidAmount = Number(
-      record.paidAmount ??
-        record.advanceAmount ??
-        record.advance_received ??
-        0
+      record.paidAmount ?? record.advanceAmount ?? record.advance_received ?? 0
     );
     const dueAmount =
       Number(
-        record.dueAmount ??
-          record.balance_amount ??
-          totalAmount - paidAmount
+        record.dueAmount ?? record.balance_amount ?? totalAmount - paidAmount
       ) || 0;
     const modeOfJourneyValue =
       record.mode_of_journey ??
@@ -138,8 +131,7 @@ const BookingManagement: React.FC = () => {
       pnr: record.pnr ?? record.pnrNo ?? record.pnr_no ?? "",
       pnrNo: record.pnrNo ?? record.pnr ?? record.pnr_no ?? "",
       pnr_no: record.pnr_no ?? record.pnr ?? record.pnrNo ?? "",
-      booking_date:
-        record.booking_date ?? formatToDateInput(bookingDateRaw),
+      booking_date: record.booking_date ?? formatToDateInput(bookingDateRaw),
       travel_start_date:
         record.travel_start_date ?? formatToDateInput(travelStartRaw),
       travel_end_date:
@@ -151,15 +143,12 @@ const BookingManagement: React.FC = () => {
       total_amount: totalAmount,
       advance_received: paidAmount,
       balance_amount: dueAmount,
-      currency:
-        record.currency ??
-        record.currencyCode ??
-        "INR",
+      currency: record.currency ?? record.currencyCode ?? "INR",
       mode_of_journey: modeOfJourneyValue,
       status:
         typeof record.status === "string"
           ? record.status
-          : (record.status?.toString?.() ?? "Draft"),
+          : record.status?.toString?.() ?? "Draft",
       pax: Array.isArray(record.pax)
         ? record.pax
         : Array.isArray(record.paxList)
@@ -207,12 +196,17 @@ const BookingManagement: React.FC = () => {
 
         if (typeof res.status === "string" && res.status !== "success") {
           const message =
-            res.data?.message || res.message || "Failed to load booking details";
+            res.data?.message ||
+            res.message ||
+            "Failed to load booking details";
           throw new ApiError(message);
         }
 
         const rawBooking = res.data ?? res;
-        if (!rawBooking || (Array.isArray(rawBooking) && rawBooking.length === 0)) {
+        if (
+          !rawBooking ||
+          (Array.isArray(rawBooking) && rawBooking.length === 0)
+        ) {
           throw new ApiError("Booking not found");
         }
 
@@ -290,7 +284,8 @@ const BookingManagement: React.FC = () => {
           travel_start_date: travelStart,
           travel_end_date: travelEnd,
           pax_count: paxCount,
-          total_amount: Number(record?.totalAmount ?? record?.total_amount) || 0,
+          total_amount:
+            Number(record?.totalAmount ?? record?.total_amount) || 0,
           advance_received:
             Number(
               record?.advanceAmount ??
@@ -441,11 +436,17 @@ const BookingManagement: React.FC = () => {
   const resetAndClose = () => {
     setIsModalOpen(false);
     setSelectedBooking(null);
-     setSelectedBookingError(null);
-     setSelectedBookingLoading(false);
+    setSelectedBookingError(null);
+    setSelectedBookingLoading(false);
+    setFormMode("create");
   };
 
-  const handleOpenModal = (booking?: BookingRow) => {
+  const handleOpenModal = (
+    booking?: BookingRow,
+    mode: "create" | "edit" | "view" = "create"
+  ) => {
+    setFormMode(mode);
+
     if (!booking) {
       setSelectedBooking(null);
       setSelectedBookingError(null);
@@ -559,7 +560,10 @@ const BookingManagement: React.FC = () => {
             Manage travel bookings and customer reservations
           </p>
         </div>
-        <Button onClick={() => handleOpenModal()} icon={Plus}>
+        <Button
+          onClick={() => handleOpenModal(undefined, "create")}
+          icon={Plus}
+        >
           Add Booking
         </Button>
       </div>
@@ -722,11 +726,18 @@ const BookingManagement: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          icon={Eye}
+                          onClick={() => handleOpenModal(b, "view")}
+                          title="View booking"
+                        />
                         {(b as any).pnr && (
                           <Button
                             variant="outline"
                             size="sm"
-                            icon={Eye}
+                            icon={Ticket}
                             onClick={() => handleViewTicket(b)}
                             title="View Ticket"
                           />
@@ -735,7 +746,7 @@ const BookingManagement: React.FC = () => {
                           variant="outline"
                           size="sm"
                           icon={Edit}
-                          onClick={() => handleOpenModal(b)}
+                          onClick={() => handleOpenModal(b, "edit")}
                         />
                         <Button
                           variant="danger"
@@ -883,11 +894,17 @@ const BookingManagement: React.FC = () => {
         </div>
       </Modal>
 
-      {/* Add / Edit Modal */}
+      {/* Add / Edit / View Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={resetAndClose}
-        title={selectedBooking ? "Edit Booking" : "Add New Booking"}
+        title={
+          formMode === "create"
+            ? "Add New Booking"
+            : formMode === "edit"
+            ? "Edit Booking"
+            : "View Booking"
+        }
         size="xl"
       >
         {customersLoading && (
@@ -920,6 +937,7 @@ const BookingManagement: React.FC = () => {
             onAddCustomer={addCustomer}
             onSubmitBooking={submitBooking}
             onCancel={resetAndClose}
+            mode={formMode}
           />
         )}
       </Modal>

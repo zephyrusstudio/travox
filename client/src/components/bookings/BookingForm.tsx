@@ -15,12 +15,15 @@ import { useBookingForm } from "./useBookingForm";
 // Types
 // ──────────────────────────────────────────────────────────────────────────────
 
+type FormMode = "create" | "edit" | "view";
+
 type Props = {
   selectedBooking: any | null; // keep as any to avoid leaking app-specific shape
   customers: CustomerLite[];
   onAddCustomer: (c: NewCustomerData) => void;
   onSubmitBooking: (payload: any) => Promise<any> | any; // app's booking shape
   onCancel: () => void;
+  mode?: FormMode;
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -45,6 +48,8 @@ type AccordionSectionProps = {
   defaultOpen?: boolean;
   actions?: React.ReactNode;
   children: React.ReactNode;
+  forceOpen?: boolean;
+  disableContent?: boolean;
 };
 
 const AccordionSection: React.FC<AccordionSectionProps> = ({
@@ -53,8 +58,12 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
   defaultOpen = false,
   actions,
   children,
+  forceOpen,
+  disableContent = false,
 }) => {
   const [open, setOpen] = React.useState(defaultOpen);
+  const isControlled = typeof forceOpen === "boolean";
+  const isOpen = isControlled ? forceOpen : open;
   const contentId = React.useId();
 
   return (
@@ -62,10 +71,14 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
       <div className="flex items-start justify-between gap-3 px-4 py-3">
         <button
           type="button"
-          onClick={() => setOpen((prev) => !prev)}
+          onClick={() => {
+            if (isControlled) return;
+            setOpen((prev) => !prev);
+          }}
           className="flex flex-1 items-center justify-between text-left focus:outline-none"
-          aria-expanded={open}
+          aria-expanded={isOpen}
           aria-controls={contentId}
+          disabled={isControlled}
         >
           <div>
             <p className="text-sm font-semibold text-gray-900">{title}</p>
@@ -75,18 +88,23 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
           </div>
           <ChevronDown
             className={`h-5 w-5 text-gray-500 transition-transform ${
-              open ? "rotate-180" : ""
+              isOpen ? "rotate-180" : ""
             }`}
           />
         </button>
         {actions ? <div className="flex-shrink-0">{actions}</div> : null}
       </div>
-      {open && (
+      {isOpen && (
         <div
           id={contentId}
           className="border-t border-gray-100 bg-gray-50 px-4 py-4"
         >
-          <div className="space-y-4">{children}</div>
+          <fieldset
+            disabled={disableContent}
+            className="space-y-4 border-0 p-0 m-0"
+          >
+            {children}
+          </fieldset>
         </div>
       )}
     </div>
@@ -99,6 +117,13 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
 
 const BookingForm: React.FC<Props> = (props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const computedMode: FormMode =
+    props.mode ?? (props.selectedBooking ? "edit" : "create");
+  const isViewMode = computedMode === "view";
+  const readOnlySectionProps = isViewMode
+    ? { disableContent: true, forceOpen: true }
+    : {};
+
   const {
     // state
     aiData,
@@ -132,7 +157,25 @@ const BookingForm: React.FC<Props> = (props) => {
     updateSegmentMiscField,
     handleAddNewCustomer,
     handleSubmit,
-  } = useBookingForm(props);
+  } = useBookingForm({
+    selectedBooking: props.selectedBooking,
+    customers: props.customers,
+    onAddCustomer: props.onAddCustomer,
+    onSubmitBooking: props.onSubmitBooking,
+    onCancel: props.onCancel,
+    mode: computedMode,
+  });
+
+  const handleFormSubmit = React.useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      if (isViewMode) {
+        event.preventDefault();
+        return;
+      }
+      handleSubmit(event);
+    },
+    [handleSubmit, isViewMode]
+  );
 
   return (
     <div className="space-y-6">
@@ -190,6 +233,7 @@ const BookingForm: React.FC<Props> = (props) => {
           title="AI Extracted Data"
           description="Review and adjust the values pulled from the uploaded ticket."
           defaultOpen={ui.isProcessing || ui.processingComplete}
+          {...readOnlySectionProps}
           actions={
             ui.processingComplete ? (
               <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
@@ -433,11 +477,12 @@ const BookingForm: React.FC<Props> = (props) => {
         </AccordionSection>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleFormSubmit} className="space-y-5">
         <AccordionSection
           title="Customer & Booking"
           description="Select the traveller and fill in the core booking information."
           defaultOpen
+          {...readOnlySectionProps}
         >
           <div className="space-y-4">
             <div>
@@ -689,12 +734,14 @@ const BookingForm: React.FC<Props> = (props) => {
           }`}
           description="Organise trip legs and services. Add more itineraries as needed."
           defaultOpen={Boolean(itineraries.length)}
+          {...readOnlySectionProps}
           actions={
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={addItinerary}
+              disabled={isViewMode}
             >
               Add Itinerary
             </Button>
@@ -1144,6 +1191,7 @@ const BookingForm: React.FC<Props> = (props) => {
                       variant="outline"
                       size="sm"
                       onClick={() => addSegment(itineraryIdx)}
+                      disabled={isViewMode}
                     >
                       Add Segment
                     </Button>
@@ -1157,8 +1205,9 @@ const BookingForm: React.FC<Props> = (props) => {
         {formData.total_amount > 0 && (
           <AccordionSection
             title="Payment Summary"
-            description="Quick snapshot of what’s due for this booking."
+            description="Quick snapshot of what is due for this booking."
             defaultOpen
+            {...readOnlySectionProps}
           >
             <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
               <div>
@@ -1191,20 +1240,22 @@ const BookingForm: React.FC<Props> = (props) => {
 
         <div className="flex items-center justify-end space-x-3 pt-4">
           <Button type="button" variant="outline" onClick={props.onCancel}>
-            Cancel
+            {isViewMode ? "Close" : "Cancel"}
           </Button>
-          <Button
-            type="submit"
-            disabled={!formData.customer_id || ui.isSubmitting}
-          >
-            {ui.isSubmitting
-              ? props.selectedBooking
-                ? "Updating..."
-                : "Saving..."
-              : props.selectedBooking
-              ? "Update Booking"
-              : "Add Booking"}
-          </Button>
+          {!isViewMode && (
+            <Button
+              type="submit"
+              disabled={!formData.customer_id || ui.isSubmitting}
+            >
+              {ui.isSubmitting
+                ? props.selectedBooking
+                  ? "Updating..."
+                  : "Saving..."
+                : props.selectedBooking
+                ? "Update Booking"
+                : "Add Booking"}
+            </Button>
+          )}
         </div>
       </form>
     </div>

@@ -1,3 +1,5 @@
+import { normalizeRole } from "../utils/roleAccess";
+
 export const useApp = () => {
   const getStoredUser = () => {
     const raw =
@@ -23,7 +25,7 @@ export const useApp = () => {
           name,
           email: parsed.email || "",
           username: parsed.username || name,
-          role: parsed.role,
+          role: normalizeRole(parsed.role),
         };
       }
     } catch (error) {
@@ -38,7 +40,8 @@ export const useApp = () => {
     name: "User",
     email: "",
     username: "User",
-  };
+    role: normalizeRole(undefined),
+  } as const;
 
   const user = getStoredUser() || fallbackUser;
 

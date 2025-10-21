@@ -24,6 +24,7 @@ export type UseBookingFormProps = {
   onAddCustomer: (c: NewCustomerData) => void;
   onSubmitBooking: (payload: any) => Promise<any> | any;
   onCancel: () => void;
+  mode?: "create" | "edit" | "view";
 };
 
 type OcrExtractUploadResponse = {

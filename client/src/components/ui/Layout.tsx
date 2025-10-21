@@ -8,12 +8,14 @@ import {
   LayoutDashboard,
   LogOut,
   Receipt,
+  Shield,
   Users,
   X,
 } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../../contexts/AppContext";
+import { AppModule, canAccessModule } from "../../utils/roleAccess";
 import { successToast } from "../../utils/toasts";
 
 interface LayoutProps {
@@ -21,7 +23,14 @@ interface LayoutProps {
   currentPage: string;
 }
 
-const sidebarItems = [
+type SidebarItem = {
+  id: AppModule;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  submenu?: any[];
+};
+
+const sidebarItems: SidebarItem[] = [
   // { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   // { id: "tickets", label: "Ticket Upload", icon: Upload },
   // {
@@ -49,6 +58,7 @@ const sidebarItems = [
   // { id: "refunds", label: "Refunds", icon: RefreshCw },
   // { id: "reports", label: "Reports", icon: FileText },
   { id: "logs", label: "Audit Logs", icon: Clock },
+  { id: "users", label: "User Access", icon: Shield },
   // { id: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -58,6 +68,13 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["ledgers"]);
   const navigate = useNavigate();
   const { currentUser, authUser } = useApp();
+  const accessibleSidebarItems = React.useMemo(
+    () =>
+      sidebarItems.filter((item) =>
+        canAccessModule(currentUser?.role, item.id)
+      ),
+    [currentUser?.role]
+  );
 
   const toggleSubmenu = (menuId: string) => {
     setExpandedMenus((prev) =>
@@ -103,7 +120,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
         </div>
 
         <nav className="mt-6 px-3 pb-20 overflow-y-auto flex-1 min-h-0">
-          {sidebarItems.map((item) => {
+          {accessibleSidebarItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPage === item.id;
             const hasSubmenu = item.submenu && item.submenu.length > 0;

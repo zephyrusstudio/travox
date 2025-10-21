@@ -98,6 +98,7 @@ const AuthPage: React.FC = () => {
       // persist token for guards and API
       localStorage.setItem(TOKEN_KEY, accessToken);
       sessionStorage.setItem(TOKEN_KEY, accessToken);
+      localStorage.setItem("user", JSON.stringify(user));
       sessionStorage.setItem("user", JSON.stringify(user));
 
       navigate("/", { replace: true });

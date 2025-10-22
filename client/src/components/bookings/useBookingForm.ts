@@ -92,6 +92,14 @@ const toNumberOrBlank = (value: unknown): number | "" => {
   return Number.isFinite(num) ? num : "";
 };
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const normalizePhone = (value: string) => value.replace(/\D/g, "");
+const isEmailValid = (value: string) => EMAIL_REGEX.test(value);
+const isPhoneValid = (value: string) => {
+  const digitsOnly = normalizePhone(value);
+  return digitsOnly.length >= 7 && digitsOnly.length <= 15;
+};
+
 export function useBookingForm({
   selectedBooking,
   customers,
@@ -906,15 +914,35 @@ export function useBookingForm({
   }, []);
 
   const handleAddNewCustomer = useCallback(() => {
-    if (!newCustomerData.full_name.trim()) {
-      alert("Customer name is required");
+    const trimmedFullName = newCustomerData.full_name.trim();
+    const trimmedEmail = newCustomerData.email.trim();
+    const trimmedPhone = newCustomerData.phone.trim();
+
+    if (!trimmedFullName || !trimmedEmail || !trimmedPhone) {
+      errorToast("Full name, email, and phone are required to add a new customer.");
       return;
     }
-    onAddCustomer(newCustomerData);
+
+    if (!isEmailValid(trimmedEmail)) {
+      errorToast("Please enter a valid email address.");
+      return;
+    }
+
+    if (!isPhoneValid(trimmedPhone)) {
+      errorToast("Please enter a valid phone number.");
+      return;
+    }
+
+    const payload: NewCustomerData = {
+      ...newCustomerData,
+      full_name: trimmedFullName,
+      email: trimmedEmail,
+      phone: trimmedPhone,
+    };
+
+    onAddCustomer(payload);
     setTimeout(() => {
-      const newC = customers.find(
-        (c) => c.full_name === newCustomerData.full_name
-      );
+      const newC = customers.find((c) => c.full_name === trimmedFullName);
       if (newC)
         setFormData((prev) => ({
           ...prev,

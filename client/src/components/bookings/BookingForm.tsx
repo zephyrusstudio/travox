@@ -539,9 +539,10 @@ const BookingForm: React.FC<Props> = (props) => {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </Labeled>
-                    <Labeled label="Email">
+                    <Labeled label="Email *">
                       <input
                         type="email"
+                        required
                         value={newCustomerData.email}
                         onChange={(e) =>
                           setNewCustomerField("email", e.target.value)
@@ -549,9 +550,12 @@ const BookingForm: React.FC<Props> = (props) => {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </Labeled>
-                    <Labeled label="Phone">
+                    <Labeled label="Phone *">
                       <input
                         type="tel"
+                        placeholder="Eg. 1234567890"
+                        required
+                        maxLength={10}
                         value={newCustomerData.phone}
                         onChange={(e) =>
                           setNewCustomerField("phone", e.target.value)
@@ -576,6 +580,11 @@ const BookingForm: React.FC<Props> = (props) => {
                       type="button"
                       onClick={handleAddNewCustomer}
                       size="sm"
+                      disabled={
+                        !newCustomerData.full_name.trim() ||
+                        !newCustomerData.email.trim() ||
+                        !newCustomerData.phone.trim()
+                      }
                     >
                       Add Customer
                     </Button>

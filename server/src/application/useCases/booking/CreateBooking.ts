@@ -70,12 +70,38 @@ export class CreateBooking {
   ) {}
 
   async execute(data: CreateBookingDTO, orgId: string, createdBy: string): Promise<Booking> {
-    // --- Validation ---
-    if (!data.customerId || !data.currency || !data.totalAmount || !data.pax || data.pax.length === 0) {
+    // --- Minimal Required Field Validation ---
+    if (!data.customerId || !data.currency || data.totalAmount === undefined || data.totalAmount === null || !data.pax || data.pax.length === 0) {
       throw new Error('Missing required fields: customerId, currency, totalAmount, and at least one pax');
     }
+    
     if (data.totalAmount <= 0) {
       throw new Error('Total amount must be greater than 0');
+    }
+
+    // Validate PAX - only name and type are required
+    for (const pax of data.pax) {
+      if (!pax.paxName || !pax.paxType) {
+        throw new Error('Each passenger must have paxName and paxType');
+      }
+    }
+
+    // Validate segments if provided - mode-specific validation
+    if (data.itineraries) {
+      for (const itinerary of data.itineraries) {
+        if (!itinerary.name || itinerary.seqNo === undefined) {
+          throw new Error('Each itinerary must have name and seqNo');
+        }
+        
+        for (const segment of itinerary.segments) {
+          if (!segment.modeOfJourney || segment.seqNo === undefined) {
+            throw new Error('Each segment must have modeOfJourney and seqNo');
+          }
+          
+          // Mode-specific validation (minimal requirements only)
+          this.validateSegmentByMode(segment);
+        }
+      }
     }
 
     let paidAmount = 0;
@@ -142,5 +168,47 @@ export class CreateBooking {
     }
 
     return createdBooking;
+  }
+
+  /**
+   * Mode-specific minimal validation for booking segments
+   * Only validates truly essential fields per mode of journey
+   */
+  private validateSegmentByMode(segment: SegmentDTO): void {
+    switch (segment.modeOfJourney) {
+      case ModeOfJourney.FLIGHT:
+        // For flights, only departure location is truly essential
+        // arrAt and depAt are both optional as per your requirement
+        if (!segment.depCode) {
+          throw new Error('Departure code (depCode) is required for flight segments');
+        }
+        break;
+        
+      case ModeOfJourney.HOTEL:
+        // For hotels, hotel name is essential
+        if (!segment.hotelName) {
+          throw new Error('Hotel name is required for hotel segments');
+        }
+        break;
+        
+      case ModeOfJourney.TRAIN:
+      case ModeOfJourney.BUS:
+        // For ground transport, at least departure point should be known
+        if (!segment.depCode && !segment.boardingPoint) {
+          throw new Error('Either departure code or boarding point is required for ground transport segments');
+        }
+        break;
+        
+      case ModeOfJourney.CAB:
+        // For cabs, boarding and drop points are useful but not strictly required for minimal booking
+        break;
+        
+      case ModeOfJourney.OTHER:
+        // For other modes, no specific validation - maximum flexibility
+        break;
+        
+      default:
+        throw new Error(`Unsupported mode of journey: ${segment.modeOfJourney}`);
+    }
   }
 }

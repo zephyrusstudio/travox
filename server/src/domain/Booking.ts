@@ -208,16 +208,35 @@ export class Booking {
       return;
     }
 
+    // Collect all valid departure dates (depAt for most modes, checkIn for hotels)
     const departureDates = allSegments
-      .map(s => s.depAt || s.checkIn)
-      .filter((d): d is Date => d !== undefined);
+      .map(s => {
+        if (s.modeOfJourney === 'HOTEL') {
+          return s.checkIn;
+        }
+        return s.depAt;
+      })
+      .filter((d): d is Date => d !== undefined && d instanceof Date);
       
+    // Collect all valid arrival dates (arrAt for most modes, checkOut for hotels)
+    // This handles your main concern - arrAt can be undefined and won't cause issues
     const arrivalDates = allSegments
-      .map(s => s.arrAt || s.checkOut)
-      .filter((d): d is Date => d !== undefined);
+      .map(s => {
+        if (s.modeOfJourney === 'HOTEL') {
+          return s.checkOut;
+        }
+        return s.arrAt;
+      })
+      .filter((d): d is Date => d !== undefined && d instanceof Date);
 
-    this.travelStartAt = departureDates.length > 0 ? new Date(Math.min(...departureDates.map(d => d.getTime()))) : undefined;
-    this.travelEndAt = arrivalDates.length > 0 ? new Date(Math.max(...arrivalDates.map(d => d.getTime()))) : undefined;
+    // Calculate travel dates only if we have valid dates
+    this.travelStartAt = departureDates.length > 0 
+      ? new Date(Math.min(...departureDates.map(d => d.getTime()))) 
+      : undefined;
+      
+    this.travelEndAt = arrivalDates.length > 0 
+      ? new Date(Math.max(...arrivalDates.map(d => d.getTime()))) 
+      : undefined;
   }
 
   // Get booking data for API response with optional unmasking of sensitive fields
@@ -231,25 +250,25 @@ export class Booking {
       totalAmount: this.totalAmount,
       paidAmount: this.paidAmount,
       pax: this.pax.map(p => p.toApiResponse(unmask)),
-      itineraries: this.itineraries,
-      packageName: this.packageName,
-      pnrNo: this.pnrNo,
-      modeOfJourney: this.modeOfJourney,
-      advanceAmount: this.advanceAmount,
+      itineraries: this.itineraries.map(i => i.toApiResponse()),
+      packageName: this.packageName || null,
+      pnrNo: this.pnrNo || null,
+      modeOfJourney: this.modeOfJourney || null,
+      advanceAmount: this.advanceAmount || null,
       status: this.status,
       paxCount: this.paxCount,
-      primaryPaxName: this.primaryPaxName,
-      travelStartAt: this.travelStartAt,
-      travelEndAt: this.travelEndAt,
+      primaryPaxName: this.primaryPaxName || null,
+      travelStartAt: this.travelStartAt || null,
+      travelEndAt: this.travelEndAt || null,
       dueAmount: this.dueAmount,
-      vendorId: this.vendorId,
+      vendorId: this.vendorId || null,
       createdBy: this.createdBy,
       updatedBy: this.updatedBy,
       isDeleted: this.isDeleted,
-      archivedAt: this.archivedAt,
+      archivedAt: this.archivedAt || null,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
-      ticketId: this.ticketId
+      ticketId: this.ticketId || null
     };
   }
 }

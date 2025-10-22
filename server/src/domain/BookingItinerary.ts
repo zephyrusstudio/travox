@@ -54,4 +54,18 @@ export class BookingItinerary {
     this.segments.push(segment);
     this.updatedAt = new Date();
   }
+
+  // Get itinerary data for API response
+  toApiResponse(): any {
+    return {
+      id: this.id,
+      orgId: this.orgId,
+      bookingId: this.bookingId,
+      name: this.name,
+      seqNo: this.seqNo,
+      segments: this.segments.map(s => s.toApiResponse()),
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt
+    };
+  }
 }

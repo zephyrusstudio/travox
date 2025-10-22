@@ -92,6 +92,27 @@ const toNumberOrBlank = (value: unknown): number | "" => {
   return Number.isFinite(num) ? num : "";
 };
 
+const DATE_INPUT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const formatDateForInput = (value?: string | null): string => {
+  if (!value) return "";
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  if (DATE_INPUT_REGEX.test(trimmed)) return trimmed;
+
+  const datePortion = trimmed.includes("T")
+    ? trimmed.split("T")[0]?.trim()
+    : trimmed;
+  if (datePortion && DATE_INPUT_REGEX.test(datePortion)) return datePortion;
+
+  const parsed = new Date(trimmed);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  return trimmed;
+};
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const normalizePhone = (value: string) => value.replace(/\D/g, "");
 const isEmailValid = (value: string) => EMAIL_REGEX.test(value);
@@ -196,9 +217,11 @@ export function useBookingForm({
           customer_name: selectedBooking.customer_name || "",
           package_name: selectedBooking.package_name,
           pnr_no: initialPnr,
-          booking_date: selectedBooking.booking_date,
-          travel_start_date: selectedBooking.travel_start_date,
-          travel_end_date: selectedBooking.travel_end_date,
+          booking_date: formatDateForInput(selectedBooking.booking_date),
+          travel_start_date: formatDateForInput(
+            selectedBooking.travel_start_date
+          ),
+          travel_end_date: formatDateForInput(selectedBooking.travel_end_date),
           pax_count: selectedBooking.pax_count,
           total_amount: selectedBooking.total_amount,
           advance_received: selectedBooking.advance_received,
@@ -608,9 +631,11 @@ export function useBookingForm({
             booking.packageName ||
             `${extracted.route} - ${extracted.travelCategory} Trip`,
           pnr_no: extracted.pnr,
-          booking_date: extracted.bookingDate,
-          travel_start_date: extracted.journeyDate,
-          travel_end_date: extracted.returnDate || extracted.journeyDate,
+          booking_date: formatDateForInput(extracted.bookingDate),
+          travel_start_date: formatDateForInput(extracted.journeyDate),
+          travel_end_date: formatDateForInput(
+            extracted.returnDate || extracted.journeyDate
+          ),
           pax_count: extracted.paxList.length,
           total_amount: extracted.totalAmount ?? extracted.bookingAmount,
           currency: extracted.currency,

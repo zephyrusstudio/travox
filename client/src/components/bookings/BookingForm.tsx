@@ -131,7 +131,6 @@ const BookingForm: React.FC<Props> = (props) => {
     newCustomerData,
     passengers,
     itineraries,
-    extractionMetadata,
     ui,
     // derived
     balance,

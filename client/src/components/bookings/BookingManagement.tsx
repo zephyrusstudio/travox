@@ -274,6 +274,16 @@ const BookingManagement: React.FC = () => {
         const paxCount =
           record?.paxCount ??
           (Array.isArray(record?.pax) ? record.pax.length : 0);
+        const totalAmount =
+          Number(record?.totalAmount ?? record?.total_amount) || 0;
+        const paidAmount =
+          Number(
+            record?.paidAmount ??
+              record?.advanceAmount ??
+              record?.advance_received
+          ) || 0;
+        const balanceAmount =
+          Number(record?.dueAmount ?? totalAmount - paidAmount) || 0;
 
         const booking: BookingRow = {
           booking_id: record?.id ? String(record.id) : "",
@@ -284,19 +294,9 @@ const BookingManagement: React.FC = () => {
           travel_start_date: travelStart,
           travel_end_date: travelEnd,
           pax_count: paxCount,
-          total_amount:
-            Number(record?.totalAmount ?? record?.total_amount) || 0,
-          advance_received:
-            Number(
-              record?.advanceAmount ??
-                record?.paidAmount ??
-                record?.advance_received
-            ) || 0,
-          balance_amount:
-            Number(
-              record?.dueAmount ??
-                (record?.totalAmount ?? 0) - (record?.paidAmount ?? 0)
-            ) || 0,
+          total_amount: totalAmount,
+          advance_received: paidAmount,
+          balance_amount: Math.max(0, balanceAmount),
           status: normalizeStatus(record?.status),
         };
 
@@ -381,6 +381,7 @@ const BookingManagement: React.FC = () => {
   const hydratedBookings = useMemo<BookingRow[]>(() => {
     if (!bookings.length) return bookings;
     return bookings.map((booking) => {
+      console.log("🚀 ~ BookingManagement ~ bookings:", bookings);
       const mappedName =
         customersMap.get(booking.customer_id) ||
         booking.customer_name ||
@@ -395,6 +396,7 @@ const BookingManagement: React.FC = () => {
 
   const filteredBookings = useMemo(() => {
     const source = hydratedBookings;
+    console.log("🚀 ~ BookingManagement ~ source:", source);
     if (!normalizedSearch) return source;
     return source.filter((b) => {
       const packageName = (b.package_name || "").toLowerCase();
@@ -409,6 +411,8 @@ const BookingManagement: React.FC = () => {
       );
     });
   }, [hydratedBookings, normalizedSearch]);
+
+  console.log(filteredBookings);
 
   const handleViewTicket = (booking: BookingRow) => {
     const mock: TicketData = {
@@ -528,15 +532,67 @@ const BookingManagement: React.FC = () => {
 
   const submitBooking = useCallback(
     async (payload: any) => {
+      const rawBookingId =
+        selectedBooking?.booking_id ??
+        selectedBooking?.bookingId ??
+        selectedBooking?.id ??
+        "";
+      const bookingId = rawBookingId ? String(rawBookingId) : "";
+      const isUpdate = formMode === "edit" && bookingId.length > 0;
+
+      if (formMode === "edit" && !bookingId) {
+        errorToast("Unable to update booking: missing booking ID.");
+        return;
+      }
+
       try {
         const response = await apiRequest<any>({
-          method: "POST",
-          url: "/bookings",
-          data: payload,
+          method: isUpdate ? "PUT" : "POST",
+          url: isUpdate ? `/bookings/${bookingId}` : "/bookings",
+          data: isUpdate ? { ...payload, bookingId } : payload,
           headers: { Accept: "*/*", "Content-Type": "application/json" },
         });
 
-        successToast("Booking added");
+        if (
+          response &&
+          typeof response === "object" &&
+          "status" in response &&
+          typeof (response as any).status === "number"
+        ) {
+          const axiosResponse = response as {
+            status: number;
+            data?: any;
+          };
+
+          if (axiosResponse.status >= 400) {
+            const message =
+              axiosResponse.data?.data?.message ||
+              axiosResponse.data?.message ||
+              "Unable to save booking.";
+            throw new ApiError(message, {
+              status: axiosResponse.status,
+              data: axiosResponse.data,
+            });
+          }
+        }
+
+        if (
+          response &&
+          typeof response === "object" &&
+          "status" in response &&
+          typeof (response as any).status === "string"
+        ) {
+          const statusString = String((response as any).status).toLowerCase();
+          if (statusString !== "success") {
+            const message =
+              (response as any).message ||
+              (response as any).data?.message ||
+              "Unable to save booking.";
+            throw new ApiError(message);
+          }
+        }
+
+        successToast(isUpdate ? "Booking updated" : "Booking added");
         await fetchBookings();
         return response;
       } catch (error) {
@@ -545,7 +601,7 @@ const BookingManagement: React.FC = () => {
         throw apiError;
       }
     },
-    [fetchBookings]
+    [fetchBookings, formMode, selectedBooking]
   );
 
   return (

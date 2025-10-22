@@ -193,7 +193,7 @@
  *                 example: "user_123456"
  *               role:
  *                 type: string
- *                 enum: ['OWNER', 'ADMIN', 'OPS', 'FINANCE', 'AGENT', 'VIEWER']
+ *                 enum: ['OWNER', 'ADMIN']
  *                 description: New role for the user
  *                 example: "ADMIN"
  *     responses:

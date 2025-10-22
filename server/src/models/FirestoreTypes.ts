@@ -13,11 +13,7 @@ export interface BaseDocument {
 
 export enum UserRole {
   OWNER = 'Owner',
-  ADMIN = 'Admin',
-  OPS = 'Ops',
-  FINANCE = 'Finance',
-  AGENT = 'Agent',
-  VIEWER = 'Viewer'
+  ADMIN = 'Admin'
 }
 
 export enum ServiceType {

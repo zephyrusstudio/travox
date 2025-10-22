@@ -16,7 +16,7 @@ export class User {
         public phone?: string,
         public googleId?: string,
         public avatar?: string,
-        public role: UserRole = UserRole.VIEWER,
+        public role: UserRole = UserRole.ADMIN,
         public isActive: boolean = false,
         public preferences: UserPreferences = {},
         public lastLoginAt?: Date,
@@ -26,7 +26,7 @@ export class User {
 
     static createFromGoogle(orgId: string, email: string, name: string, googleId: string, avatar?: string): User {
         const now = new Date();
-        return new User('', orgId, name, email, undefined, googleId, avatar, UserRole.VIEWER, true, {}, undefined, now, now);
+        return new User('', orgId, name, email, undefined, googleId, avatar, UserRole.ADMIN, true, {}, undefined, now, now);
     }
 
     updateProfile(name?: string, phone?: string): void {
@@ -89,17 +89,19 @@ export class User {
             'organization.delete',
             'organization.transfer_ownership'
         ];
+        
+        // All audit log operations are owner-only
+        if (resource === 'audit-logs') {
+            return true;
+        }
+        
         return ownerOnly.includes(`${resource}.${action}`);
     }
 
     private checkRoleBasedAccess(resource: string, action: string): boolean {
         const accessMatrix: Record<UserRole, string[]> = {
-            [UserRole.OWNER]: ['*'], // All access
-            [UserRole.ADMIN]: ['users.*', 'customers.*', 'vendors.*', 'bookings.*', 'reports.*'],
-            [UserRole.OPS]: ['customers.*', 'vendors.*', 'bookings.*'],
-            [UserRole.FINANCE]: ['customers.read', 'vendors.*', 'bookings.*', 'payments.*', 'reports.financial'],
-            [UserRole.AGENT]: ['customers.*', 'bookings.*'],
-            [UserRole.VIEWER]: ['*.read']
+            [UserRole.OWNER]: ['*'], // All access including audit logs and admin permissions
+            [UserRole.ADMIN]: ['users.*', 'customers.*', 'vendors.*', 'bookings.*', 'payments.*', 'reports.*', 'files.*'] // All admin functions but no audit logs
         };
 
         const permissions = accessMatrix[this.role] || [];

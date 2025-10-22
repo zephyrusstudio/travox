@@ -97,7 +97,7 @@ export class GoogleLogin {
             if (existingUsers.length === 0) {
                 user.setRole(UserRole.OWNER);
             } else {
-                user.setRole(UserRole.VIEWER);
+                user.setRole(UserRole.ADMIN);
             }
 
             user = await this.users.create(user);

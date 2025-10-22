@@ -243,7 +243,7 @@ const options: swaggerJSDoc.Options = {
             },
             role: {
               type: 'string',
-              enum: ['OWNER', 'ADMIN', 'OPS', 'FINANCE', 'AGENT', 'VIEWER'],
+              enum: ['OWNER', 'ADMIN'],
               example: 'ADMIN'
             },
             isActive: {

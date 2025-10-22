@@ -14,7 +14,7 @@ export class UserRepositoryFirestore implements IUserRepository {
             org_id: user.orgId || '',
             email: user.email || '',
             name: user.name || '',
-            role: user.role as UserRole || UserRole.VIEWER,
+            role: user.role as UserRole || UserRole.ADMIN,
             is_active: user.isActive,
             timezone: user.preferences?.timezone || 'UTC',
             created_at: user.createdAt ? Timestamp.fromDate(user.createdAt) : now,
@@ -33,7 +33,7 @@ export class UserRepositoryFirestore implements IUserRepository {
             undefined, // phone - not in schema
             undefined, // googleId - not in schema
             undefined, // avatar - not in schema  
-            data.role as UserRole || UserRole.VIEWER, // Single role
+            data.role as UserRole || UserRole.ADMIN, // Single role
             data.is_active,
             { timezone: data.timezone },
             undefined, // lastLoginAt - not in schema

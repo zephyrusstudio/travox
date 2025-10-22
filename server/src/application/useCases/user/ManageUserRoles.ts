@@ -71,11 +71,7 @@ export class ManageUserRoles {
     const allUsers = await this.userRepo.findByOrganizationId(orgId);
     const stats: Record<UserRole, number> = {
       [UserRole.OWNER]: 0,
-      [UserRole.ADMIN]: 0,
-      [UserRole.OPS]: 0,
-      [UserRole.FINANCE]: 0,
-      [UserRole.AGENT]: 0,
-      [UserRole.VIEWER]: 0
+      [UserRole.ADMIN]: 0
     };
 
     allUsers.forEach((user: User) => {

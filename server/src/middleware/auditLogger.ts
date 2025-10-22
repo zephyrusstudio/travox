@@ -15,12 +15,13 @@ declare module 'express-serve-static-core' {
 }
 
 /**
- * Middleware to capture audit logs for all CRUD operations
+ * Middleware to capture audit logs for CRUD operations (CREATE, UPDATE, DELETE only)
+ * VIEW operations (GET requests) are not tracked in audit logs
  * Can work with or without authentication
  */
 export function auditLogger(entity?: string) {
   return (req: Request, res: Response, next: NextFunction) => {
-    // Skip audit logging for GET requests (unless explicitly specified)
+    // Note: GET requests will be filtered out in logAuditEntry function
     const isReadOperation = req.method === 'GET';
     
     const originalSend = res.send;
@@ -65,6 +66,12 @@ export async function logAuditEntry(
     const auditRepo = container.resolve<IAuditLogRepository>('IAuditLogRepository');
     
     const action = getActionFromMethod(req.method, res.statusCode);
+    
+    // Skip audit logging for VIEW actions (GET requests) and failed operations
+    if (action === null) {
+      return;
+    }
+    
     const clientIp = getClientIp(req);
     const userAgent = req.get('User-Agent') || '';
     
@@ -81,8 +88,6 @@ export async function logAuditEntry(
       diff = AuditLog.createDiffForUpdate(req.auditContext.beforeData, responseData);
     } else if (action === 'DELETE' && req.auditContext.beforeData) {
       diff = AuditLog.createDiffForDelete(req.auditContext.beforeData);
-    } else if (action === 'VIEW') {
-      diff = { accessed: true };
     }
 
     const auditLog = AuditLog.create(
@@ -119,9 +124,10 @@ export function setAuditContext(
   };
 }
 
-function getActionFromMethod(method: string, statusCode: number): 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW' {
-  if (statusCode >= 400) {
-    return 'VIEW'; // Failed operations are logged as view attempts
+function getActionFromMethod(method: string, statusCode: number): 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'LOGIN' | 'LOGOUT' | null {
+  // Don't track GET requests or failed operations (these are considered VIEW operations)
+  if (method.toUpperCase() === 'GET' || statusCode >= 400) {
+    return null;
   }
 
   switch (method.toUpperCase()) {
@@ -132,9 +138,8 @@ function getActionFromMethod(method: string, statusCode: number): 'CREATE' | 'UP
       return 'UPDATE';
     case 'DELETE':
       return 'DELETE';
-    case 'GET':
     default:
-      return 'VIEW';
+      return null;
   }
 }
 

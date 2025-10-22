@@ -5,7 +5,7 @@ export interface AuditLogFilters {
   entity?: string;
   entityId?: string;
   actorId?: string;
-  action?: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW';
+  action?: 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'LOGIN' | 'LOGOUT';
   startDate?: string;
   endDate?: string;
   limit?: number;
@@ -29,7 +29,7 @@ interface ApiAuditLog {
   actorId: string;
   entity: string;
   entityId: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW';
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'LOGIN' | 'LOGOUT';
   diff: Record<string, unknown>;
   ip: string;
   userAgent: string;

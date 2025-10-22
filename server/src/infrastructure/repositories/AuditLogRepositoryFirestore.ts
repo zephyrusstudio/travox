@@ -140,7 +140,7 @@ export class AuditLogRepositoryFirestore implements IAuditLogRepository {
       doc.actor_id,
       doc.entity,
       doc.entity_id,
-      doc.action as 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW',
+      doc.action as 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'LOGIN' | 'LOGOUT',
       doc.diff,
       doc.ip,
       doc.user_agent,

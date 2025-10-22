@@ -5,7 +5,7 @@ import { AuditLog } from '../../../domain/AuditLog';
 interface CreateAuditLogDTO {
   entity: string;
   entityId: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW';
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'LOGIN' | 'LOGOUT';
   diff: Record<string, any>;
   ip: string;
   userAgent: string;
@@ -23,8 +23,8 @@ export class CreateAuditLog {
       throw new Error('Missing required fields: entity, entityId, action');
     }
 
-    if (!['CREATE', 'UPDATE', 'DELETE', 'VIEW'].includes(data.action)) {
-      throw new Error('Invalid action. Must be one of: CREATE, UPDATE, DELETE, VIEW');
+    if (!['CREATE', 'UPDATE', 'DELETE', 'STATUS_CHANGE', 'LOGIN', 'LOGOUT'].includes(data.action)) {
+      throw new Error('Invalid action. Must be one of: CREATE, UPDATE, DELETE, STATUS_CHANGE, LOGIN, LOGOUT');
     }
 
     // Create audit log domain object
@@ -102,21 +102,5 @@ export class CreateAuditLog {
     }, orgId, actorId);
   }
 
-  async logView(
-    entity: string,
-    entityId: string,
-    orgId: string,
-    actorId: string,
-    ip: string,
-    userAgent: string
-  ): Promise<AuditLog> {
-    return this.execute({
-      entity,
-      entityId,
-      action: 'VIEW',
-      diff: {},
-      ip,
-      userAgent
-    }, orgId, actorId);
-  }
+  // logView method removed - VIEW actions are no longer tracked
 }

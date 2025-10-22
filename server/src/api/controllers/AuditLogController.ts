@@ -18,7 +18,7 @@ export class AuditLogController {
       
       res.status(201).json({
         status: 'success',
-        data: auditLog
+        data: auditLog.toApiResponse()
       });
     } catch (error: any) {
       res.status(400).json({
@@ -36,7 +36,7 @@ export class AuditLogController {
         entity: req.query.entity as string,
         entityId: req.query.entityId as string,
         actorId: req.query.actorId as string,
-        action: req.query.action as 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW',
+        action: req.query.action as 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'LOGIN' | 'LOGOUT',
         startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
         endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
         limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
@@ -46,7 +46,10 @@ export class AuditLogController {
       const result = await useCase.execute(filters, req.user?.orgId!);
       res.json({
         status: 'success',
-        data: result
+        data: {
+          logs: result.logs.map(log => log.toApiResponse()),
+          total: result.total
+        }
       });
     } catch (error: any) {
       res.status(500).json({
@@ -64,7 +67,7 @@ export class AuditLogController {
       const auditLogs = await useCase.getByEntity(entity, entityId, req.user?.orgId!);
       res.json({
         status: 'success',
-        data: auditLogs
+        data: auditLogs.map(log => log.toApiResponse())
       });
     } catch (error: any) {
       res.status(500).json({
@@ -82,7 +85,7 @@ export class AuditLogController {
       const auditLogs = await useCase.getByActor(actorId, req.user?.orgId!);
       res.json({
         status: 'success',
-        data: auditLogs
+        data: auditLogs.map(log => log.toApiResponse())
       });
     } catch (error: any) {
       res.status(500).json({
@@ -111,7 +114,7 @@ export class AuditLogController {
       );
       res.json({
         status: 'success',
-        data: auditLogs
+        data: auditLogs.map(log => log.toApiResponse())
       });
     } catch (error: any) {
       res.status(500).json({
@@ -129,7 +132,7 @@ export class AuditLogController {
         entity: req.query.entity as string,
         entityId: req.query.entityId as string,
         actorId: req.query.actorId as string,
-        action: req.query.action as 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW',
+        action: req.query.action as 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'LOGIN' | 'LOGOUT',
         startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
         endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined
       };

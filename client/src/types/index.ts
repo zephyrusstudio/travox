@@ -125,7 +125,7 @@ export interface AuditLog {
   actorId: string;
   entity: string;
   entityId: string;
-  action: "CREATE" | "UPDATE" | "DELETE" | "VIEW";
+  action: "CREATE" | "UPDATE" | "DELETE" | "STATUS_CHANGE" | "LOGIN" | "LOGOUT";
   diff: {
     before?: Record<string, unknown> | string | null;
     after?: Record<string, unknown> | string | null;

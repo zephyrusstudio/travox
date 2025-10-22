@@ -8,7 +8,7 @@ export class AuditLog {
     public actorId: string,
     public entity: string,
     public entityId: string,
-    public action: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW' | 'STATUS_CHANGE' | 'LOGIN' | 'LOGOUT',
+    public action: 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'LOGIN' | 'LOGOUT',
     public diff: Record<string, any>,
     public ip: string,
     public userAgent: string,
@@ -20,7 +20,7 @@ export class AuditLog {
     actorId: string,
     entity: string,
     entityId: string,
-    action: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW' | 'STATUS_CHANGE' | 'LOGIN' | 'LOGOUT',
+    action: 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'LOGIN' | 'LOGOUT',
     diff: Record<string, any>,
     ip: string,
     userAgent: string
@@ -66,6 +66,25 @@ export class AuditLog {
     return {
       before: deletedData,
       after: null
+    };
+  }
+
+  /**
+   * Converts the audit log to API response format with proper timestamp handling
+   * Converts Firestore Timestamp to JavaScript Date for proper JSON serialization
+   */
+  toApiResponse(): any {
+    return {
+      id: this.id,
+      orgId: this.orgId,
+      actorId: this.actorId,
+      entity: this.entity,
+      entityId: this.entityId,
+      action: this.action,
+      diff: this.diff,
+      ip: this.ip,
+      userAgent: this.userAgent,
+      createdAt: this.createdAt.toDate() // Convert Firestore Timestamp to Date
     };
   }
 }

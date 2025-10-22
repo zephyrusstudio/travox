@@ -6,7 +6,7 @@ interface GetAuditLogsFilters {
   entity?: string;
   entityId?: string;
   actorId?: string;
-  action?: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW';
+  action?: 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'LOGIN' | 'LOGOUT';
   startDate?: Date;
   endDate?: Date;
   limit?: number;

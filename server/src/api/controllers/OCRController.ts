@@ -59,8 +59,8 @@ export class OCRController {
         status: 'error',
         message: 'Either upload a file or provide a fileId query parameter',
         usage: {
-          fileUpload: 'POST /ocr/extract with multipart/form-data file',
-          fileId: 'POST /ocr/extract?fileId=YOUR_FILE_ID'
+          fileUpload: 'POST /scan with multipart/form-data file',
+          fileId: 'POST /scan?fileId=YOUR_FILE_ID'
         }
       });
 
@@ -163,17 +163,17 @@ export class OCRController {
       });
 
       // Optionally convert to booking format
-      const bookingFormat = req.query.bookingFormat === 'true';
+      const format = req.query.format === 'true';
       
       let bookingData = null;
-      if (bookingFormat) {
+      if (format) {
         bookingData = await this.convertToBooking(extractedData, req);
       }
 
       res.status(200).json({
         status: 'success',
         message: 'OCR extraction completed successfully',
-        data: bookingFormat ? {
+        data: format ? {
           fileInfo: {
             id: fileId,
             name: downloadResult.fileName,
@@ -261,17 +261,17 @@ export class OCRController {
       });
 
       // Optionally convert to booking format
-      const bookingFormat = req.query.bookingFormat === 'true';
+      const format = req.query.format === 'true';
       
       let bookingData = null;
-      if (bookingFormat) {
+      if (format) {
         bookingData = await this.convertToBooking(extractedData, req);
       }
 
       res.status(200).json({
         status: 'success',
         message: 'OCR extraction completed successfully',
-        data: bookingFormat ? {
+        data: format ? {
           fileInfo: {
             name: file.originalname,
             mimeType: file.mimetype,

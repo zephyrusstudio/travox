@@ -1,6 +1,6 @@
 /**
  * @swagger
- * /ocr/extract-upload:
+ * /scan-upload:
  *   post:
  *     tags: [OCR]
  *     summary: Extract booking data from uploaded file
@@ -21,7 +21,7 @@
  *                 format: binary
  *                 description: Travel document file (JPEG, PNG, GIF, WebP, or PDF)
  *     parameters:
- *       - name: bookingFormat
+ *       - name: format
  *         in: query
  *         required: false
  *         description: Convert extracted data to booking format
@@ -58,7 +58,7 @@
  *                           $ref: '#/components/schemas/OCRExtractedBooking'
  *                         booking:
  *                           type: object
- *                           description: Converted booking data (only if bookingFormat=true)
+ *                           description: Converted booking data (only if format=true)
  *                           properties:
  *                             bookingData:
  *                               $ref: '#/components/schemas/Booking'
@@ -110,7 +110,7 @@
  *             schema:
  *               $ref: '#/components/schemas/Error'
  * 
- * /files/{fileId}/extract:
+ * /files/{fileId}/scan:
  *   post:
  *     tags: [OCR]
  *     summary: Extract booking data from existing file
@@ -125,7 +125,7 @@
  *         schema:
  *           type: string
  *           example: "file_123456"
- *       - name: bookingFormat
+ *       - name: format
  *         in: query
  *         required: false
  *         description: Convert extracted data to booking format
@@ -180,7 +180,7 @@
  *                   properties:
  *                     supportedEndpoint:
  *                       type: string
- *                       example: "/ocr/extract-upload"
+ *                       example: "/scan-upload"
  *       500:
  *         description: Server error - OCR extraction failed
  *         content:
@@ -188,7 +188,7 @@
  *             schema:
  *               $ref: '#/components/schemas/Error'
  * 
- * /ocr/test-connection:
+ * /scan:
  *   get:
  *     tags: [OCR]
  *     summary: Test Gemini AI connection
@@ -224,7 +224,7 @@
  *             schema:
  *               $ref: '#/components/schemas/Error'
  * 
- * /ocr/schema-info:
+ * /schema:
  *   get:
  *     tags: [OCR]
  *     summary: Get current OCR schema information

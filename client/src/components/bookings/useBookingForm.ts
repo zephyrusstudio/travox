@@ -32,8 +32,8 @@ type OcrExtractUploadResponse = {
   message: string;
   data?: {
     fileInfo: { name: string; mimeType: string; size: number };
-    extractedData?: any; // shape from OCRExtractedBooking if bookingFormat=false
-    booking?: any; // booking payload when bookingFormat=true
+    extractedData?: any; // shape from OCRExtractedBooking if format=false
+    booking?: any; // booking payload when format=true
   };
 };
 
@@ -590,8 +590,8 @@ export function useBookingForm({
       try {
         const response = await apiRequest<OcrExtractUploadResponse>({
           method: "POST",
-          url: "/ocr/extract",
-          params: { bookingFormat: true },
+          url: "/scan",
+          params: { format: true },
           data: payload,
         });
 

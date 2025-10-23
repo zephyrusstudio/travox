@@ -2,12 +2,9 @@ import {
   Activity,
   Calendar,
   Download,
-  Edit,
   Eye,
   Filter,
-  Plus,
   RefreshCw,
-  Trash2,
   User,
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
@@ -21,6 +18,7 @@ import { AuditLog } from "../../types";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
+import Modal from "../ui/Modal";
 
 const AuditLogsManagement: React.FC = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -31,6 +29,8 @@ const AuditLogsManagement: React.FC = () => {
   const [filters, setFilters] = useState<AuditLogFilters>({});
   const [showFilters, setShowFilters] = useState(false);
   const [users, setUsers] = useState<Map<string, UserType>>(new Map());
+  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Fetch audit logs
   const fetchAuditLogs = useCallback(async () => {
@@ -63,47 +63,37 @@ const AuditLogsManagement: React.FC = () => {
   // Export to CSV
   const exportToCSV = async () => {
     try {
-      // Get all audit logs for export (without pagination)
-      const response = await auditLogService.getAuditLogs({
-        ...filters,
-        limit: 1000, // Export up to 1000 records
-      });
-      auditLogService.exportToCSV(response.logs);
+      // Call API endpoint to export CSV with current filters
+      await auditLogService.exportToCSV(filters);
     } catch (error) {
       console.error("Failed to export audit logs:", error);
     }
   };
 
-  // Get action icon
-  const getActionIcon = (action: string) => {
-    switch (action) {
-      case "CREATE":
-        return Plus;
-      case "UPDATE":
-        return Edit;
-      case "DELETE":
-        return Trash2;
-      case "VIEW":
-        return Eye;
-      default:
-        return Activity;
+  // Format JSON for display
+  const formatJsonForDisplay = (value: string | object | null | undefined): string => {
+    if (value === null || value === undefined) {
+      return 'null';
     }
-  };
-
-  // Get action color
-  const getActionColor = (action: string) => {
-    switch (action) {
-      case "CREATE":
-        return "bg-green-100 text-green-600";
-      case "UPDATE":
-        return "bg-blue-100 text-blue-600";
-      case "DELETE":
-        return "bg-red-100 text-red-600";
-      case "VIEW":
-        return "bg-gray-100 text-gray-600";
-      default:
-        return "bg-gray-100 text-gray-600";
+    
+    // If it's already an object, stringify it with formatting
+    if (typeof value === 'object') {
+      return JSON.stringify(value, null, 2);
     }
+    
+    // If it's a string, try to parse and re-stringify it
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return JSON.stringify(parsed, null, 2);
+      } catch {
+        // If it's not valid JSON, return as-is but with some basic formatting
+        return value;
+      }
+    }
+    
+    // For other types, convert to string
+    return String(value);
   };
 
   // Get action variant for Badge
@@ -150,12 +140,6 @@ const AuditLogsManagement: React.FC = () => {
       ...prev,
       [key]: value || undefined,
     }));
-  };
-
-  // Apply filters
-  const applyFilters = () => {
-    setCurrentPage(1);
-    fetchAuditLogs();
   };
 
   // Clear filters
@@ -374,6 +358,9 @@ const AuditLogsManagement: React.FC = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actor
                     </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -395,7 +382,7 @@ const AuditLogsManagement: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           <div>
-                            <div className="font-medium capitalize">
+                            <div className="font-medium uppercase">
                               {log.entity}
                             </div>
                             {log.entityId && log.entityId !== "unknown" && (
@@ -423,6 +410,18 @@ const AuditLogsManagement: React.FC = () => {
                               })()}
                             </div>
                           </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => {
+                              setSelectedLog(log);
+                              setShowDetailModal(true);
+                            }}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors duration-200"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Show Details
+                          </button>
                         </td>
                       </tr>
                     );
@@ -467,6 +466,99 @@ const AuditLogsManagement: React.FC = () => {
             </Button>
           </div>
         </div>
+      )}
+
+      {/* Detail Modal */}
+      {showDetailModal && selectedLog && (
+        <Modal
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedLog(null);
+          }}
+          title="Audit Log Details"
+          size="xl"
+        >
+          <div className="max-w-full">
+            
+            <div className="space-y-4">
+              {/* Basic Info */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-gray-500">ID:</span>
+                  <div className="mt-1 font-mono text-xs bg-gray-100 p-2 rounded">
+                    {selectedLog.id}
+                  </div>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-500">Timestamp:</span>
+                  <div className="mt-1">{formatTimestamp(selectedLog.createdAt)}</div>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-500">Action:</span>
+                  <div className="mt-1">
+                    <Badge variant={getActionVariant(selectedLog.action)}>
+                      {selectedLog.action}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-500">Entity:</span>
+                  <div className="mt-1 uppercase font-medium">{selectedLog.entity}</div>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-500">Entity ID:</span>
+                  <div className="mt-1 font-mono text-xs">{selectedLog.entityId}</div>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-500">Actor:</span>
+                  <div className="mt-1">{getUserDisplayName(selectedLog.actorId).name}</div>
+                </div>
+              </div>
+
+              {/* Diff Details */}
+              <div>
+                <span className="font-medium text-gray-500 mb-2 block">Changes (Diff):</span>
+                <div className="bg-gray-50 border rounded-lg p-4">
+                  {selectedLog.diff && Object.keys(selectedLog.diff).length > 0 ? (
+                    <div className="space-y-3">
+                      {selectedLog.diff.before && (
+                        <div>
+                          <div className="text-sm font-medium text-red-600 mb-1">Before:</div>
+                          <pre className="text-xs bg-red-50 p-3 rounded border overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
+                            {formatJsonForDisplay(selectedLog.diff.before)}
+                          </pre>
+                        </div>
+                      )}
+                      {selectedLog.diff.after && (
+                        <div>
+                          <div className="text-sm font-medium text-green-600 mb-1">After:</div>
+                          <pre className="text-xs bg-green-50 p-3 rounded border overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
+                            {formatJsonForDisplay(selectedLog.diff.after)}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 text-sm">No diff data available</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Additional Info */}
+              <div className="grid grid-cols-2 gap-4 text-sm pt-4 border-t">
+                <div>
+                  <span className="font-medium text-gray-500">IP Address:</span>
+                  <div className="mt-1 font-mono">{selectedLog.ip}</div>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-500">User Agent:</span>
+                  <div className="mt-1 text-xs break-all">{selectedLog.userAgent}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );

@@ -1,18 +1,10 @@
 export type UserRole =
   | "Owner"
-  | "Admin"
-  | "Ops"
-  | "Finance"
-  | "Agent"
-  | "Viewer";
+  | "Admin";
 
 export const USER_ROLES: UserRole[] = [
   "Owner",
   "Admin",
-  "Ops",
-  "Finance",
-  "Agent",
-  "Viewer",
 ];
 
 export type AppModule =
@@ -25,22 +17,31 @@ export type AppModule =
   | "users";
 
 const MODULE_ACCESS: Record<AppModule, UserRole[]> = {
-  customers: ["Owner", "Admin", "Ops", "Finance", "Agent", "Viewer"],
-  vendors: ["Owner", "Admin", "Ops", "Finance"],
-  bookings: ["Owner", "Admin", "Ops", "Finance", "Agent", "Viewer"],
-  payments: ["Owner", "Admin", "Finance"],
-  expenses: ["Owner", "Admin", "Finance"],
+  customers: ["Owner", "Admin"],
+  vendors: ["Owner", "Admin"],
+  bookings: ["Owner", "Admin"],
+  payments: ["Owner", "Admin"],
+  expenses: ["Owner", "Admin"],
   logs: ["Owner"],
-  users: ["Owner", "Admin"],
+  users: ["Owner"],
 };
 
 export function normalizeRole(role?: string | null): UserRole {
-  if (!role) return "Viewer";
+  if (!role) return "Admin";
 
   const match = USER_ROLES.find(
     (known) => known.toLowerCase() === role.toLowerCase()
   );
-  return match ?? "Viewer";
+  
+  // Map old roles to new roles
+  if (!match) {
+    const lowerRole = role.toLowerCase();
+    if (lowerRole === "ops" || lowerRole === "finance" || lowerRole === "agent" || lowerRole === "viewer") {
+      return "Admin";
+    }
+  }
+  
+  return match ?? "Admin";
 }
 
 export function canAccessModule(

@@ -299,13 +299,13 @@ const UserManagement: React.FC = () => {
                     Role
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Status
+                    Created At
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Last login
+                    Updated At
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Actions
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Status
                   </th>
                 </tr>
               </thead>
@@ -361,52 +361,46 @@ const UserManagement: React.FC = () => {
                           ))}
                         </select>
                       </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-                            user.isActive
-                              ? "bg-emerald-50 text-emerald-600"
-                              : "bg-amber-50 text-amber-600"
-                          }`}
-                        >
-                          <span className="mr-2 h-1.5 w-1.5 rounded-full bg-current" />
-                          {user.isActive ? "Active" : "Inactive"}
-                        </span>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {formatDateTime(user.createdAt)}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
-                        {formatDateTime(user.lastLoginAt)}
+                        {formatDateTime(user.updatedAt)}
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => {
-                            if (canModifyStatus) {
-                              void toggleUserStatus(user);
-                            }
-                          }}
-                          disabled={isUpdatingStatus || !canModifyStatus}
-                          className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition ${
-                            user.isActive
-                              ? "border border-amber-200 bg-white text-amber-600 hover:bg-amber-50"
-                              : "border border-emerald-200 bg-emerald-500 text-white hover:bg-emerald-600"
-                          } disabled:cursor-not-allowed disabled:opacity-60 ${
-                            !canModifyStatus
-                              ? "bg-gray-100 text-gray-400 border-gray-200"
-                              : ""
-                          }`}
-                        >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => {
+                              if (canModifyStatus) {
+                                void toggleUserStatus(user);
+                              }
+                            }}
+                            disabled={isUpdatingStatus || !canModifyStatus}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                              user.isActive
+                                ? "bg-emerald-600"
+                                : "bg-gray-200"
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform ${
+                                user.isActive ? "translate-x-6" : "translate-x-1"
+                              }`}
+                            />
+                          </button>
                           {isUpdatingStatus ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : user.isActive ? (
-                            <ShieldOff className="h-4 w-4" />
+                            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
                           ) : (
-                            <ShieldCheck className="h-4 w-4" />
+                            <span className={`text-sm font-medium ${
+                              user.isActive ? "text-emerald-600" : "text-gray-500"
+                            }`}>
+                              {user.isActive ? "Active" : "Inactive"}
+                            </span>
                           )}
-                          {isCurrentUser
-                            ? "Not allowed"
-                            : user.isActive
-                            ? "Deactivate"
-                            : "Activate"}
-                        </button>
+                          {isCurrentUser && (
+                            <span className="text-xs text-gray-400">(You)</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

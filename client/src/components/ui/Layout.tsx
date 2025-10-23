@@ -210,18 +210,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
-                {authUser?.photoURL ? (
-                  <img
-                    src={authUser.photoURL}
-                    alt="Profile"
-                    className="w-10 h-10 rounded-full"
-                  />
-                ) : (
-                  <span className="text-sm font-bold text-white">
-                    {currentUser?.username.charAt(0).toUpperCase()}
-                  </span>
-                )}
+              <div className="p-4 min-w-14 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-full flex items-center justify-center shadow-sm">
+                {currentUser?.username.charAt(0).toUpperCase()}
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-900">

@@ -102,14 +102,6 @@ export interface Refund {
   refund_mode: string;
 }
 
-export interface User {
-  user_id: string;
-  username: string;
-  email: string;
-  role: "admin" | "manager" | "accountant";
-  password_hash?: string;
-}
-
 export interface LogEntry {
   log_id: string;
   user_id: string;

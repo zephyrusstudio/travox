@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
-import { Save, User, Lock, Bell, Globe } from 'lucide-react';
+import { Save, User, Lock, Bell, Database } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../ui/Card';
 import Button from '../ui/Button';
-import Badge from '../ui/Badge';
+import { UserRole, USER_ROLES } from '../../utils/roleAccess';
 
 import FirebaseSetup from './FirebaseSetup';
 
 const UserSettings: React.FC = () => {
-  const { currentUser, users } = useApp();
+  const { currentUser } = useApp();
   const [activeTab, setActiveTab] = useState('profile');
   const [profileData, setProfileData] = useState({
     username: currentUser?.username || '',
     email: currentUser?.email || '',
-    role: currentUser?.role || 'accountant'
+    role: currentUser?.role || 'Admin'
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -31,7 +31,6 @@ const UserSettings: React.FC = () => {
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'password', label: 'Password', icon: Lock },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'users', label: 'User Management', icon: Globe },
     { id: 'firebase', label: 'Firebase Setup', icon: Database }
   ];
 
@@ -61,18 +60,7 @@ const UserSettings: React.FC = () => {
     alert('Notification settings updated!');
   };
 
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 'danger';
-      case 'manager':
-        return 'warning';
-      case 'accountant':
-        return 'info';
-      default:
-        return 'default';
-    }
-  };
+
 
   const renderProfileTab = () => (
     <form onSubmit={handleProfileUpdate} className="space-y-6">
@@ -105,16 +93,18 @@ const UserSettings: React.FC = () => {
           </label>
           <select
             value={profileData.role}
-            onChange={(e) => setProfileData({ ...profileData, role: e.target.value as any })}
+            onChange={(e) => setProfileData({ ...profileData, role: e.target.value as UserRole })}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={currentUser?.role !== 'admin'}
+            disabled={currentUser?.role !== 'Owner'}
           >
-            <option value="admin">Admin</option>
-            <option value="manager">Manager</option>
-            <option value="accountant">Accountant</option>
+            {USER_ROLES.map((role) => (
+              <option key={role} value={role}>
+                {role}
+              </option>
+            ))}
           </select>
-          {currentUser?.role !== 'admin' && (
-            <p className="text-sm text-gray-500 mt-1">Only admins can change roles</p>
+          {currentUser?.role !== 'Owner' && (
+            <p className="text-sm text-gray-500 mt-1">Only owners can change roles</p>
           )}
         </div>
       </div>
@@ -216,43 +206,7 @@ const UserSettings: React.FC = () => {
     </div>
   );
 
-  const renderUsersTab = () => (
-    <div className="space-y-6">
-      {currentUser?.role !== 'admin' ? (
-        <div className="text-center py-8">
-          <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">You don't have permission to manage users</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">System Users</h3>
-            <Button icon={User}>Add User</Button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {users.map((user) => (
-              <Card key={user.user_id}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-700">
-                        {user.username.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <Badge variant={getRoleBadgeVariant(user.role) as any} size="sm">
-                      {user.role}
-                    </Badge>
-                  </div>
-                  <h4 className="font-medium text-gray-900">{user.username}</h4>
-                  <p className="text-sm text-gray-600">{user.email}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -262,8 +216,6 @@ const UserSettings: React.FC = () => {
         return renderPasswordTab();
       case 'notifications':
         return renderNotificationsTab();
-      case 'users':
-        return renderUsersTab();
       case 'firebase':
         return <FirebaseSetup />;
       default:

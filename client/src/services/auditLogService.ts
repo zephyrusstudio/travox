@@ -18,8 +18,48 @@ export interface AuditLogsResponse {
 }
 
 // Helper function to convert Firestore timestamp to ISO string
-function convertFirestoreTimestamp(timestamp: { _seconds: number; _nanoseconds: number }): string {
-  return new Date(timestamp._seconds * 1000 + timestamp._nanoseconds / 1000000).toISOString();
+function convertFirestoreTimestamp(timestamp: { _seconds: number; _nanoseconds: number } | string | null | undefined): string {
+  // Handle null/undefined cases
+  if (!timestamp) {
+    return new Date().toISOString(); // Return current time as fallback
+  }
+
+  // Handle string timestamps (already ISO format)
+  if (typeof timestamp === 'string') {
+    try {
+      return new Date(timestamp).toISOString();
+    } catch {
+      return new Date().toISOString();
+    }
+  }
+
+  // Handle Firestore timestamp format
+  if (typeof timestamp === 'object' && '_seconds' in timestamp) {
+    try {
+      // Validate that _seconds and _nanoseconds are valid numbers
+      const seconds = Number(timestamp._seconds);
+      const nanoseconds = Number(timestamp._nanoseconds || 0);
+      
+      if (isNaN(seconds) || isNaN(nanoseconds)) {
+        return new Date().toISOString();
+      }
+      
+      const milliseconds = seconds * 1000 + nanoseconds / 1000000;
+      const date = new Date(milliseconds);
+      
+      // Check if the resulting date is valid
+      if (isNaN(date.getTime())) {
+        return new Date().toISOString();
+      }
+      
+      return date.toISOString();
+    } catch {
+      return new Date().toISOString();
+    }
+  }
+
+  // Fallback for any other format
+  return new Date().toISOString();
 }
 
 // Interface for the API response log format
@@ -33,25 +73,46 @@ interface ApiAuditLog {
   diff: Record<string, unknown>;
   ip: string;
   userAgent: string;
-  createdAt: { _seconds: number; _nanoseconds: number };
+  createdAt: { _seconds: number; _nanoseconds: number } | string | null;
 }
 
 // Transform API response to our AuditLog interface
 function transformAuditLog(apiLog: ApiAuditLog): AuditLog {
-  return {
-    id: apiLog.id,
-    orgId: apiLog.orgId,
-    actorId: apiLog.actorId,
-    entity: apiLog.entity,
-    entityId: apiLog.entityId,
-    action: apiLog.action,
-    diff: apiLog.diff || {},
-    ip: apiLog.ip,
-    userAgent: apiLog.userAgent,
-    createdAt: convertFirestoreTimestamp(apiLog.createdAt),
-    timestamp: convertFirestoreTimestamp(apiLog.createdAt), // For backward compatibility
-    actorName: `User ${apiLog.actorId.slice(-4)}` // Generate display name from ID
-  };
+  try {
+    const convertedTimestamp = convertFirestoreTimestamp(apiLog.createdAt);
+    
+    return {
+      id: apiLog.id || 'unknown',
+      orgId: apiLog.orgId || 'unknown',
+      actorId: apiLog.actorId || 'unknown',
+      entity: apiLog.entity || 'unknown',
+      entityId: apiLog.entityId || 'unknown',
+      action: apiLog.action || 'CREATE',
+      diff: apiLog.diff || {},
+      ip: apiLog.ip || 'unknown',
+      userAgent: apiLog.userAgent || 'unknown',
+      createdAt: convertedTimestamp,
+      timestamp: convertedTimestamp, // For backward compatibility
+      actorName: apiLog.actorId ? `User ${apiLog.actorId.slice(-4)}` : 'Unknown User'
+    };
+  } catch (error) {
+    console.warn('Error transforming audit log:', error, apiLog);
+    // Return a minimal audit log object with current timestamp
+    return {
+      id: apiLog.id || 'unknown',
+      orgId: apiLog.orgId || 'unknown',
+      actorId: apiLog.actorId || 'unknown',
+      entity: apiLog.entity || 'unknown',
+      entityId: apiLog.entityId || 'unknown',
+      action: 'CREATE',
+      diff: {},
+      ip: 'unknown',
+      userAgent: 'unknown',
+      createdAt: new Date().toISOString(),
+      timestamp: new Date().toISOString(),
+      actorName: 'Unknown User'
+    };
+  }
 }
 
 export const auditLogService = {
@@ -78,10 +139,13 @@ export const auditLogService = {
       });
 
       if (response.status === 'success') {
-        const transformedLogs = response.data.logs.map(transformAuditLog);
+        // Ensure response.data.logs is an array
+        const logs = Array.isArray(response.data.logs) ? response.data.logs : [];
+        const transformedLogs = logs.map(transformAuditLog).filter(Boolean); // Filter out any null/undefined results
+        
         return {
           logs: transformedLogs,
-          total: response.data.total
+          total: response.data.total || 0
         };
       } else {
         throw new Error(response.message || 'Failed to fetch audit logs');
@@ -97,34 +161,42 @@ export const auditLogService = {
     return response.logs;
   },
 
-  exportToCSV(logs: AuditLog[]): void {
-    const sanitize = (value: string | number | null | undefined): string => {
-      const stringValue = value === null || value === undefined ? '' : String(value);
-      const escaped = stringValue.replace(/"/g, '""');
-      return `"${escaped}"`;
-    };
+  async exportToCSV(filters: AuditLogFilters = {}): Promise<void> {
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      
+      if (filters.entity) params.append('entity', filters.entity);
+      if (filters.entityId) params.append('entityId', filters.entityId);
+      if (filters.actorId) params.append('actorId', filters.actorId);
+      if (filters.action) params.append('action', filters.action);
+      if (filters.startDate) params.append('startDate', filters.startDate);
+      if (filters.endDate) params.append('endDate', filters.endDate);
 
-    const headers = ['Timestamp', 'Action', 'Entity', 'Actor'];
-    const csvContent = [
-      headers.join(','),
-      ...logs.map(log =>
-        [
-          sanitize(log.createdAt),
-          sanitize(log.action),
-          sanitize(log.entity),
-          sanitize(log.actorName || log.actorId)
-        ].join(',')
-      )
-    ].join('\n');
+      const queryString = params.toString();
+      const url = `/audit-logs/export${queryString ? `?${queryString}` : ''}`;
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `audit-logs-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      // Make API request to get CSV file
+      const response = await apiRequest<Blob>({
+        url: url,
+        method: 'GET',
+        responseType: 'blob',
+      });
+
+      // Create download link
+      const blob = new Blob([response], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const downloadUrl = URL.createObjectURL(blob);
+      link.setAttribute('href', downloadUrl);
+      link.setAttribute('download', `audit-logs-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Failed to export audit logs:', error);
+      throw error;
+    }
   }
 };

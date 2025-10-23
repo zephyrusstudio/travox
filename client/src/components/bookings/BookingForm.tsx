@@ -3,6 +3,7 @@ import { Bot, CheckCircle, ChevronDown, Loader, Upload, X } from "lucide-react";
 import React, { useRef } from "react";
 import Button from "../ui/Button";
 import {
+  BookingStatus,
   CustomerLite,
   ModeOfJourneyOption,
   NewCustomerData,
@@ -334,6 +335,7 @@ const BookingForm: React.FC<Props> = (props) => {
             <Labeled label="Booking Amount">
               <input
                 type="number"
+                step="0.01"
                 value={aiData.bookingAmount}
                 onChange={(e) =>
                   setAiData({ bookingAmount: parseFloat(e.target.value) || 0 })
@@ -643,28 +645,20 @@ const BookingForm: React.FC<Props> = (props) => {
                 />
               </Labeled>
               <Labeled label="Status">
-                <input
-                  type="text"
+                <select
                   value={formData.status}
                   onChange={(e) => setFormField("status", e.target.value)}
-                  placeholder="e.g. Draft"
-                  list="booking-status-options"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <datalist id="booking-status-options">
-                  {[
-                    "Draft",
-                    "Pending",
-                    "Confirmed",
-                    "Ticketed",
-                    "In Progress",
-                    "Completed",
-                    "Cancelled",
-                    "Refunded",
-                  ].map((status) => (
-                    <option key={status} value={status} />
-                  ))}
-                </datalist>
+                >
+                  <option value="">Select Status</option>
+                  <option value={BookingStatus.DRAFT}>{BookingStatus.DRAFT}</option>
+                  <option value={BookingStatus.CONFIRMED}>{BookingStatus.CONFIRMED}</option>
+                  <option value={BookingStatus.TICKETED}>{BookingStatus.TICKETED}</option>
+                  <option value={BookingStatus.IN_PROGRESS}>{BookingStatus.IN_PROGRESS}</option>
+                  <option value={BookingStatus.COMPLETED}>{BookingStatus.COMPLETED}</option>
+                  <option value={BookingStatus.CANCELLED}>{BookingStatus.CANCELLED}</option>
+                  <option value={BookingStatus.REFUNDED}>{BookingStatus.REFUNDED}</option>
+                </select>
               </Labeled>
               <Labeled label="Mode of Journey *">
                 <select
@@ -705,6 +699,7 @@ const BookingForm: React.FC<Props> = (props) => {
               <Labeled label="Total Amount *">
                 <input
                   type="number"
+                  step="0.01"
                   required
                   min={0}
                   value={formData.total_amount}
@@ -720,6 +715,7 @@ const BookingForm: React.FC<Props> = (props) => {
               <Labeled label="Paid Amount">
                 <input
                   type="number"
+                  step="0.01"
                   min={0}
                   max={formData.total_amount}
                   value={formData.advance_received}

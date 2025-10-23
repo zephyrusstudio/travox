@@ -5,6 +5,7 @@ import { errorToast, successToast } from "../../utils/toasts";
 import {
   AIDataState,
   BookingFormState,
+  BookingStatus,
   CustomerLite,
   ExtractionMetadataForm,
   ItineraryForm,
@@ -202,7 +203,7 @@ export function useBookingForm({
   const initialStatus =
     typeof selectedBooking?.status === "string" && selectedBooking.status
       ? selectedBooking.status
-      : "Draft";
+      : BookingStatus.DRAFT;
   const initialPnr =
     selectedBooking?.pnrNo ||
     selectedBooking?.pnr ||
@@ -242,7 +243,7 @@ export function useBookingForm({
           advance_received: 0,
           currency: "INR",
           mode_of_journey: ModeOfJourneyOption.FLIGHT,
-          status: "Draft",
+          status: BookingStatus.DRAFT,
         }
   );
 
@@ -562,7 +563,7 @@ export function useBookingForm({
       itineraries: normalizedItineraries,
       vendorInfo: vendor,
       extractionMetadata: metadata,
-      status: booking?.status || "Draft",
+      status: booking?.status || BookingStatus.DRAFT,
       totalAmount: Number(booking?.totalAmount || 0),
     };
   }
@@ -1109,7 +1110,7 @@ export function useBookingForm({
             contact: vendorInfo.contact || "",
             email: vendorInfo.email || "",
           },
-          status: formData.status || "Draft",
+          status: formData.status || BookingStatus.DRAFT,
           extractionMetadata: metadataPayload,
         };
 

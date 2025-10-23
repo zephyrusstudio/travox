@@ -7,7 +7,6 @@ import {
   Eye,
   Plus,
   Search,
-  Ticket,
   Trash2,
   Users,
 } from "lucide-react";
@@ -31,22 +30,17 @@ import {
   CustomerLite,
   ModeOfJourneyOption,
   NewCustomerData,
-  TicketData,
-  TravelCategory,
 } from "./booking.types";
 
 type BookingRow = Booking & { pnr?: string };
 
 const BookingManagement: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [selectedBookingLoading, setSelectedBookingLoading] = useState(false);
   const [selectedBookingError, setSelectedBookingError] = useState<
     string | null
   >(null);
-  const [selectedTicketData, setSelectedTicketData] =
-    useState<TicketData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
@@ -246,11 +240,19 @@ const BookingManagement: React.FC = () => {
       const items: any[] = Array.isArray(res?.data) ? res.data : [];
       const normalizeStatus = (status: string): BookingStatus => {
         const normalized = (status || "").toLowerCase();
-        if (normalized === BookingStatus.Confirmed)
-          return BookingStatus.Confirmed;
-        if (normalized === BookingStatus.Cancelled)
-          return BookingStatus.Cancelled;
-        return BookingStatus.Pending;
+        if (normalized === "confirmed" || status === BookingStatus.CONFIRMED)
+          return BookingStatus.CONFIRMED;
+        if (normalized === "cancelled" || status === BookingStatus.CANCELLED)
+          return BookingStatus.CANCELLED;
+        if (normalized === "ticketed" || status === BookingStatus.TICKETED)
+          return BookingStatus.TICKETED;
+        if (normalized === "in progress" || status === BookingStatus.IN_PROGRESS)
+          return BookingStatus.IN_PROGRESS;
+        if (normalized === "completed" || status === BookingStatus.COMPLETED)
+          return BookingStatus.COMPLETED;
+        if (normalized === "refunded" || status === BookingStatus.REFUNDED)
+          return BookingStatus.REFUNDED;
+        return BookingStatus.DRAFT;
       };
 
       const mapped: BookingRow[] = items.map((record) => {
@@ -414,29 +416,6 @@ const BookingManagement: React.FC = () => {
 
   console.log(filteredBookings);
 
-  const handleViewTicket = (booking: BookingRow) => {
-    const mock: TicketData = {
-      fileName: `${booking.package_name.replace(/\s+/g, "_")}_ticket.pdf`,
-      pnr: (booking as any).pnr || "ABC123",
-      extractedData: {
-        paxList: Array.from({ length: booking.pax_count }, (_, i) => ({
-          name: i === 0 ? booking.customer_name : `Passenger ${i + 1}`,
-          isPrimary: i === 0,
-        })),
-        journeyDate: booking.travel_start_date,
-        returnDate: booking.travel_end_date,
-        bookingAmount: booking.total_amount,
-        travelCategory:
-          booking.total_amount > 100000
-            ? TravelCategory.International
-            : TravelCategory.Domestic,
-        route: "DEL-BOM",
-      },
-    };
-    setSelectedTicketData(mock);
-    setIsTicketModalOpen(true);
-  };
-
   const resetAndClose = () => {
     setIsModalOpen(false);
     setSelectedBooking(null);
@@ -503,11 +482,19 @@ const BookingManagement: React.FC = () => {
 
   const getStatusVariant = (status: string) => {
     switch (status as BookingStatus) {
-      case BookingStatus.Confirmed:
+      case BookingStatus.CONFIRMED:
         return "success";
-      case BookingStatus.Pending:
+      case BookingStatus.TICKETED:
+        return "success";
+      case BookingStatus.COMPLETED:
+        return "success";
+      case BookingStatus.DRAFT:
         return "warning";
-      case BookingStatus.Cancelled:
+      case BookingStatus.IN_PROGRESS:
+        return "warning";
+      case BookingStatus.CANCELLED:
+        return "danger";
+      case BookingStatus.REFUNDED:
         return "danger";
       default:
         return "default";
@@ -517,7 +504,7 @@ const BookingManagement: React.FC = () => {
   const stats = useMemo(() => {
     const totalBookings = bookings.length;
     const confirmedBookings = bookings.filter(
-      (b) => b.status === BookingStatus.Confirmed
+      (b) => b.status === BookingStatus.CONFIRMED
     ).length;
     const totalRevenue = bookings.reduce(
       (sum, b) => sum + (Number(b.total_amount) || 0),
@@ -789,15 +776,6 @@ const BookingManagement: React.FC = () => {
                           onClick={() => handleOpenModal(b, "view")}
                           title="View booking"
                         />
-                        {(b as any).pnr && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            icon={Ticket}
-                            onClick={() => handleViewTicket(b)}
-                            title="View Ticket"
-                          />
-                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -819,90 +797,6 @@ const BookingManagement: React.FC = () => {
           </Table>
         </CardContent>
       </Card>
-
-      {/* Ticket Modal */}
-      <Modal
-        isOpen={isTicketModalOpen}
-        onClose={() => setIsTicketModalOpen(false)}
-        title="Ticket Information"
-        size="lg"
-      >
-        {selectedTicketData && (
-          <div className="space-y-6">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h4 className="font-semibold text-blue-900 mb-3">
-                Ticket Details
-              </h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p>
-                    <span className="font-medium">File:</span>{" "}
-                    {selectedTicketData.fileName}
-                  </p>
-                  <p>
-                    <span className="font-medium">PNR:</span>{" "}
-                    {selectedTicketData.pnr}
-                  </p>
-                  <p>
-                    <span className="font-medium">Route:</span>{" "}
-                    {selectedTicketData.extractedData.route}
-                  </p>
-                </div>
-                <div>
-                  <p>
-                    <span className="font-medium">Journey:</span>{" "}
-                    {new Date(
-                      selectedTicketData.extractedData.journeyDate
-                    ).toLocaleDateString()}
-                  </p>
-                  <p>
-                    <span className="font-medium">Return:</span>{" "}
-                    {new Date(
-                      selectedTicketData.extractedData.returnDate
-                    ).toLocaleDateString()}
-                  </p>
-                  <p>
-                    <span className="font-medium">Category:</span>{" "}
-                    {selectedTicketData.extractedData.travelCategory}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-3">
-                Passenger List
-              </h4>
-              <div className="space-y-2">
-                {selectedTicketData.extractedData.paxList.map((p, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <span className="font-medium">{p.name}</span>
-                    {p.isPrimary && (
-                      <Badge variant="info" size="sm">
-                        Primary
-                      </Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-green-50 rounded-lg p-4">
-              <h4 className="font-semibold text-green-900 mb-2">
-                Booking Amount
-              </h4>
-              <p className="text-2xl font-bold text-green-700">
-                ₹
-                {selectedTicketData.extractedData.bookingAmount.toLocaleString()}
-              </p>
-            </div>
-          </div>
-        )}
-      </Modal>
-
       {/* Delete Confirm Modal */}
       <Modal
         isOpen={isDeleteModalOpen}

@@ -57,7 +57,7 @@ export interface Booking {
   total_amount: number;
   advance_received: number;
   balance_amount: number;
-  status: "confirmed" | "pending" | "cancelled";
+  status: string;
 }
 
 export interface Payment {

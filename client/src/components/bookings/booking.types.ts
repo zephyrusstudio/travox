@@ -7,9 +7,13 @@ export enum TravelCategory {
 }
 
 export enum BookingStatus {
-  Confirmed = "confirmed",
-  Pending = "pending",
-  Cancelled = "cancelled",
+  DRAFT = "Draft",
+  CONFIRMED = "Confirmed", 
+  TICKETED = "Ticketed",
+  IN_PROGRESS = "In Progress",
+  COMPLETED = "Completed",
+  CANCELLED = "Cancelled",
+  REFUNDED = "Refunded",
 }
 
 export enum Gender {

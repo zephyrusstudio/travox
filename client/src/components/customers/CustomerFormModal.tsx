@@ -91,23 +91,34 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Validation
-  const isPhoneValid =
-    !formData.phone ||
-    /^[0-9]{10}$/.test(formData.phone.replace(/^\+\d{1,4}-/, ""));
+  const phoneDigits = formData.phone?.replace(/^\+\d{1,4}-/, "") ?? "";
+  const hasPhone = phoneDigits.length > 0;
+  const isPhonePatternValid = /^[0-9]{10}$/.test(phoneDigits);
+  const phoneError = !hasPhone
+    ? "Phone is required."
+    : !isPhonePatternValid
+    ? "Enter exactly 10 digits."
+    : "";
+  const isPhoneValid = phoneError === "";
+
+  const trimmedEmail = formData.email?.trim() ?? "";
+  const hasEmail = trimmedEmail.length > 0;
+  const isEmailPatternValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
+  const emailError = !hasEmail
+    ? "Email is required."
+    : !isEmailPatternValid
+    ? "Enter a valid email."
+    : "";
+  const isEmailValid = emailError === "";
+
   const isAadhaarValid =
     !formData.aadhaarNo || /^[0-9]{12}$/.test(formData.aadhaarNo);
   const isGstinValid = !formData.gstin || /^[0-9A-Z]{15}$/.test(formData.gstin);
   const isPassportValid =
     !formData.passportNo || /^[A-Z0-9]{1,8}$/.test(formData.passportNo);
-  const isEmailValid =
-    !formData.email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
 
-  const phoneDigits = formData.phone?.replace(/^\+\d{1,4}-/, "") ?? "";
   const hasName = Boolean(formData.name?.trim());
-  const hasEmail = Boolean(formData.email?.trim());
-  const hasPhone = Boolean(phoneDigits);
-  const hasContactInfo =
-    (hasEmail && isEmailValid) || (hasPhone && isPhoneValid);
+  const hasContactInfo = isEmailValid && isPhoneValid;
   const isAccountDetailsValid =
     !isLinkingAccount ||
     Boolean(
@@ -192,7 +203,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
   async function createCustomer(): Promise<string> {
     const payload: Record<string, unknown> = {
       name: formData.name?.trim(),
-      email: formData.email || undefined,
+      email: trimmedEmail || undefined,
       phone: formData.phone || undefined,
       address: formData.address || undefined,
       passportNo: formData.passportNo || undefined,
@@ -221,7 +232,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
   ): Promise<string> {
     const payload: Record<string, unknown> = {
       name: formData.name?.trim(),
-      email: formData.email || undefined,
+      email: trimmedEmail || undefined,
       phone: formData.phone || undefined,
       address: formData.address || undefined,
       passportNo: formData.passportNo || undefined,
@@ -251,7 +262,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
   const toggleBankSection = () => {
     if (!isLinkingAccount && !hasRequiredCustomerInfo) {
       errorToast(
-        "Please add the customer's name and either email or phone before linking a bank account."
+        "Please add the customer's name, email, and phone before linking a bank account."
       );
       return;
     }
@@ -472,7 +483,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Full Name *
+              Full Name <span className="text-rose-600">*</span>
             </label>
             <input
               type="text"
@@ -488,25 +499,26 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+              Email <span className="text-rose-600">*</span>
             </label>
             <input
               type="email"
+              required
               value={formData.email}
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {!isEmailValid && (
-              <p className="mt-1 text-xs text-rose-600">Enter a valid email.</p>
+            {emailError && (
+              <p className="mt-1 text-xs text-rose-600">{emailError}</p>
             )}
           </div>
 
           {/* Phone */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone
+              Phone <span className="text-rose-600">*</span>
             </label>
             <div className="flex">
               <input
@@ -535,6 +547,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                 type="tel"
                 inputMode="numeric"
                 maxLength={MAX_PHONE}
+                required
                 value={
                   formData.phone
                     ? formData.phone.replace(/^\+\d{1,4}-/, "")
@@ -545,10 +558,8 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                 placeholder="Enter phone number"
               />
             </div>
-            {!isPhoneValid && (
-              <p className="mt-1 text-xs text-rose-600">
-                Enter exactly 10 digits.
-              </p>
+            {phoneError && (
+              <p className="mt-1 text-xs text-rose-600">{phoneError}</p>
             )}
           </div>
 
@@ -653,7 +664,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
             <div className="space-y-4 border-t border-gray-200 bg-gray-50 px-4 py-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Bank Name *
+                  Bank Name <span className="text-rose-600">*</span>
                 </label>
                 <input
                   type="text"
@@ -667,7 +678,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    IFSC Code *
+                    IFSC Code <span className="text-rose-600">*</span>
                   </label>
                   <input
                     type="text"
@@ -683,7 +694,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Branch Name *
+                    Branch Name <span className="text-rose-600">*</span>
                   </label>
                   <input
                     type="text"
@@ -700,7 +711,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Account Number *
+                    Account Number <span className="text-rose-600">*</span>
                   </label>
                   <input
                     type="text"

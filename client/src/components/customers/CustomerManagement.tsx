@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/components/customers/CustomerManagement.tsx
-import { Plus, RefreshCw, Upload, Users } from "lucide-react";
+import { Plus, RefreshCw, Users } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Customer } from "../../types";
 
@@ -150,13 +150,6 @@ const CustomerManagement: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center space-x-4">
-          <Button
-            variant="outline"
-            onClick={() => (window.location.hash = "#tickets")}
-            icon={Upload}
-          >
-            Upload Tickets
-          </Button>
           <Button onClick={() => openForm()} icon={Plus}>
             Add Customer
           </Button>

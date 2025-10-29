@@ -52,7 +52,6 @@ interface CreateBookingDTO {
   pax: PaxDTO[];
   itineraries?: ItineraryDTO[];
   bookingDate?: Date;
-  paidAmount?: number;
   packageName?: string;
   pnrNo?: string;
   modeOfJourney?: string;

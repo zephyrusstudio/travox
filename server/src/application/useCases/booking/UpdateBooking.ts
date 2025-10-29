@@ -47,6 +47,7 @@ interface UpdateBookingDTO {
   customerId?: string;
   currency?: string;
   totalAmount?: number;
+  bookingDate?: Date;
   pax?: PaxDTO[];
   itineraries?: ItineraryDTO[];
   packageName?: string;
@@ -79,6 +80,11 @@ export class UpdateBooking {
     booking.pnrNo = data.pnrNo || booking.pnrNo;
     booking.modeOfJourney = data.modeOfJourney || booking.modeOfJourney;
     booking.advanceAmount = data.advanceAmount || booking.advanceAmount;
+    
+    // Update bookingDate if provided
+    if (data.bookingDate !== undefined) {
+      booking.bookingDate = data.bookingDate;
+    }
     
     // Update vendorId if provided (Note: this doesn't automatically manage vendor booking counts)
     if (data.vendorId !== undefined) {

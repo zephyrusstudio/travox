@@ -38,6 +38,57 @@ type OcrExtractUploadResponse = {
   };
 };
 
+type PaxPayload = {
+  paxName: string;
+  paxType: PaxTypeOption | string;
+  passportNo?: string;
+  dob?: string;
+};
+
+type SegmentPayload = {
+  seqNo: number;
+  modeOfJourney: ModeOfJourneyOption | string;
+  carrierCode?: string;
+  serviceNumber?: string;
+  depCode?: string;
+  arrCode?: string;
+  depAt?: string;
+  arrAt?: string;
+  classCode?: string;
+  baggage?: string;
+  hotelName?: string;
+  hotelAddress?: string;
+  checkIn?: string;
+  checkOut?: string;
+  roomType?: string;
+  mealPlan?: string;
+  operatorName?: string;
+  boardingPoint?: string;
+  dropPoint?: string;
+  misc?: Record<string, unknown>;
+};
+
+type ItineraryPayload = {
+  name: string;
+  seqNo: number;
+  segments: SegmentPayload[];
+};
+
+type CreateBookingPayload = {
+  customerId: string;
+  currency: string;
+  totalAmount: number;
+  pax: PaxPayload[];
+  itineraries?: ItineraryPayload[];
+  bookingDate?: string;
+  packageName?: string;
+  pnrNo?: string;
+  modeOfJourney?: string;
+  advanceAmount?: number;
+  status?: BookingStatus;
+  vendorId?: string;
+};
+
 const createPassenger = (overrides: Partial<Pax> = {}): Pax => ({
   name: "",
   paxType: PaxTypeOption.ADT,
@@ -145,13 +196,61 @@ export function useBookingForm({
     return PaxTypeOption.ADT;
   }, []);
 
-  const toIso = useCallback((date?: string, time?: string) => {
-    if (!date) return undefined;
-    const hasTime = date.includes("T");
-    const stamp = hasTime ? date : `${date}T${time ?? "00:00"}`;
-    const d = new Date(stamp);
-    return isNaN(d.getTime()) ? undefined : d.toISOString();
-  }, []);
+// Convert a YYYY-MM-DD (optionally with time) into an ISO string without shifting the calendar day.
+const toIso = useCallback((date?: string, time?: string) => {
+  if (!date) return undefined;
+
+  const trimmedDate = date.trim();
+  if (!trimmedDate) return undefined;
+
+  let datePart = trimmedDate;
+  let timePart = time?.trim() ?? "";
+
+  if (trimmedDate.includes("T")) {
+    const [dPart, tPart = ""] = trimmedDate.split("T");
+    datePart = dPart;
+    if (!timePart) {
+      timePart = tPart;
+    }
+  }
+
+  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datePart);
+  if (!dateMatch) {
+    const parsed = new Date(trimmedDate);
+    return isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+  }
+
+  let hours = 0;
+  let minutes = 0;
+  let seconds = 0;
+
+  if (timePart) {
+    const cleanedTime = timePart
+      .replace(/Z$/i, "")
+      .replace(/([+-]\d{2}):?\d{2}$/i, "")
+      .trim();
+    const timeMatch = /^(\d{2}):(\d{2})(?::(\d{2}))?/.exec(cleanedTime);
+    if (timeMatch) {
+      hours = Number(timeMatch[1]);
+      minutes = Number(timeMatch[2]);
+      seconds = Number(timeMatch[3] ?? "0");
+    }
+  }
+
+  const iso = new Date(
+    Date.UTC(
+      Number(dateMatch[1]),
+      Number(dateMatch[2]) - 1,
+      Number(dateMatch[3]),
+      hours,
+      minutes,
+      seconds,
+      0
+    )
+  ).toISOString();
+
+  return iso;
+}, []);
 
   // ── UI state ────────────────────────────────────────────────────────────────
   const [isProcessing, setIsProcessing] = useState(false);
@@ -1018,7 +1117,14 @@ export function useBookingForm({
               }),
             ];
 
-        const paxPayload = paxSource.map((pax, index) => {
+        const trimOrUndefined = (value?: string | null) =>
+          value && value.trim().length > 0 ? value.trim() : undefined;
+        const toIsoIfValid = (value?: string | null) => {
+          const trimmedValue = trimOrUndefined(value);
+          return trimmedValue ? toIso(trimmedValue) : undefined;
+        };
+
+        const paxPayload: PaxPayload[] = paxSource.map((pax, index) => {
           const paxName =
             pax.name?.trim() ||
             selectedCustomerDetails?.full_name ||
@@ -1028,113 +1134,220 @@ export function useBookingForm({
             pax.paxType && pax.paxType !== ""
               ? pax.paxType
               : derivePaxType(pax.age);
-          return {
+
+          const payloadItem: PaxPayload = {
             paxName,
             paxType,
-            passportNo:
-              pax.passportNo && pax.passportNo.trim().length > 0
-                ? pax.passportNo.trim()
-                : pax.isPrimary && selectedCustomerDetails?.passportNo
-                ? selectedCustomerDetails.passportNo
-                : null,
-            dob: pax.dob && pax.dob.trim().length > 0 ? pax.dob.trim() : null,
           };
+
+          const passportSource =
+            pax.passportNo?.trim() ||
+            (pax.isPrimary && selectedCustomerDetails?.passportNo
+              ? selectedCustomerDetails.passportNo.trim()
+              : "");
+          if (passportSource) {
+            payloadItem.passportNo = passportSource;
+          }
+
+          const dobIso = toIsoIfValid(pax.dob ?? null);
+          if (dobIso) {
+            payloadItem.dob = dobIso;
+          }
+
+          return payloadItem;
         });
 
-        const itinerariesPayload = itineraries.map((itinerary, idx) => ({
-          name: itinerary.name?.trim() || `Itinerary ${idx + 1}`,
-          seqNo: itinerary.seqNo || idx + 1,
-          segments: itinerary.segments.map((segment, segmentIdx) => ({
-            seqNo: segment.seqNo || segmentIdx + 1,
-            modeOfJourney:
-              segment.modeOfJourney ||
-              formData.mode_of_journey ||
-              aiData.modeOfJourney ||
-              determineModeOfJourney(aiData.travelCategory),
-            carrierCode: segment.carrierCode || null,
-            serviceNumber: segment.serviceNumber || null,
-            depCode: segment.depCode || null,
-            arrCode: segment.arrCode || null,
-            depAt: segment.depAt || null,
-            arrAt: segment.arrAt || null,
-            classCode: segment.classCode || null,
-            baggage: segment.baggage || null,
-            hotelName: segment.hotelName || null,
-            hotelAddress: segment.hotelAddress || null,
-            checkIn: segment.checkIn || null,
-            checkOut: segment.checkOut || null,
-            roomType: segment.roomType || null,
-            mealPlan: segment.mealPlan || null,
-            operatorName: segment.operatorName || null,
-            boardingPoint: segment.boardingPoint || null,
-            dropPoint: segment.dropPoint || null,
-            misc: {
-              totalRooms:
-                segment.misc.totalRooms === "" ? null : segment.misc.totalRooms,
-              totalGuests: segment.misc.totalGuests || null,
-              totalNights:
-                segment.misc.totalNights === ""
-                  ? null
-                  : segment.misc.totalNights,
-            },
-          })),
-        }));
+        const itinerariesPayload: ItineraryPayload[] = itineraries
+          .map((itinerary, idx) => {
+            const segments = itinerary.segments
+              .map((segment, segmentIdx) => {
+                const segmentMode =
+                  segment.modeOfJourney ||
+                  formData.mode_of_journey ||
+                  aiData.modeOfJourney ||
+                  determineModeOfJourney(aiData.travelCategory);
 
-        const metadataPayload = {
-          confidence: extractionMetadata.confidence || "UNKNOWN",
-          extractedFields: extractionMetadata.extractedFields
-            .map((field) => field.trim())
-            .filter(Boolean),
-          notes: extractionMetadata.notes || "",
-          schemaVersion: extractionMetadata.schemaVersion || "",
-        };
+                const segmentPayload: SegmentPayload = {
+                  seqNo: segment.seqNo || segmentIdx + 1,
+                  modeOfJourney: segmentMode,
+                };
 
-        const payload: Record<string, any> = {
+                const depCode = trimOrUndefined(segment.depCode);
+                if (depCode) {
+                  segmentPayload.depCode = depCode;
+                }
+
+                const arrCode = trimOrUndefined(segment.arrCode);
+                if (arrCode) {
+                  segmentPayload.arrCode = arrCode;
+                }
+
+                const carrierCode = trimOrUndefined(segment.carrierCode);
+                if (carrierCode) {
+                  segmentPayload.carrierCode = carrierCode;
+                }
+
+                const serviceNumber = trimOrUndefined(segment.serviceNumber);
+                if (serviceNumber) {
+                  segmentPayload.serviceNumber = serviceNumber;
+                }
+
+                const classCode = trimOrUndefined(segment.classCode);
+                if (classCode) {
+                  segmentPayload.classCode = classCode;
+                }
+
+                const baggage = trimOrUndefined(segment.baggage);
+                if (baggage) {
+                  segmentPayload.baggage = baggage;
+                }
+
+                const hotelName = trimOrUndefined(segment.hotelName);
+                if (hotelName) {
+                  segmentPayload.hotelName = hotelName;
+                }
+
+                const hotelAddress = trimOrUndefined(segment.hotelAddress);
+                if (hotelAddress) {
+                  segmentPayload.hotelAddress = hotelAddress;
+                }
+
+                const roomType = trimOrUndefined(segment.roomType);
+                if (roomType) {
+                  segmentPayload.roomType = roomType;
+                }
+
+                const mealPlan = trimOrUndefined(segment.mealPlan);
+                if (mealPlan) {
+                  segmentPayload.mealPlan = mealPlan;
+                }
+
+                const operatorName = trimOrUndefined(segment.operatorName);
+                if (operatorName) {
+                  segmentPayload.operatorName = operatorName;
+                }
+
+                const boardingPoint = trimOrUndefined(segment.boardingPoint);
+                if (boardingPoint) {
+                  segmentPayload.boardingPoint = boardingPoint;
+                }
+
+                const dropPoint = trimOrUndefined(segment.dropPoint);
+                if (dropPoint) {
+                  segmentPayload.dropPoint = dropPoint;
+                }
+
+                const depAtIso = toIsoIfValid(segment.depAt ?? null);
+                if (depAtIso) {
+                  segmentPayload.depAt = depAtIso;
+                }
+
+                const arrAtIso = toIsoIfValid(segment.arrAt ?? null);
+                if (arrAtIso) {
+                  segmentPayload.arrAt = arrAtIso;
+                }
+
+                const checkInIso = toIsoIfValid(segment.checkIn ?? null);
+                if (checkInIso) {
+                  segmentPayload.checkIn = checkInIso;
+                }
+
+                const checkOutIso = toIsoIfValid(segment.checkOut ?? null);
+                if (checkOutIso) {
+                  segmentPayload.checkOut = checkOutIso;
+                }
+
+                const misc: Record<string, unknown> = {};
+                if (typeof segment.misc.totalRooms === "number") {
+                  misc.totalRooms = segment.misc.totalRooms;
+                }
+                const totalGuests = trimOrUndefined(segment.misc.totalGuests);
+                if (totalGuests) {
+                  misc.totalGuests = totalGuests;
+                }
+                if (typeof segment.misc.totalNights === "number") {
+                  misc.totalNights = segment.misc.totalNights;
+                }
+                if (Object.keys(misc).length > 0) {
+                  segmentPayload.misc = misc;
+                }
+
+                const hasDetails = Object.keys(segmentPayload).some(
+                  (key) => key !== "seqNo" && key !== "modeOfJourney"
+                );
+                if (!hasDetails) {
+                  return null;
+                }
+
+                return segmentPayload;
+              })
+              .filter(
+                (segment): segment is SegmentPayload => segment !== null
+              );
+
+            if (segments.length === 0) {
+              return null;
+            }
+
+            return {
+              name: trimOrUndefined(itinerary.name) || `Itinerary ${idx + 1}`,
+              seqNo: itinerary.seqNo || idx + 1,
+              segments,
+            };
+          })
+          .filter(
+            (itineraryEntry): itineraryEntry is ItineraryPayload =>
+              itineraryEntry !== null
+          );
+
+        const currency =
+          trimOrUndefined(formData.currency) ||
+          trimOrUndefined(aiData.currency) ||
+          "INR";
+
+        const payload: CreateBookingPayload = {
           customerId: formData.customer_id,
-          packageName: formData.package_name.trim(),
-          pnrNo: formData.pnr_no?.trim() || null,
-          bookingDate: formData.booking_date
-            ? toIso(formData.booking_date)
-            : null,
-          totalAmount: formData.total_amount,
-          currency: formData.currency || aiData.currency || "INR",
-          advanceAmount: formData.advance_received,
-          modeOfJourney:
-            formData.mode_of_journey ||
-            aiData.modeOfJourney ||
-            determineModeOfJourney(aiData.travelCategory),
+          currency,
+          totalAmount: Number(formData.total_amount) || 0,
           pax: paxPayload,
-          itineraries: itinerariesPayload,
-          vendorInfo: {
-            name: vendorInfo.name || "",
-            contact: vendorInfo.contact || "",
-            email: vendorInfo.email || "",
-          },
-          status: formData.status || BookingStatus.DRAFT,
-          extractionMetadata: metadataPayload,
         };
 
-        if (!payload.pnrNo && aiData.pnr) {
-          payload.pnrNo = aiData.pnr.trim();
+        if (itinerariesPayload.length > 0) {
+          payload.itineraries = itinerariesPayload;
         }
-        if (formData.travel_start_date)
-          payload.travelStartDate = toIso(formData.travel_start_date);
-        if (formData.travel_end_date)
-          payload.travelEndDate = toIso(formData.travel_end_date);
-        if (aiData.journeyDate)
-          payload.journeyDate = toIso(aiData.journeyDate, aiData.journeyTime);
-        if (aiData.returnDate) payload.returnDate = toIso(aiData.returnDate);
-        if (aiData.route) payload.route = aiData.route;
-        if (aiData.airline) payload.airline = aiData.airline;
-        if (aiData.flightNumber) payload.flightNumber = aiData.flightNumber;
-        if (aiData.vendorInfo?.name && !payload.vendorInfo?.name) {
-          payload.vendorInfo.name = aiData.vendorInfo.name;
+
+        const packageName = trimOrUndefined(formData.package_name);
+        if (packageName) {
+          payload.packageName = packageName;
         }
-        if (aiData.vendorInfo?.contact && !payload.vendorInfo?.contact) {
-          payload.vendorInfo.contact = aiData.vendorInfo.contact;
+
+        const pnrNo =
+          trimOrUndefined(formData.pnr_no) || trimOrUndefined(aiData.pnr);
+        if (pnrNo) {
+          payload.pnrNo = pnrNo;
         }
-        if (aiData.vendorInfo?.email && !payload.vendorInfo?.email) {
-          payload.vendorInfo.email = aiData.vendorInfo.email;
+
+        const bookingDateIso = toIsoIfValid(formData.booking_date);
+        if (bookingDateIso) {
+          payload.bookingDate = bookingDateIso;
+        }
+
+        const modeOfJourney =
+          formData.mode_of_journey ||
+          aiData.modeOfJourney ||
+          determineModeOfJourney(aiData.travelCategory);
+        if (modeOfJourney) {
+          payload.modeOfJourney = modeOfJourney;
+        }
+
+        const advanceAmount = Number(formData.advance_received);
+        if (!Number.isNaN(advanceAmount) && advanceAmount > 0) {
+          payload.advanceAmount = advanceAmount;
+        }
+
+        const status = trimOrUndefined(formData.status);
+        if (status) {
+          payload.status = status as BookingStatus;
         }
 
         await onSubmitBooking(payload);
@@ -1150,42 +1363,27 @@ export function useBookingForm({
       }
     },
     [
-      aiData.airline,
-      aiData.flightNumber,
-      aiData.journeyDate,
-      aiData.journeyTime,
-      aiData.pnr,
-      aiData.returnDate,
-      aiData.route,
       aiData.currency,
       aiData.modeOfJourney,
+      aiData.pnr,
       aiData.travelCategory,
       customers,
-      extractionMetadata.confidence,
-      extractionMetadata.extractedFields,
-      extractionMetadata.notes,
-      extractionMetadata.schemaVersion,
       formData.advance_received,
       formData.booking_date,
       formData.currency,
       formData.customer_id,
       formData.customer_name,
       formData.mode_of_journey,
-      formData.pnr_no,
       formData.package_name,
+      formData.pnr_no,
       formData.status,
       formData.total_amount,
-      formData.travel_end_date,
-      formData.travel_start_date,
       itineraries,
       determineModeOfJourney,
       derivePaxType,
       onCancel,
       onSubmitBooking,
       passengers,
-      vendorInfo.contact,
-      vendorInfo.email,
-      vendorInfo.name,
       toIso,
     ]
   );

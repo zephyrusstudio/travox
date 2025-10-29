@@ -247,22 +247,13 @@ const BookingForm: React.FC<Props> = (props) => {
             <div className="flex items-center gap-2">
               <Bot className="h-4 w-4" />
               <span>
-                AI drafts these fields for you. Update anything that looks off
-                before saving.
+                AI drafts these fields for you. Matching booking fields are
+                prefilled below, so update any details there before saving.
               </span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Labeled label="PNR">
-              <input
-                type="text"
-                value={aiData.pnr}
-                onChange={(e) => setAiData({ pnr: e.target.value })}
-                placeholder="Enter PNR"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </Labeled>
             <Labeled label="Route">
               <input
                 type="text"

@@ -196,61 +196,61 @@ export function useBookingForm({
     return PaxTypeOption.ADT;
   }, []);
 
-// Convert a YYYY-MM-DD (optionally with time) into an ISO string without shifting the calendar day.
-const toIso = useCallback((date?: string, time?: string) => {
-  if (!date) return undefined;
+  // Convert a YYYY-MM-DD (optionally with time) into an ISO string without shifting the calendar day.
+  const toIso = useCallback((date?: string, time?: string) => {
+    if (!date) return undefined;
 
-  const trimmedDate = date.trim();
-  if (!trimmedDate) return undefined;
+    const trimmedDate = date.trim();
+    if (!trimmedDate) return undefined;
 
-  let datePart = trimmedDate;
-  let timePart = time?.trim() ?? "";
+    let datePart = trimmedDate;
+    let timePart = time?.trim() ?? "";
 
-  if (trimmedDate.includes("T")) {
-    const [dPart, tPart = ""] = trimmedDate.split("T");
-    datePart = dPart;
-    if (!timePart) {
-      timePart = tPart;
+    if (trimmedDate.includes("T")) {
+      const [dPart, tPart = ""] = trimmedDate.split("T");
+      datePart = dPart;
+      if (!timePart) {
+        timePart = tPart;
+      }
     }
-  }
 
-  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datePart);
-  if (!dateMatch) {
-    const parsed = new Date(trimmedDate);
-    return isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
-  }
-
-  let hours = 0;
-  let minutes = 0;
-  let seconds = 0;
-
-  if (timePart) {
-    const cleanedTime = timePart
-      .replace(/Z$/i, "")
-      .replace(/([+-]\d{2}):?\d{2}$/i, "")
-      .trim();
-    const timeMatch = /^(\d{2}):(\d{2})(?::(\d{2}))?/.exec(cleanedTime);
-    if (timeMatch) {
-      hours = Number(timeMatch[1]);
-      minutes = Number(timeMatch[2]);
-      seconds = Number(timeMatch[3] ?? "0");
+    const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datePart);
+    if (!dateMatch) {
+      const parsed = new Date(trimmedDate);
+      return isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
     }
-  }
 
-  const iso = new Date(
-    Date.UTC(
-      Number(dateMatch[1]),
-      Number(dateMatch[2]) - 1,
-      Number(dateMatch[3]),
-      hours,
-      minutes,
-      seconds,
-      0
-    )
-  ).toISOString();
+    let hours = 0;
+    let minutes = 0;
+    let seconds = 0;
 
-  return iso;
-}, []);
+    if (timePart) {
+      const cleanedTime = timePart
+        .replace(/Z$/i, "")
+        .replace(/([+-]\d{2}):?\d{2}$/i, "")
+        .trim();
+      const timeMatch = /^(\d{2}):(\d{2})(?::(\d{2}))?/.exec(cleanedTime);
+      if (timeMatch) {
+        hours = Number(timeMatch[1]);
+        minutes = Number(timeMatch[2]);
+        seconds = Number(timeMatch[3] ?? "0");
+      }
+    }
+
+    const iso = new Date(
+      Date.UTC(
+        Number(dateMatch[1]),
+        Number(dateMatch[2]) - 1,
+        Number(dateMatch[3]),
+        hours,
+        minutes,
+        seconds,
+        0
+      )
+    ).toISOString();
+
+    return iso;
+  }, []);
 
   // ── UI state ────────────────────────────────────────────────────────────────
   const [isProcessing, setIsProcessing] = useState(false);
@@ -391,8 +391,10 @@ const toIso = useCallback((date?: string, time?: string) => {
         seqNo: Number(it?.seqNo) || idx + 1,
         segments:
           Array.isArray(it?.segments) && it.segments.length > 0
-            ? it.segments.map((seg: any, sIdx: number) =>
-                createSegment(initialModeOfJourney, {
+            ? it.segments.map((seg: any, sIdx: number) => {
+                const checkInValue = seg?.checkIn || seg?.check_in || "";
+                const checkOutValue = seg?.checkOut || seg?.check_out || "";
+                return createSegment(initialModeOfJourney, {
                   seqNo: Number(seg?.seqNo) || sIdx + 1,
                   modeOfJourney:
                     seg?.modeOfJourney ||
@@ -409,8 +411,8 @@ const toIso = useCallback((date?: string, time?: string) => {
                   baggage: seg?.baggage || "",
                   hotelName: seg?.hotelName || seg?.hotel_name || "",
                   hotelAddress: seg?.hotelAddress || seg?.hotel_address || "",
-                  checkIn: seg?.checkIn || seg?.check_in || "",
-                  checkOut: seg?.checkOut || seg?.check_out || "",
+                  checkIn: formatDateForInput(checkInValue),
+                  checkOut: formatDateForInput(checkOutValue),
                   roomType: seg?.roomType || seg?.room_type || "",
                   mealPlan: seg?.mealPlan || seg?.meal_plan || "",
                   operatorName: seg?.operatorName || seg?.operator_name || "",
@@ -422,8 +424,8 @@ const toIso = useCallback((date?: string, time?: string) => {
                     totalGuests: seg?.misc?.totalGuests || "",
                     totalNights: toNumberOrBlank(seg?.misc?.totalNights),
                   },
-                })
-              )
+                });
+              })
             : [createSegment(initialModeOfJourney)],
       }));
     }
@@ -522,8 +524,11 @@ const toIso = useCallback((date?: string, time?: string) => {
               ModeOfJourneyOption.HOTEL;
             const segments =
               Array.isArray(it?.segments) && it.segments.length > 0
-                ? it.segments.map((seg: any, sIdx: number) =>
-                    createSegment(baseMode, {
+                ? it.segments.map((seg: any, sIdx: number) => {
+                    const checkInValue = seg?.checkIn || seg?.check_in || "";
+                    const checkOutValue =
+                      seg?.checkOut || seg?.check_out || "";
+                    return createSegment(baseMode, {
                       seqNo: Number(seg?.seqNo) || sIdx + 1,
                       modeOfJourney:
                         seg?.modeOfJourney || seg?.mode_of_journey || baseMode,
@@ -539,8 +544,8 @@ const toIso = useCallback((date?: string, time?: string) => {
                       hotelName: seg?.hotelName || seg?.hotel_name || "",
                       hotelAddress:
                         seg?.hotelAddress || seg?.hotel_address || "",
-                      checkIn: seg?.checkIn || seg?.check_in || "",
-                      checkOut: seg?.checkOut || seg?.check_out || "",
+                      checkIn: formatDateForInput(checkInValue),
+                      checkOut: formatDateForInput(checkOutValue),
                       roomType: seg?.roomType || seg?.room_type || "",
                       mealPlan: seg?.mealPlan || seg?.meal_plan || "",
                       operatorName:
@@ -553,8 +558,8 @@ const toIso = useCallback((date?: string, time?: string) => {
                         totalGuests: seg?.misc?.totalGuests || "",
                         totalNights: toNumberOrBlank(seg?.misc?.totalNights),
                       },
-                    })
-                  )
+                    });
+                  })
                 : [createSegment(baseMode)];
             return {
               name: it?.name || `Itinerary ${idx + 1}`,
@@ -576,8 +581,8 @@ const toIso = useCallback((date?: string, time?: string) => {
                       booking?.hotelAddress ||
                       booking?.vendorInfo?.address ||
                       "",
-                    checkIn: booking?.checkIn || "",
-                    checkOut: booking?.checkOut || "",
+                    checkIn: formatDateForInput(booking?.checkIn || ""),
+                    checkOut: formatDateForInput(booking?.checkOut || ""),
                   }
                 ),
               ],
@@ -1044,7 +1049,9 @@ const toIso = useCallback((date?: string, time?: string) => {
     const trimmedPhone = newCustomerData.phone.trim();
 
     if (!trimmedFullName || !trimmedEmail || !trimmedPhone) {
-      errorToast("Full name, email, and phone are required to add a new customer.");
+      errorToast(
+        "Full name, email, and phone are required to add a new customer."
+      );
       return;
     }
 
@@ -1281,9 +1288,7 @@ const toIso = useCallback((date?: string, time?: string) => {
 
                 return segmentPayload;
               })
-              .filter(
-                (segment): segment is SegmentPayload => segment !== null
-              );
+              .filter((segment): segment is SegmentPayload => segment !== null);
 
             if (segments.length === 0) {
               return null;
@@ -1353,6 +1358,7 @@ const toIso = useCallback((date?: string, time?: string) => {
         await onSubmitBooking(payload);
         onCancel();
       } catch (err) {
+        console.log(err);
         const message =
           err instanceof Error
             ? err.message

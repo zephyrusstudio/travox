@@ -473,11 +473,9 @@ const BookingManagement: React.FC = () => {
     }
   };
 
-  const formatDate = (d?: string) => {
-    if (!d) return "-";
-    const parsed = new Date(d);
-    if (Number.isNaN(parsed.getTime())) return "-";
-    return parsed.toLocaleDateString("en-IN");
+  const formatDate = (d?: string | Date) => {
+    const formatted = formatToDateInput(d ?? null);
+    return formatted || "-";
   };
 
   const getStatusVariant = (status: string) => {

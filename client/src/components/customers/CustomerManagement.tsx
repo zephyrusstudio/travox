@@ -151,7 +151,7 @@ const CustomerManagement: React.FC = () => {
         </div>
         <div className="flex items-center space-x-4">
           <Button onClick={() => openForm()} icon={Plus}>
-            Add Customer
+            Save & Add Customer
           </Button>
         </div>
       </div>

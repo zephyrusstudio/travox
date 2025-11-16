@@ -89,6 +89,13 @@ type CreateBookingPayload = {
   vendorId?: string;
 };
 
+const normalizeAmount = (value: unknown): number => {
+  const numeric =
+    typeof value === "number" ? value : Number(value ?? 0);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.max(0, Math.ceil(numeric));
+};
+
 const createPassenger = (overrides: Partial<Pax> = {}): Pax => ({
   name: "",
   paxType: PaxTypeOption.ADT,
@@ -323,7 +330,7 @@ export function useBookingForm({
           ),
           travel_end_date: formatDateForInput(selectedBooking.travel_end_date),
           pax_count: selectedBooking.pax_count,
-          total_amount: selectedBooking.total_amount,
+          total_amount: normalizeAmount(selectedBooking.total_amount),
           advance_received: selectedBooking.advance_received,
           currency: initialCurrency,
           mode_of_journey: initialModeOfJourney,
@@ -490,6 +497,11 @@ export function useBookingForm({
     passportNo: "",
     gstin: "",
   });
+  const [pendingCustomerSelection, setPendingCustomerSelection] = useState<{
+    name: string;
+    email?: string;
+    phone?: string;
+  } | null>(null);
 
   const setNewCustomerField = useCallback(
     <K extends keyof NewCustomerData>(key: K, value: NewCustomerData[K]) =>
@@ -655,7 +667,7 @@ export function useBookingForm({
       journeyDate: checkIn,
       journeyTime: booking?.journeyTime || "",
       returnDate: checkOut,
-      bookingAmount: Number(booking?.totalAmount || 0),
+      bookingAmount: normalizeAmount(booking?.totalAmount),
       travelCategory: isDomestic
         ? TravelCategory.Domestic
         : TravelCategory.International,
@@ -668,7 +680,7 @@ export function useBookingForm({
       vendorInfo: vendor,
       extractionMetadata: metadata,
       status: booking?.status || BookingStatus.DRAFT,
-      totalAmount: Number(booking?.totalAmount || 0),
+      totalAmount: normalizeAmount(booking?.totalAmount),
     };
   }
 
@@ -1043,7 +1055,7 @@ export function useBookingForm({
     }));
   }, []);
 
-  const handleAddNewCustomer = useCallback(() => {
+  const handleAddNewCustomer = useCallback(async () => {
     const trimmedFullName = newCustomerData.full_name.trim();
     const trimmedEmail = newCustomerData.email.trim();
     const trimmedPhone = newCustomerData.phone.trim();
@@ -1072,16 +1084,17 @@ export function useBookingForm({
       phone: trimmedPhone,
     };
 
-    onAddCustomer(payload);
-    setTimeout(() => {
-      const newC = customers.find((c) => c.full_name === trimmedFullName);
-      if (newC)
-        setFormData((prev) => ({
-          ...prev,
-          customer_id: newC.customer_id,
-          customer_name: newC.full_name,
-        }));
-    }, 100);
+    setPendingCustomerSelection({
+      name: trimmedFullName.toLowerCase(),
+      email: trimmedEmail.toLowerCase(),
+      phone: trimmedPhone,
+    });
+    try {
+      await onAddCustomer(payload);
+    } catch (err) {
+      setPendingCustomerSelection(null);
+      throw err;
+    }
     setNewCustomerData({
       full_name: "",
       email: "",
@@ -1091,7 +1104,39 @@ export function useBookingForm({
       gstin: "",
     });
     setShowAddCustomer(false);
-  }, [customers, newCustomerData, onAddCustomer]);
+  }, [newCustomerData, onAddCustomer]);
+
+  useEffect(() => {
+    if (!pendingCustomerSelection) return;
+
+    const normalizeLower = (value?: string | null) =>
+      value?.trim().toLowerCase() ?? "";
+    const normalizePhone = (value?: string | null) =>
+      value?.replace(/\s+/g, "") ?? "";
+
+    const match = customers.find((c) => {
+      const emailMatch =
+        pendingCustomerSelection.email &&
+        normalizeLower(c.email) === pendingCustomerSelection.email;
+      const phoneMatch =
+        pendingCustomerSelection.phone &&
+        normalizePhone(c.phone) ===
+          normalizePhone(pendingCustomerSelection.phone);
+      const nameMatch =
+        normalizeLower(c.full_name) === pendingCustomerSelection.name;
+
+      return emailMatch || phoneMatch || nameMatch;
+    });
+
+    if (match) {
+      setFormData((prev) => ({
+        ...prev,
+        customer_id: match.customer_id,
+        customer_name: match.full_name,
+      }));
+      setPendingCustomerSelection(null);
+    }
+  }, [customers, pendingCustomerSelection]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -1313,7 +1358,7 @@ export function useBookingForm({
         const payload: CreateBookingPayload = {
           customerId: formData.customer_id,
           currency,
-          totalAmount: Number(formData.total_amount) || 0,
+          totalAmount: normalizeAmount(formData.total_amount),
           pax: paxPayload,
         };
 

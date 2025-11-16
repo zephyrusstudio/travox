@@ -31,10 +31,10 @@ type Props = {
 // Small UI primitives
 // ──────────────────────────────────────────────────────────────────────────────
 
-const Labeled: React.FC<{ label: string; children: React.ReactNode }> = ({
-  label,
-  children,
-}) => (
+const Labeled: React.FC<{
+  label: React.ReactNode;
+  children: React.ReactNode;
+}> = ({ label, children }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label}
@@ -165,6 +165,17 @@ const BookingForm: React.FC<Props> = (props) => {
     onCancel: props.onCancel,
     mode: computedMode,
   });
+
+  const syncBookingAmount = React.useCallback(
+    (value: number) => {
+      const normalized = Number.isFinite(value)
+        ? Math.max(0, Math.ceil(value))
+        : 0;
+      setAiData({ bookingAmount: normalized });
+      setFormField("total_amount", normalized);
+    },
+    [setAiData, setFormField]
+  );
 
   const handleFormSubmit = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
@@ -326,10 +337,10 @@ const BookingForm: React.FC<Props> = (props) => {
             <Labeled label="Booking Amount">
               <input
                 type="number"
-                step="0.01"
+                step={1}
                 value={aiData.bookingAmount}
                 onChange={(e) =>
-                  setAiData({ bookingAmount: parseFloat(e.target.value) || 0 })
+                  syncBookingAmount(parseFloat(e.target.value) || 0)
                 }
                 placeholder="Enter amount"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -339,7 +350,7 @@ const BookingForm: React.FC<Props> = (props) => {
 
           <div className="mt-6">
             <div className="flex items-center justify-between mb-3">
-              <h5 className="font-medium text-gray-900">Passenger List</h5>
+              <h5 className="font-medium text-gray-900">Passenger Lists</h5>
               <Button
                 type="button"
                 variant="outline"
@@ -388,79 +399,100 @@ const BookingForm: React.FC<Props> = (props) => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <input
-                      type="text"
-                      value={pax.name}
-                      onChange={(e) =>
-                        updatePassenger(index, "name", e.target.value)
-                      }
-                      placeholder="Passenger name"
-                      className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <select
-                      value={pax.paxType || ""}
-                      onChange={(e) =>
-                        updatePassenger(
-                          index,
-                          "paxType",
-                          e.target.value as PaxTypeOption
-                        )
-                      }
-                      className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      {Object.values(PaxTypeOption).map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      value={pax.passportNo || ""}
-                      onChange={(e) =>
-                        updatePassenger(index, "passportNo", e.target.value)
-                      }
-                      placeholder="Passport Number"
-                      className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                      <span>Passenger Name</span>
+                      <input
+                        type="text"
+                        value={pax.name}
+                        onChange={(e) =>
+                          updatePassenger(index, "name", e.target.value)
+                        }
+                        placeholder="Passenger name"
+                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                      <span>Passenger Type</span>
+                      <select
+                        value={pax.paxType || ""}
+                        onChange={(e) =>
+                          updatePassenger(
+                            index,
+                            "paxType",
+                            e.target.value as PaxTypeOption
+                          )
+                        }
+                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {Object.values(PaxTypeOption).map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                      <span>Passport Number</span>
+                      <input
+                        type="text"
+                        value={pax.passportNo || ""}
+                        onChange={(e) =>
+                          updatePassenger(index, "passportNo", e.target.value)
+                        }
+                        placeholder="Passport Number"
+                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <input
-                      type="date"
-                      value={pax.dob || ""}
-                      onChange={(e) =>
-                        updatePassenger(index, "dob", e.target.value)
-                      }
-                      className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <input
-                      type="number"
-                      value={pax.age ?? ""}
-                      onChange={(e) =>
-                        updatePassenger(index, "age", e.target.value)
-                      }
-                      placeholder="Age"
-                      className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <select
-                      value={pax.gender || ""}
-                      onChange={(e) =>
-                        updatePassenger(index, "gender", e.target.value)
-                      }
-                      className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                    </select>
-                    <input
-                      type="text"
-                      value={pax.isPrimary ? "Primary" : "Secondary"}
-                      readOnly
-                      className="border border-gray-200 bg-gray-100 rounded-lg px-3 py-2 text-gray-500"
-                    />
+                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                      <span>Date of Birth</span>
+                      <input
+                        type="date"
+                        value={pax.dob || ""}
+                        onChange={(e) =>
+                          updatePassenger(index, "dob", e.target.value)
+                        }
+                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                      <span>Age</span>
+                      <input
+                        type="number"
+                        value={pax.age ?? ""}
+                        onChange={(e) =>
+                          updatePassenger(index, "age", e.target.value)
+                        }
+                        placeholder="Age"
+                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                      <span>Gender</span>
+                      <select
+                        value={pax.gender || ""}
+                        onChange={(e) =>
+                          updatePassenger(index, "gender", e.target.value)
+                        }
+                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </label>
+                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                      <span>Primary Status</span>
+                      <input
+                        type="text"
+                        value={pax.isPrimary ? "Primary" : "Secondary"}
+                        readOnly
+                        className="border border-gray-200 bg-gray-100 rounded-lg px-3 py-2 text-gray-500"
+                      />
+                    </label>
                   </div>
                 </div>
               ))}
@@ -479,7 +511,7 @@ const BookingForm: React.FC<Props> = (props) => {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Customer *
+                Customer <span className="text-red-500">*</span>
               </label>
               {!ui.showAddCustomer ? (
                 <div className="flex space-x-2">
@@ -520,7 +552,13 @@ const BookingForm: React.FC<Props> = (props) => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <Labeled label="Full Name *">
+                    <Labeled
+                      label={
+                        <>
+                          Full Name <span className="text-red-500">*</span>
+                        </>
+                      }
+                    >
                       <input
                         type="text"
                         required
@@ -531,7 +569,13 @@ const BookingForm: React.FC<Props> = (props) => {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </Labeled>
-                    <Labeled label="Email *">
+                    <Labeled
+                      label={
+                        <>
+                          Email <span className="text-red-500">*</span>
+                        </>
+                      }
+                    >
                       <input
                         type="email"
                         required
@@ -542,7 +586,13 @@ const BookingForm: React.FC<Props> = (props) => {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </Labeled>
-                    <Labeled label="Phone *">
+                    <Labeled
+                      label={
+                        <>
+                          Phone <span className="text-red-500">*</span>
+                        </>
+                      }
+                    >
                       <input
                         type="tel"
                         placeholder="Eg. 1234567890"
@@ -578,7 +628,7 @@ const BookingForm: React.FC<Props> = (props) => {
                         !newCustomerData.phone.trim()
                       }
                     >
-                      Add Customer
+                      Save & Add Customer
                     </Button>
                   </div>
                 </div>
@@ -586,7 +636,13 @@ const BookingForm: React.FC<Props> = (props) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Labeled label="Package Name *">
+              <Labeled
+                label={
+                  <>
+                    Package Name <span className="text-red-500">*</span>
+                  </>
+                }
+              >
                 <input
                   type="text"
                   required
@@ -604,7 +660,13 @@ const BookingForm: React.FC<Props> = (props) => {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </Labeled>
-              <Labeled label="Booking Date *">
+              <Labeled
+                label={
+                  <>
+                    Booking Date <span className="text-red-500">*</span>
+                  </>
+                }
+              >
                 <input
                   type="date"
                   required
@@ -613,7 +675,13 @@ const BookingForm: React.FC<Props> = (props) => {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </Labeled>
-              <Labeled label="Travel Start Date *">
+              <Labeled
+                label={
+                  <>
+                    Travel Start Date <span className="text-red-500">*</span>
+                  </>
+                }
+              >
                 <input
                   type="date"
                   required
@@ -624,7 +692,13 @@ const BookingForm: React.FC<Props> = (props) => {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </Labeled>
-              <Labeled label="Travel End Date *">
+              <Labeled
+                label={
+                  <>
+                    Travel End Date <span className="text-red-500">*</span>
+                  </>
+                }
+              >
                 <input
                   type="date"
                   required
@@ -642,16 +716,36 @@ const BookingForm: React.FC<Props> = (props) => {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select Status</option>
-                  <option value={BookingStatus.DRAFT}>{BookingStatus.DRAFT}</option>
-                  <option value={BookingStatus.CONFIRMED}>{BookingStatus.CONFIRMED}</option>
-                  <option value={BookingStatus.TICKETED}>{BookingStatus.TICKETED}</option>
-                  <option value={BookingStatus.IN_PROGRESS}>{BookingStatus.IN_PROGRESS}</option>
-                  <option value={BookingStatus.COMPLETED}>{BookingStatus.COMPLETED}</option>
-                  <option value={BookingStatus.CANCELLED}>{BookingStatus.CANCELLED}</option>
-                  <option value={BookingStatus.REFUNDED}>{BookingStatus.REFUNDED}</option>
+                  <option value={BookingStatus.DRAFT}>
+                    {BookingStatus.DRAFT}
+                  </option>
+                  <option value={BookingStatus.CONFIRMED}>
+                    {BookingStatus.CONFIRMED}
+                  </option>
+                  <option value={BookingStatus.TICKETED}>
+                    {BookingStatus.TICKETED}
+                  </option>
+                  <option value={BookingStatus.IN_PROGRESS}>
+                    {BookingStatus.IN_PROGRESS}
+                  </option>
+                  <option value={BookingStatus.COMPLETED}>
+                    {BookingStatus.COMPLETED}
+                  </option>
+                  <option value={BookingStatus.CANCELLED}>
+                    {BookingStatus.CANCELLED}
+                  </option>
+                  <option value={BookingStatus.REFUNDED}>
+                    {BookingStatus.REFUNDED}
+                  </option>
                 </select>
               </Labeled>
-              <Labeled label="Mode of Journey *">
+              <Labeled
+                label={
+                  <>
+                    Mode of Journey <span className="text-red-500">*</span>
+                  </>
+                }
+              >
                 <select
                   required
                   value={formData.mode_of_journey}
@@ -687,18 +781,21 @@ const BookingForm: React.FC<Props> = (props) => {
                   className="w-full border border-gray-200 bg-gray-100 rounded-lg px-3 py-2 text-gray-600"
                 />
               </Labeled>
-              <Labeled label="Total Amount *">
+              <Labeled
+                label={
+                  <>
+                    Total Amount <span className="text-red-500">*</span>
+                  </>
+                }
+              >
                 <input
                   type="number"
-                  step="0.01"
+                  step={1}
                   required
                   min={0}
                   value={formData.total_amount}
                   onChange={(e) =>
-                    setFormField(
-                      "total_amount",
-                      parseFloat(e.target.value) || 0
-                    )
+                    syncBookingAmount(parseFloat(e.target.value) || 0)
                   }
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />

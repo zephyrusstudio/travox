@@ -71,18 +71,20 @@ const AuditLogsManagement: React.FC = () => {
   };
 
   // Format JSON for display
-  const formatJsonForDisplay = (value: string | object | null | undefined): string => {
+  const formatJsonForDisplay = (
+    value: string | object | null | undefined
+  ): string => {
     if (value === null || value === undefined) {
-      return 'null';
+      return "null";
     }
-    
+
     // If it's already an object, stringify it with formatting
-    if (typeof value === 'object') {
+    if (typeof value === "object") {
       return JSON.stringify(value, null, 2);
     }
-    
+
     // If it's a string, try to parse and re-stringify it
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       try {
         const parsed = JSON.parse(value);
         return JSON.stringify(parsed, null, 2);
@@ -91,7 +93,7 @@ const AuditLogsManagement: React.FC = () => {
         return value;
       }
     }
-    
+
     // For other types, convert to string
     return String(value);
   };
@@ -117,7 +119,17 @@ const AuditLogsManagement: React.FC = () => {
   // Format timestamp
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
-    return date.toLocaleString();
+    if (Number.isNaN(date.getTime())) return timestamp;
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const shortYear = String(date.getFullYear()).slice(-2);
+    const time = date.toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+    return `${day}/${month}/${shortYear} - ${time}`;
   };
 
   // Get user display name
@@ -480,7 +492,6 @@ const AuditLogsManagement: React.FC = () => {
           size="xl"
         >
           <div className="max-w-full">
-            
             <div className="space-y-4">
               {/* Basic Info */}
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -492,7 +503,9 @@ const AuditLogsManagement: React.FC = () => {
                 </div>
                 <div>
                   <span className="font-medium text-gray-500">Timestamp:</span>
-                  <div className="mt-1">{formatTimestamp(selectedLog.createdAt)}</div>
+                  <div className="mt-1">
+                    {formatTimestamp(selectedLog.createdAt)}
+                  </div>
                 </div>
                 <div>
                   <span className="font-medium text-gray-500">Action:</span>
@@ -504,27 +517,38 @@ const AuditLogsManagement: React.FC = () => {
                 </div>
                 <div>
                   <span className="font-medium text-gray-500">Entity:</span>
-                  <div className="mt-1 uppercase font-medium">{selectedLog.entity}</div>
+                  <div className="mt-1 uppercase font-medium">
+                    {selectedLog.entity}
+                  </div>
                 </div>
                 <div>
                   <span className="font-medium text-gray-500">Entity ID:</span>
-                  <div className="mt-1 font-mono text-xs">{selectedLog.entityId}</div>
+                  <div className="mt-1 font-mono text-xs">
+                    {selectedLog.entityId}
+                  </div>
                 </div>
                 <div>
                   <span className="font-medium text-gray-500">Actor:</span>
-                  <div className="mt-1">{getUserDisplayName(selectedLog.actorId).name}</div>
+                  <div className="mt-1">
+                    {getUserDisplayName(selectedLog.actorId).name}
+                  </div>
                 </div>
               </div>
 
               {/* Diff Details */}
               <div>
-                <span className="font-medium text-gray-500 mb-2 block">Changes (Diff):</span>
+                <span className="font-medium text-gray-500 mb-2 block">
+                  Changes (Diff):
+                </span>
                 <div className="bg-gray-50 border rounded-lg p-4">
-                  {selectedLog.diff && Object.keys(selectedLog.diff).length > 0 ? (
+                  {selectedLog.diff &&
+                  Object.keys(selectedLog.diff).length > 0 ? (
                     <div className="space-y-3">
                       {selectedLog.diff.before && (
                         <div>
-                          <div className="text-sm font-medium text-red-600 mb-1">Before:</div>
+                          <div className="text-sm font-medium text-red-600 mb-1">
+                            Before:
+                          </div>
                           <pre className="text-xs bg-red-50 p-3 rounded border overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
                             {formatJsonForDisplay(selectedLog.diff.before)}
                           </pre>
@@ -532,7 +556,9 @@ const AuditLogsManagement: React.FC = () => {
                       )}
                       {selectedLog.diff.after && (
                         <div>
-                          <div className="text-sm font-medium text-green-600 mb-1">After:</div>
+                          <div className="text-sm font-medium text-green-600 mb-1">
+                            After:
+                          </div>
                           <pre className="text-xs bg-green-50 p-3 rounded border overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
                             {formatJsonForDisplay(selectedLog.diff.after)}
                           </pre>
@@ -540,7 +566,9 @@ const AuditLogsManagement: React.FC = () => {
                       )}
                     </div>
                   ) : (
-                    <div className="text-gray-500 text-sm">No diff data available</div>
+                    <div className="text-gray-500 text-sm">
+                      No diff data available
+                    </div>
                   )}
                 </div>
               </div>
@@ -553,7 +581,9 @@ const AuditLogsManagement: React.FC = () => {
                 </div>
                 <div>
                   <span className="font-medium text-gray-500">User Agent:</span>
-                  <div className="mt-1 text-xs break-all">{selectedLog.userAgent}</div>
+                  <div className="mt-1 text-xs break-all">
+                    {selectedLog.userAgent}
+                  </div>
                 </div>
               </div>
             </div>

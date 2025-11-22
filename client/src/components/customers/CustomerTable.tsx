@@ -14,7 +14,7 @@ import Table, {
 
 const CustomerTable: React.FC<CustomerTableProps> & {
   SearchBox: React.FC<SearchBoxProps>;
-} = ({ customers, onEdit, onDelete, onViewTickets, getBookingsByCustomer }) => {
+} = ({ customers, onEdit, onDelete, onViewTickets }) => {
   return (
     <Card>
       <CardHeader>
@@ -31,13 +31,13 @@ const CustomerTable: React.FC<CustomerTableProps> & {
               <TableCell header>Contact</TableCell>
               <TableCell header>GSTIN</TableCell>
               <TableCell header>Bookings</TableCell>
+              <TableCell header>Total Spent</TableCell>
               <TableCell header>Created</TableCell>
               <TableCell header>Actions</TableCell>
             </TableRow>
           </TableHeader>
           <TableBody>
             {customers.map((customer) => {
-              const bookings = getBookingsByCustomer(customer.id);
               return (
                 <TableRow key={customer.id}>
                   <TableCell>
@@ -77,9 +77,14 @@ const CustomerTable: React.FC<CustomerTableProps> & {
                   </TableCell>
                   <TableCell>
                     <Badge variant="default" size="sm">
-                      {bookings.length} booking
-                      {bookings.length !== 1 ? "s" : ""}
+                      {customer.totalBookings} booking
+                      {customer.totalBookings !== 1 ? "s" : ""}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm font-medium text-gray-900">
+                      ₹{customer.totalSpent.toLocaleString('en-IN')}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <span className="text-sm text-gray-600">

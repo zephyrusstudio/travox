@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/components/customers/CustomerManagement.tsx
 import { Plus, RefreshCw, Users } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Customer } from "../../types";
 
 import { ApiError, apiRequest } from "../../utils/apiConnector";
@@ -48,7 +47,7 @@ const CustomerManagement: React.FC = () => {
   const { searchTerm, setSearchTerm, filtered } = useCustomerSearch(customers);
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     setLoading(true);
     setErrorMsg(null);
     try {
@@ -67,7 +66,7 @@ const CustomerManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, itemsPerPage]);
 
   const openForm = (customer?: Customer) => {
     setSelectedCustomer(customer ?? null);
@@ -136,13 +135,10 @@ const CustomerManagement: React.FC = () => {
     setExistingAccountData(null);
   };
 
-  // placeholder until wired from context/store
-  const getBookingsByCustomer = (_id: string) => [] as any[];
-
   // ── Effects ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     fetchCustomers();
-  }, [currentPage, itemsPerPage]);
+  }, [fetchCustomers]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -260,6 +256,9 @@ const CustomerManagement: React.FC = () => {
                       Bookings
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      Total Spent
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
                       Created
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">
@@ -287,6 +286,9 @@ const CustomerManagement: React.FC = () => {
                       </td>
                       <td className="py-4 px-4">
                         <div className="h-6 bg-gray-200 rounded-full animate-pulse w-12"></div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="h-3 bg-gray-200 rounded animate-pulse w-20"></div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="h-3 bg-gray-200 rounded animate-pulse w-20"></div>
@@ -322,7 +324,6 @@ const CustomerManagement: React.FC = () => {
           onEdit={openForm}
           onDelete={askDelete}
           onViewTickets={viewTicketHistory}
-          getBookingsByCustomer={getBookingsByCustomer}
         />
       )}
 

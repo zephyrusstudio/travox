@@ -4,16 +4,17 @@ export interface Customer {
   name: string;
   email?: string;
   phone?: string;
-  address?: string;
   passportNo?: string;
   aadhaarNo?: string;
   visaNo?: string;
   gstin?: string;
   accountId?: string;
-  totalBookings?: number;
+  totalBookings: number;
+  totalSpent: number;
   createdBy?: string;
   updatedBy?: string;
   isDeleted?: boolean;
+  archivedAt?: string; // ISO string
   createdAt: string; // ISO string
   updatedAt?: string; // ISO string
 }
@@ -23,7 +24,6 @@ export type CustomerTableProps = {
   onEdit: (c: Customer) => void;
   onDelete: (id: string) => void;
   onViewTickets: (c: Customer) => void;
-  getBookingsByCustomer: (id: string) => Booking[];
 };
 
 export interface Vendor {

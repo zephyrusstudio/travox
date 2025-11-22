@@ -31,7 +31,7 @@ const TicketHistoryModal: React.FC<TicketHistoryModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Ticket History - ${customer?.full_name ?? ""}`}
+      title={`Ticket History - ${customer?.name ?? ""}`}
       size="xl"
     >
       <div className="space-y-6">
@@ -42,7 +42,7 @@ const TicketHistoryModal: React.FC<TicketHistoryModalProps> = ({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p>
-                <span className="font-medium">Name:</span> {customer?.full_name}
+                <span className="font-medium">Name:</span> {customer?.name}
               </p>
               <p>
                 <span className="font-medium">Email:</span>{" "}

@@ -9,7 +9,7 @@ export interface AuditLogFilters {
   startDate?: string;
   endDate?: string;
   limit?: number;
-  page?: number;
+  offset?: number;
 }
 
 export interface AuditLogsResponse {
@@ -128,7 +128,7 @@ export const auditLogService = {
       if (filters.startDate) params.append('startDate', filters.startDate);
       if (filters.endDate) params.append('endDate', filters.endDate);
       if (filters.limit) params.append('limit', filters.limit.toString());
-      if (filters.page) params.append('page', filters.page.toString());
+      if (filters.offset !== undefined) params.append('offset', filters.offset.toString());
 
       const queryString = params.toString();
       const url = `/audit-logs${queryString ? `?${queryString}` : ''}`;

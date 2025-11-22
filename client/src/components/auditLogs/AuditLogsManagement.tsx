@@ -37,10 +37,11 @@ const AuditLogsManagement: React.FC = () => {
   const fetchAuditLogs = useCallback(async () => {
     setLoading(true);
     try {
+      const offset = (currentPage - 1) * itemsPerPage;
       const response = await auditLogService.getAuditLogs({
         ...filters,
         limit: itemsPerPage,
-        page: currentPage,
+        offset: offset,
       });
 
       setAuditLogs(response.logs);

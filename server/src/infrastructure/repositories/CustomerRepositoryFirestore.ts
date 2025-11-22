@@ -111,8 +111,10 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
   }
 
   async findAll(orgId: string, limit?: number): Promise<Customer[]> {
-    // Simplified query for testing - just filter by org_id
-    let query = this.collection.where('org_id', '==', orgId);
+    // Query with sorting by updated_at descending (most recently updated first)
+    let query = this.collection
+      .where('org_id', '==', orgId)
+      .orderBy('updated_at', 'desc');
     
     if (limit) {
       query = query.limit(limit);

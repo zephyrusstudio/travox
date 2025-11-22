@@ -72,7 +72,13 @@ const CustomerManagement: React.FC = () => {
         method: "GET",
         url: `/customers?unmask=true&limit=${itemsPerPage}&offset=${offset}`,
       });
-      const data = res?.data ?? [];
+      let data = res?.data ?? [];
+      // Sort by updatedAt descending (most recently updated first)
+      data = data.sort((a: Customer, b: Customer) => {
+        const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+        const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+        return dateB - dateA;
+      });
       setCustomers(data);
       // Use count from API response if available
       setTotalItems(res?.count ?? data.length);

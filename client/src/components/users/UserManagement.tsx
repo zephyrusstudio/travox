@@ -238,6 +238,37 @@ const UserManagement: React.FC = () => {
         </div>
       )}
 
+      {/* Pagination */}
+      {loading ? (
+        <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
+          <div className="flex flex-1 items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-52"></div>
+              <div className="flex items-center gap-2">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+                <div className="h-8 bg-gray-200 rounded-md animate-pulse w-16"></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-24"></div>
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        filteredUsers.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            itemsPerPageOptions={[5, 10, 20, 50, 100]}
+          />
+        )
+      )}
+
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-gray-100 p-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-1 flex-wrap gap-3">
@@ -338,11 +369,6 @@ const UserManagement: React.FC = () => {
                           <span className="text-xs text-gray-500">
                             {user.email || "No email provided"}
                           </span>
-                          {isCurrentUser && (
-                            <span className="mt-1 inline-flex w-fit rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-600">
-                              You
-                            </span>
-                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -404,9 +430,6 @@ const UserManagement: React.FC = () => {
                               {user.isActive ? "Active" : "Inactive"}
                             </span>
                           )}
-                          {isCurrentUser && (
-                            <span className="text-xs text-gray-400">(You)</span>
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -417,18 +440,6 @@ const UserManagement: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* Pagination */}
-      {!loading && filteredUsers.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={setItemsPerPage}
-          itemsPerPageOptions={[5, 10, 20, 50, 100]}
-        />
-      )}
     </div>
   );
 };

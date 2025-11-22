@@ -158,8 +158,17 @@ const CustomerManagement: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center space-x-4">
-          <Button onClick={() => openForm()} icon={Plus}>
-            Save & Add Customer
+          <Button
+            onClick={fetchCustomers}
+            icon={RefreshCw}
+            variant="outline"
+            className="flex gap-3"
+            disabled={loading}
+          >
+            Refresh
+          </Button>
+          <Button onClick={() => openForm()} icon={Plus} className="flex gap-3">
+            Create Customer
           </Button>
         </div>
       </div>
@@ -180,6 +189,37 @@ const CustomerManagement: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* Pagination */}
+      {loading ? (
+        <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
+          <div className="flex flex-1 items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-52"></div>
+              <div className="flex items-center gap-2">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+                <div className="h-8 bg-gray-200 rounded-md animate-pulse w-16"></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-24"></div>
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        filtered.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            itemsPerPageOptions={[5, 10, 20, 50, 100]}
+          />
+        )
+      )}
 
       {/* Table */}
       {loading ? (
@@ -358,18 +398,6 @@ const CustomerManagement: React.FC = () => {
           </div>
         </div>
       </Modal>
-
-      {/* Pagination */}
-      {!loading && filtered.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={setItemsPerPage}
-          itemsPerPageOptions={[5, 10, 20, 50, 100]}
-        />
-      )}
     </div>
   );
 };

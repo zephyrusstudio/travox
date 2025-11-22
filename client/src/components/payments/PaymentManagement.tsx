@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CreditCard, Plus, Receipt, Search } from "lucide-react";
+import { CreditCard, Plus, Receipt, RefreshCw, Search } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
@@ -480,9 +480,20 @@ const PaymentManagement: React.FC = () => {
           </h1>
           <p className="text-gray-600">Track and manage customer payments</p>
         </div>
-        <Button onClick={handleOpenModal} icon={Plus}>
-          Record Payment
-        </Button>
+        <div className="flex items-center space-x-4">
+          <Button
+            onClick={fetchPayments}
+            icon={RefreshCw}
+            variant="outline"
+            className="flex gap-3"
+            disabled={loadingPayments}
+          >
+            Refresh
+          </Button>
+          <Button onClick={handleOpenModal} icon={Plus} className="flex gap-3">
+            Record Payment
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -529,6 +540,37 @@ const PaymentManagement: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* Pagination */}
+      {loadingPayments ? (
+        <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
+          <div className="flex flex-1 items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-52"></div>
+              <div className="flex items-center gap-2">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+                <div className="h-8 bg-gray-200 rounded-md animate-pulse w-16"></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-24"></div>
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        filteredPayments.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            itemsPerPageOptions={[5, 10, 20, 50, 100]}
+          />
+        )
+      )}
 
       {/* Payments Table */}
       <Card>
@@ -620,18 +662,6 @@ const PaymentManagement: React.FC = () => {
           </Table>
         </CardContent>
       </Card>
-
-      {/* Pagination */}
-      {!loadingPayments && filteredPayments.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={setItemsPerPage}
-          itemsPerPageOptions={[5, 10, 20, 50, 100]}
-        />
-      )}
 
       {/* Record Payment Modal */}
       <PaymentForm

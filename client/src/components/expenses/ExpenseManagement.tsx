@@ -4,6 +4,7 @@ import {
   ClipboardList,
   Plus,
   Receipt,
+  RefreshCw,
   Search,
   Wallet,
 } from "lucide-react";
@@ -371,9 +372,20 @@ const ExpenseManagement: React.FC = () => {
             Record vendor payouts and track operating expenses
           </p>
         </div>
-        <Button onClick={handleOpenModal} icon={Plus}>
-          Record Expense
-        </Button>
+        <div className="flex items-center space-x-4">
+          <Button
+            onClick={fetchExpenses}
+            icon={RefreshCw}
+            variant="outline"
+            className="flex gap-3"
+            disabled={loadingExpenses}
+          >
+            Refresh
+          </Button>
+          <Button onClick={handleOpenModal} icon={Plus} className="flex gap-3">
+            Record Expense
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -418,6 +430,37 @@ const ExpenseManagement: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* Pagination */}
+      {loadingExpenses ? (
+        <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
+          <div className="flex flex-1 items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-52"></div>
+              <div className="flex items-center gap-2">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+                <div className="h-8 bg-gray-200 rounded-md animate-pulse w-16"></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-24"></div>
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        filteredExpenses.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            itemsPerPageOptions={[5, 10, 20, 50, 100]}
+          />
+        )
+      )}
 
       <Card>
         <CardHeader>
@@ -513,18 +556,6 @@ const ExpenseManagement: React.FC = () => {
           </Table>
         </CardContent>
       </Card>
-
-      {/* Pagination */}
-      {!loadingExpenses && filteredExpenses.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={setItemsPerPage}
-          itemsPerPageOptions={[5, 10, 20, 50, 100]}
-        />
-      )}
 
       <ExpenseForm
         isOpen={isModalOpen}

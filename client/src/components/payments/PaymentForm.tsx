@@ -180,7 +180,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting} loading={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} loading={isSubmitting} className="flex gap-3">
             Record Payment
           </Button>
         </div>

@@ -19,13 +19,14 @@ import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
 import Modal from "../ui/Modal";
+import Pagination from "../ui/Pagination";
 
 const AuditLogsManagement: React.FC = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 20;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [filters, setFilters] = useState<AuditLogFilters>({});
   const [showFilters, setShowFilters] = useState(false);
   const [users, setUsers] = useState<Map<string, UserType>>(new Map());
@@ -38,7 +39,7 @@ const AuditLogsManagement: React.FC = () => {
     try {
       const response = await auditLogService.getAuditLogs({
         ...filters,
-        limit: pageSize,
+        limit: itemsPerPage,
         page: currentPage,
       });
 
@@ -58,7 +59,7 @@ const AuditLogsManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters, currentPage, pageSize]);
+  }, [filters, currentPage, itemsPerPage]);
 
   // Export to CSV
   const exportToCSV = async () => {
@@ -192,7 +193,7 @@ const AuditLogsManagement: React.FC = () => {
           >
             Export CSV
           </Button>
-          <Button onClick={fetchAuditLogs} icon={RefreshCw} disabled={loading}>
+          <Button onClick={fetchAuditLogs} icon={RefreshCw} className="flex gap-3" disabled={loading}>
             Refresh
           </Button>
         </div>
@@ -273,6 +274,37 @@ const AuditLogsManagement: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Pagination */}
+      {loading ? (
+        <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
+          <div className="flex flex-1 items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-52"></div>
+              <div className="flex items-center gap-2">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+                <div className="h-8 bg-gray-200 rounded-md animate-pulse w-16"></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-24"></div>
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        auditLogs.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalItems={total}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            itemsPerPageOptions={[5, 10, 20, 50, 100]}
+          />
+        )
       )}
 
       {/* Audit Logs Table */}
@@ -444,41 +476,6 @@ const AuditLogsManagement: React.FC = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Pagination */}
-      {total > pageSize && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-700">
-            Showing {(currentPage - 1) * pageSize + 1} to{" "}
-            {Math.min(currentPage * pageSize, total)} of {total} results
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              size="sm"
-            >
-              Previous
-            </Button>
-            <span className="text-sm text-gray-700">
-              Page {currentPage} of {Math.ceil(total / pageSize)}
-            </span>
-            <Button
-              variant="outline"
-              onClick={() =>
-                setCurrentPage((prev) =>
-                  Math.min(Math.ceil(total / pageSize), prev + 1)
-                )
-              }
-              disabled={currentPage >= Math.ceil(total / pageSize)}
-              size="sm"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Detail Modal */}
       {showDetailModal && selectedLog && (

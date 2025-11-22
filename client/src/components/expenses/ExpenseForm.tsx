@@ -224,6 +224,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
               type="submit"
               disabled={isSubmitting || !vendorHasAccount}
               loading={isSubmitting}
+              className="flex gap-3"
             >
               Record Expense
             </Button>

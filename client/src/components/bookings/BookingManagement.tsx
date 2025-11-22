@@ -6,6 +6,7 @@ import {
   Edit,
   Eye,
   Plus,
+  RefreshCw,
   Search,
   Trash2,
   Users,
@@ -608,12 +609,24 @@ const BookingManagement: React.FC = () => {
             Manage travel bookings and customer reservations
           </p>
         </div>
-        <Button
-          onClick={() => handleOpenModal(undefined, "create")}
-          icon={Plus}
-        >
-          Add Booking
-        </Button>
+        <div className="flex items-center space-x-4">
+          <Button
+            onClick={fetchBookings}
+            icon={RefreshCw}
+            variant="outline"
+            className="flex gap-3"
+            disabled={bookingsLoading}
+          >
+            Refresh
+          </Button>
+          <Button
+            onClick={() => handleOpenModal(undefined, "create")}
+            icon={Plus}
+            className="flex gap-3"
+          >
+            Create Booking
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -674,6 +687,37 @@ const BookingManagement: React.FC = () => {
         <div className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
           {bookingsError}
         </div>
+      )}
+
+      {/* Pagination */}
+      {bookingsLoading ? (
+        <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
+          <div className="flex flex-1 items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-52"></div>
+              <div className="flex items-center gap-2">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+                <div className="h-8 bg-gray-200 rounded-md animate-pulse w-16"></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-24"></div>
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        filteredBookings.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            itemsPerPageOptions={[5, 10, 20, 50, 100]}
+          />
+        )
       )}
 
       {/* Table */}
@@ -896,18 +940,6 @@ const BookingManagement: React.FC = () => {
           />
         )}
       </Modal>
-
-      {/* Pagination */}
-      {!bookingsLoading && filteredBookings.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={setItemsPerPage}
-          itemsPerPageOptions={[5, 10, 20, 50, 100]}
-        />
-      )}
     </div>
   );
 };

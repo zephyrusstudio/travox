@@ -190,9 +190,20 @@ const VendorManagement: React.FC = () => {
             Manage your travel service providers and suppliers
           </p>
         </div>
-        <Button onClick={() => openForm()} icon={Plus}>
-          Add Vendor
-        </Button>
+        <div className="flex items-center space-x-4">
+          <Button
+            onClick={fetchVendors}
+            icon={RefreshCw}
+            variant="outline"
+            className="flex gap-3"
+            disabled={loading}
+          >
+            Refresh
+          </Button>
+          <Button onClick={() => openForm()} icon={Plus} className="flex gap-3">
+            Create Vendor
+          </Button>
+        </div>
       </div>
 
       {/* Inline error */}
@@ -217,6 +228,37 @@ const VendorManagement: React.FC = () => {
           </label>
         </div>
       </div>
+
+      {/* Pagination */}
+      {loading ? (
+        <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
+          <div className="flex flex-1 items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-52"></div>
+              <div className="flex items-center gap-2">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+                <div className="h-8 bg-gray-200 rounded-md animate-pulse w-16"></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-24"></div>
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        filteredVendors.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            itemsPerPageOptions={[5, 10, 20, 50, 100]}
+          />
+        )
+      )}
 
       {/* Grid */}
       {loading ? (
@@ -275,6 +317,7 @@ const VendorManagement: React.FC = () => {
           onDelete={askDelete}
           onManageAccount={manageAccount}
           getVendorExpenseTotal={getVendorExpenseTotal}
+          totalExpense={0}
         />
       )}
 
@@ -344,18 +387,6 @@ const VendorManagement: React.FC = () => {
           </div>
         </div>
       </Modal>
-
-      {/* Pagination */}
-      {!loading && filteredVendors.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={setItemsPerPage}
-          itemsPerPageOptions={[5, 10, 20, 50, 100]}
-        />
-      )}
     </div>
   );
 };

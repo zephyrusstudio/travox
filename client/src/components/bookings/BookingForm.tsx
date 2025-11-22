@@ -190,58 +190,89 @@ const BookingForm: React.FC<Props> = (props) => {
 
   return (
     <div className="space-y-6">
-      {!props.selectedBooking && (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+      {!props.selectedBooking && !ui.processingComplete && (
+        <div
+          className={`relative border-2 border-dashed rounded-xl transition-all duration-200 ${
+            ui.isProcessing
+              ? "border-blue-400 bg-blue-50 py-6"
+              : ui.uploadedFileName
+              ? "border-green-400 bg-green-50 py-6"
+              : "border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50 py-12"
+          }`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+              const event = {
+                target: { files },
+              } as unknown as React.ChangeEvent<HTMLInputElement>;
+              handleFileUpload(event);
+            }
+          }}
+        >
           <div className="text-center">
-            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Upload Ticket PDF/Image
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Upload a ticket to auto-extract booking information
-            </p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,image/*"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={ui.isProcessing}
-              icon={ui.isProcessing ? Loader : Upload}
-            >
-              {ui.isProcessing ? "Processing..." : "Choose File"}
-            </Button>
-            {ui.uploadedFileName && (
-              <p className="text-sm text-gray-600 mt-2">
-                Uploaded: {ui.uploadedFileName}
-              </p>
+            {ui.isProcessing ? (
+              <>
+                <Loader className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-blue-900 mb-1">
+                  Processing Ticket...
+                </h3>
+                <p className="text-sm text-blue-700">
+                  AI is extracting booking information from your ticket
+                </p>
+              </>
+            ) : ui.uploadedFileName ? (
+              <>
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-green-100 flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-green-900 mb-1">
+                  File Uploaded
+                </h3>
+                <p className="text-sm text-green-700 flex items-center justify-center gap-2">
+                  {ui.uploadedFileName}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                  <Upload className="w-8 h-8 text-gray-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Upload Ticket PDF/Image
+                </h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  Drag and drop your ticket here, or click to browse
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={ui.isProcessing}
+                  icon={Upload}
+                  className="mx-auto"
+                >
+                  Choose File
+                </Button>
+              </>
             )}
-          </div>
-        </div>
-      )}
-
-      {ui.isProcessing && (
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-center space-x-3">
-            <Loader className="w-6 h-6 text-blue-600 animate-spin" />
-            <div>
-              <h4 className="font-semibold text-blue-900">
-                Processing Ticket...
-              </h4>
-              <p className="text-sm text-blue-700">
-                AI is extracting booking information from your ticket
-              </p>
-            </div>
           </div>
         </div>
       )}
 
       {!props.selectedBooking && (
         <AccordionSection
-          title="AI Extracted Data"
+          title="Extracted Data"
           description="Review and adjust the values pulled from the uploaded ticket."
           defaultOpen={ui.isProcessing || ui.processingComplete}
           {...readOnlySectionProps}
@@ -254,14 +285,10 @@ const BookingForm: React.FC<Props> = (props) => {
             ) : null
           }
         >
-          <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-            <div className="flex items-center gap-2">
-              <Bot className="h-4 w-4" />
-              <span>
-                AI drafts these fields for you. Matching booking fields are
-                prefilled below, so update any details there before saving.
-              </span>
-            </div>
+          <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3">
+            <p className="text-md font-semibold text-red-700">
+              Extracted fields below are AI generated. Please review and update all details before saving your booking.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -622,13 +649,14 @@ const BookingForm: React.FC<Props> = (props) => {
                       type="button"
                       onClick={handleAddNewCustomer}
                       size="sm"
+                      className="flex gap-3"
                       disabled={
                         !newCustomerData.full_name.trim() ||
                         !newCustomerData.email.trim() ||
                         !newCustomerData.phone.trim()
                       }
                     >
-                      Save & Add Customer
+                      Create Customer
                     </Button>
                   </div>
                 </div>

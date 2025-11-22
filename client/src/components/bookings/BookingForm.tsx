@@ -1373,7 +1373,7 @@ const BookingForm: React.FC<Props> = (props) => {
                   : "Saving..."
                 : props.selectedBooking
                 ? "Update Booking"
-                : "Add Booking"}
+                : "Create Booking"}
             </Button>
           )}
         </div>

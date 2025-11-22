@@ -617,7 +617,6 @@ export function useBookingFormV2({
       setIsSubmitting(true);
       try {
         await onSubmitBooking(payload);
-        successToast(`Booking ${isEditMode ? 'updated' : 'created'} successfully`);
         onCancel();
       } catch (error: any) {
         errorToast(error?.message || `Failed to ${isEditMode ? 'update' : 'create'} booking`);

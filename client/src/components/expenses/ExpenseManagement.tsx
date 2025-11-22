@@ -9,6 +9,7 @@ import {
   Wallet,
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCachedSearch } from "../../hooks/useCachedSearch";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
@@ -59,7 +60,6 @@ const ExpenseManagement: React.FC = () => {
     { id: "", label: ACCOUNT_OPTION_PLACEHOLDER_LABEL },
   ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] =
     useState<ExpenseFormState>(DEFAULT_FORM_STATE);
   const [loadingExpenses, setLoadingExpenses] = useState(false);
@@ -69,6 +69,24 @@ const ExpenseManagement: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
+
+  // ── Search with caching ──────────────────────────────────────────────────────
+  const {
+    searchTerm,
+    setSearchTerm,
+    searchResults,
+    invalidateCache,
+  } = useCachedSearch<ExpenseRow>({
+    endpoint: "/expenses",
+    searchFields: (expense) => [
+      expense.vendor_name_resolved || expense.vendor_name || "",
+      expense.category || "",
+      expense.receipt_number || "",
+      expense.notes || "",
+    ],
+    initialFetch: true,
+    unmask: true,
+  });
 
   const vendorMap = useMemo(() => {
     const map = new Map<string, VendorOption>();
@@ -239,22 +257,22 @@ const ExpenseManagement: React.FC = () => {
   const isLoading =
     loadingExpenses || loadingVendors || loadingAccounts || saveInFlight;
 
+  // Use search results when searching, otherwise use paginated expenses
+  // Enrich with vendor names
   const filteredExpenses = useMemo(() => {
-    const q = searchTerm.trim().toLowerCase();
-    if (!q) return enrichedExpenses;
-    return enrichedExpenses.filter((expense) => {
-      const vendorName = (expense.vendor_name_resolved || "").toLowerCase();
-      const category = (expense.category || "").toLowerCase();
-      const receipt = (expense.receipt_number || "").toLowerCase();
-      const notes = (expense.notes || "").toLowerCase();
-      return (
-        vendorName.includes(q) ||
-        category.includes(q) ||
-        receipt.includes(q) ||
-        notes.includes(q)
-      );
+    const source = searchTerm ? searchResults : enrichedExpenses;
+    return source.map((expense) => {
+      if (expense.vendor_name_resolved) return expense;
+      const vendor = expense.vendor_id
+        ? vendorMap.get(expense.vendor_id)
+        : undefined;
+      return {
+        ...expense,
+        vendor_name_resolved:
+          vendor?.vendor_name ?? expense.vendor_name ?? "Unlinked Vendor",
+      };
     });
-  }, [enrichedExpenses, searchTerm]);
+  }, [searchTerm, searchResults, enrichedExpenses, vendorMap]);
 
   const stats = useMemo(() => {
     const totalExpenses = expenses.length;
@@ -340,6 +358,7 @@ const ExpenseManagement: React.FC = () => {
         }
 
         successToast("Expense recorded");
+        invalidateCache(); // Invalidate search cache when data changes
         await fetchExpenses();
         return true;
       } catch (error) {
@@ -350,7 +369,7 @@ const ExpenseManagement: React.FC = () => {
         setSaveInFlight(false);
       }
     },
-    [fetchExpenses, saveInFlight, vendorMap]
+    [fetchExpenses, saveInFlight, vendorMap, invalidateCache]
   );
 
   const handleSubmit = async (data: ExpenseFormState) => {

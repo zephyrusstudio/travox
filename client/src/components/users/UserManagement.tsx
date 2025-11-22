@@ -6,6 +6,7 @@ import {
   Users as UsersIcon,
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
+import { useCachedSearch } from "../../hooks/useCachedSearch";
 import { useApp } from "../../contexts/AppContext";
 import { User, userService } from "../../services/userService";
 import { USER_ROLES, UserRole } from "../../utils/roleAccess";
@@ -63,9 +64,24 @@ const UserManagement: React.FC = () => {
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(
     null
   );
-  const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+
+  // ── Search with caching ──────────────────────────────────────────────────────
+  const {
+    searchTerm: search,
+    setSearchTerm: setSearch,
+    searchResults,
+    invalidateCache,
+  } = useCachedSearch<User>({
+    endpoint: "/users",
+    searchFields: (user) => [
+      user.name || "",
+      user.email || "",
+    ],
+    initialFetch: true,
+    unmask: false,
+  });
 
   const loadUsers = async () => {
     setLoading(true);
@@ -91,8 +107,11 @@ const UserManagement: React.FC = () => {
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
+    
+    // Use search results when searching, otherwise use paginated users
+    const sourceUsers = search ? searchResults : users;
 
-    return users.filter((user) => {
+    return sourceUsers.filter((user) => {
       const matchesSearch =
         !query ||
         [user.name, user.email]
@@ -111,7 +130,7 @@ const UserManagement: React.FC = () => {
 
       return matchesSearch && matchesRole && matchesStatus;
     });
-  }, [users, search, roleFilter, statusFilter]);
+  }, [search, searchResults, users, roleFilter, statusFilter]);
 
   const totalUsers = users.length;
   const activeUsers = users.filter((user) => user.isActive).length;
@@ -136,6 +155,7 @@ const UserManagement: React.FC = () => {
       setUsers((prev) =>
         prev.map((entry) => (entry.id === user.id ? updatedUser : entry))
       );
+      invalidateCache(); // Invalidate search cache when data changes
       successToast(
         `${updatedUser.name || updatedUser.email} is now ${nextRole}`
       );
@@ -159,6 +179,7 @@ const UserManagement: React.FC = () => {
         prev.map((entry) => (entry.id === user.id ? updatedUser : entry))
       );
 
+      invalidateCache(); // Invalidate search cache when data changes
       successToast(
         `${updatedUser.name || updatedUser.email} ${
           updatedUser.isActive ? "activated" : "deactivated"

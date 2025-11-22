@@ -4,6 +4,7 @@ import { Plus, RefreshCw, Users } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { Customer } from "../../types";
 
+import { useCachedSearch } from "../../hooks/useCachedSearch";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
@@ -14,8 +15,7 @@ import AccountFormModal, {
 } from "../ui/common/AccountFormModal";
 import CustomerFormModal, { CustomerFormState } from "./CustomerFormModal";
 import CustomerTable from "./CustomerTable";
-import TicketHistoryModal from "./TicketHistoryModal";
-import useCustomerSearch from "./useCustomerSearch";
+import CustomerBookingsModal from "./CustomerBookingsModal";
 
 const CustomerManagement: React.FC = () => {
   // ── State ────────────────────────────────────────────────────────────────────
@@ -33,7 +33,6 @@ const CustomerManagement: React.FC = () => {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const [historyTickets, setHistoryTickets] = useState<any[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Account management state
@@ -43,8 +42,25 @@ const CustomerManagement: React.FC = () => {
   const [existingAccountData, setExistingAccountData] =
     useState<AccountFormState | null>(null);
 
-  // ── Derived ─────────────────────────────────────────────────────────────────
-  const { searchTerm, setSearchTerm, filtered } = useCustomerSearch(customers);
+  // ── Search with caching ──────────────────────────────────────────────────────
+  const {
+    searchTerm,
+    setSearchTerm,
+    searchResults,
+    invalidateCache,
+  } = useCachedSearch<Customer>({
+    endpoint: "/customers",
+    searchFields: (customer) => [
+      customer.name || "",
+      customer.email || "",
+      customer.phone || "",
+    ],
+    initialFetch: true,
+    unmask: true,
+  });
+
+  // Use search results if searching, otherwise use paginated customers
+  const displayCustomers = searchTerm ? searchResults : customers;
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
   const fetchCustomers = useCallback(async () => {
@@ -89,6 +105,7 @@ const CustomerManagement: React.FC = () => {
       });
       setIsDeleteOpen(false);
       setDeleteTargetId(null);
+      invalidateCache(); // Invalidate search cache when data changes
       fetchCustomers();
     } catch (e) {
       const err = e as ApiError;
@@ -99,36 +116,13 @@ const CustomerManagement: React.FC = () => {
   };
 
   const viewTicketHistory = (customer: Customer) => {
-    // Replace with API integration when available
-    const mockTickets = [
-      {
-        id: "1",
-        fileName: "Delhi_Mumbai_Ticket.pdf",
-        uploadDate: "2024-12-01",
-        pnr: "ABC123",
-        route: "DEL-BOM",
-        amount: 15000,
-        status: "finalized",
-        linkedBookingId: "booking-1",
-      },
-      {
-        id: "2",
-        fileName: "International_Flight_Ticket.pdf",
-        uploadDate: "2024-11-15",
-        pnr: "XYZ789",
-        route: "DEL-LHR",
-        amount: 85000,
-        status: "finalized",
-        linkedBookingId: "booking-2",
-      },
-    ];
     setSelectedCustomer(customer);
-    setHistoryTickets(mockTickets);
     setIsHistoryOpen(true);
   };
 
   const handleAccountLinked = () => {
     // Refresh customers list to get updated accountId
+    invalidateCache(); // Invalidate search cache when data changes
     fetchCustomers();
     setIsAccountFormOpen(false);
     setSelectedCustomerForAccount(null);
@@ -205,7 +199,7 @@ const CustomerManagement: React.FC = () => {
           </div>
         </div>
       ) : (
-        filtered.length > 0 && (
+        !searchTerm && displayCustomers.length > 0 && (
           <Pagination
             currentPage={currentPage}
             totalItems={totalItems}
@@ -320,19 +314,18 @@ const CustomerManagement: React.FC = () => {
         </div>
       ) : (
         <CustomerTable
-          customers={filtered}
+          customers={displayCustomers}
           onEdit={openForm}
           onDelete={askDelete}
           onViewTickets={viewTicketHistory}
         />
       )}
 
-      {/* Ticket History Modal */}
-      <TicketHistoryModal
+      {/* Customer Bookings Modal */}
+      <CustomerBookingsModal
         isOpen={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
         customer={selectedCustomer}
-        tickets={historyTickets}
       />
 
       {/* Add/Edit Customer Modal */}

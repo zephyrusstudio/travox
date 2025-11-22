@@ -267,7 +267,6 @@ const TicketUploadManager: React.FC = () => {
   // };
 
   const handleEditTicket = (ticket: TicketData) => {
-    console.log("🚀 ~ handleEditTicket ~ ticket:", ticket);
     setSelectedTicket(ticket);
     if (ticket?.manualData) {
       setEditData({

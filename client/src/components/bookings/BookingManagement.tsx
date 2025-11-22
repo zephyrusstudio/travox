@@ -12,6 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCachedSearch } from "../../hooks/useCachedSearch";
 import { Booking, Customer } from "../../types";
 import { ApiError, apiRequest, parseApiError } from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
@@ -44,7 +45,6 @@ const BookingManagement: React.FC = () => {
   const [selectedBookingError, setSelectedBookingError] = useState<
     string | null
   >(null);
-  const [searchTerm, setSearchTerm] = useState("");
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState<string | null>(null);
@@ -62,6 +62,24 @@ const BookingManagement: React.FC = () => {
     "create"
   );
   const [useV2Form, setUseV2Form] = useState(false);
+
+  // ── Search with caching ──────────────────────────────────────────────────────
+  const {
+    searchTerm,
+    setSearchTerm,
+    searchResults,
+    invalidateCache,
+  } = useCachedSearch<BookingRow>({
+    endpoint: "/bookings",
+    searchFields: (booking) => [
+      booking.package_name || "",
+      booking.customer_name || "",
+      booking.status || "",
+      (booking as any).pnr || "",
+    ],
+    initialFetch: true,
+    unmask: true,
+  });
 
   const formatToDateInput = (value?: string | Date | null): string => {
     if (!value) return "";
@@ -389,11 +407,9 @@ const BookingManagement: React.FC = () => {
     [fetchCustomers]
   );
 
-  const normalizedSearch = searchTerm.trim().toLowerCase();
   const hydratedBookings = useMemo<BookingRow[]>(() => {
     if (!bookings.length) return bookings;
     return bookings.map((booking) => {
-      console.log("🚀 ~ BookingManagement ~ bookings:", bookings);
       const mappedName =
         customersMap.get(booking.customer_id) ||
         booking.customer_name ||
@@ -406,23 +422,24 @@ const BookingManagement: React.FC = () => {
     });
   }, [bookings, customersMap]);
 
+  // Use search results when searching, otherwise use paginated bookings
   const filteredBookings = useMemo(() => {
-    const source = hydratedBookings;
-    console.log("🚀 ~ BookingManagement ~ source:", source);
-    if (!normalizedSearch) return source;
-    return source.filter((b) => {
-      const packageName = (b.package_name || "").toLowerCase();
-      const customerName = (b.customer_name || "").toLowerCase();
-      const status = (b.status || "").toLowerCase();
-      const pnr = ((b as any).pnr || "").toLowerCase();
-      return (
-        packageName.includes(normalizedSearch) ||
-        customerName.includes(normalizedSearch) ||
-        status.includes(normalizedSearch) ||
-        pnr.includes(normalizedSearch)
-      );
-    });
-  }, [hydratedBookings, normalizedSearch]);
+    if (searchTerm) {
+      // Hydrate search results with customer names
+      return searchResults.map((booking) => {
+        const mappedName =
+          customersMap.get(booking.customer_id) ||
+          booking.customer_name ||
+          (booking as any).primaryPaxName ||
+          "";
+        if (mappedName && mappedName !== booking.customer_name) {
+          return { ...booking, customer_name: mappedName };
+        }
+        return booking;
+      });
+    }
+    return hydratedBookings;
+  }, [searchTerm, searchResults, hydratedBookings, customersMap]);
 
   console.log(filteredBookings);
 
@@ -474,6 +491,7 @@ const BookingManagement: React.FC = () => {
       successToast("Booking deleted");
       setIsDeleteModalOpen(false);
       setDeleteTargetId(null);
+      invalidateCache(); // Invalidate search cache when data changes
       await fetchBookings();
     } catch (error) {
       const apiError = error as ApiError;
@@ -590,6 +608,7 @@ const BookingManagement: React.FC = () => {
         }
 
         successToast(isUpdate ? "Booking updated" : "Booking added");
+        invalidateCache(); // Invalidate search cache when data changes
         await fetchBookings();
         return response;
       } catch (error) {
@@ -598,7 +617,7 @@ const BookingManagement: React.FC = () => {
         throw apiError;
       }
     },
-    [fetchBookings, formMode, selectedBooking]
+    [fetchBookings, formMode, selectedBooking, invalidateCache]
   );
 
   return (

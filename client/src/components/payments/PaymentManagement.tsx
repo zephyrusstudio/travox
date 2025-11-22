@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CreditCard, Plus, Receipt, RefreshCw, Search } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCachedSearch } from "../../hooks/useCachedSearch";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
@@ -75,6 +76,22 @@ const PaymentManagement: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
+
+  // ── Search with caching ──────────────────────────────────────────────────────
+  const {
+    searchTerm,
+    setSearchTerm,
+    searchResults,
+    invalidateCache,
+  } = useCachedSearch<PaymentRow>({
+    endpoint: "/payments",
+    searchFields: (payment) => [
+      payment.receipt_number || "",
+      payment.notes || "",
+    ],
+    initialFetch: true,
+    unmask: true,
+  });
 
   const customersMap = useMemo(() => {
     const map = new Map<string, ApiCustomer>();
@@ -351,6 +368,7 @@ const PaymentManagement: React.FC = () => {
         }
 
         successToast("Payment recorded");
+        invalidateCache(); // Invalidate search cache when data changes
         await Promise.all([fetchPayments(), fetchBookings()]);
         return true;
       } catch (error) {
@@ -361,10 +379,9 @@ const PaymentManagement: React.FC = () => {
         setSaveInFlight(false);
       }
     },
-    [bookingsMap, fetchBookings, fetchPayments, saveInFlight]
+    [bookingsMap, fetchBookings, fetchPayments, saveInFlight, invalidateCache]
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState<PaymentFormState>({
     booking_id: "",
     payment_date: todayISO(),
@@ -382,22 +399,28 @@ const PaymentManagement: React.FC = () => {
     [payments]
   );
 
+  // Use search results when searching, otherwise use receivable payments
   const filteredPayments = useMemo(() => {
-    const q = searchTerm.trim().toLowerCase();
-    if (!q) return receivablePayments;
-
-    return receivablePayments.filter((payment) => {
-      const booking = bookingsMap.get(payment.booking_id);
-      const receiptMatch =
-        payment.receipt_number?.toLowerCase().includes(q) ?? false;
-      const packageMatch =
-        booking?.package_name?.toLowerCase().includes(q) ?? false;
-      const customerMatch =
-        booking?.customer_name?.toLowerCase().includes(q) ?? false;
-
-      return receiptMatch || packageMatch || customerMatch;
-    });
-  }, [receivablePayments, bookingsMap, searchTerm]);
+    if (searchTerm) {
+      // Filter search results to only receivable payments and enrich with booking info
+      return searchResults
+        .filter((payment) => payment.payment_type?.toUpperCase() === "RECEIVABLE")
+        .map((payment) => {
+          const booking = bookingsMap.get(payment.booking_id);
+          // Search also checks booking info
+          if (booking) {
+            const q = searchTerm.trim().toLowerCase();
+            const packageMatch = booking.package_name?.toLowerCase().includes(q) ?? false;
+            const customerMatch = booking.customer_name?.toLowerCase().includes(q) ?? false;
+            if (packageMatch || customerMatch) {
+              return payment;
+            }
+          }
+          return payment;
+        });
+    }
+    return receivablePayments;
+  }, [searchTerm, searchResults, receivablePayments, bookingsMap]);
 
   const isLoading = loadingPayments || loadingBookings || loadingCustomers;
 

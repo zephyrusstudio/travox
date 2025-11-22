@@ -1,5 +1,6 @@
 import { Plus, Search, RefreshCw, Building2 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCachedSearch } from "../../hooks/useCachedSearch";
 import { Vendor } from "../../types";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import Button from "../ui/Button";
@@ -39,7 +40,6 @@ const VendorManagement: React.FC = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<VendorFormState | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
   
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -52,20 +52,31 @@ const VendorManagement: React.FC = () => {
   
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // ── Search with caching ──────────────────────────────────────────────────────
+  const {
+    searchTerm,
+    setSearchTerm,
+    searchResults,
+    invalidateCache,
+  } = useCachedSearch<Vendor>({
+    endpoint: "/vendors",
+    searchFields: (vendor) => [
+      vendor.name || "",
+      vendor.serviceType || "",
+      vendor.pocName || "",
+    ],
+    initialFetch: true,
+    unmask: true,
+  });
+
   // Replace with API/selector
   const expenses: Expense[] = [];
 
   // Derived
   const filteredVendors = useMemo(() => {
-    const q = searchTerm.trim().toLowerCase();
-    if (!q) return vendors;
-    return vendors.filter((v) => {
-      const name = v.name?.toLowerCase() || "";
-      const type = v.serviceType?.toLowerCase() || "";
-      const poc = v.pocName?.toLowerCase() || "";
-      return name.includes(q) || type.includes(q) || poc.includes(q);
-    });
-  }, [vendors, searchTerm]);
+    // Use search results when searching, otherwise use paginated vendors
+    return searchTerm ? searchResults : vendors;
+  }, [searchTerm, searchResults, vendors]);
 
   const totalExpensesAmount = useMemo(
     () => expenses.reduce((t, e) => t + (e.amount || 0), 0),
@@ -115,6 +126,7 @@ const VendorManagement: React.FC = () => {
       });
       setIsDeleteOpen(false);
       setDeleteTargetId(null);
+      invalidateCache(); // Invalidate search cache when data changes
       fetchVendors();
     } catch (e) {
       const err = e as ApiError;
@@ -156,6 +168,7 @@ const VendorManagement: React.FC = () => {
 
   const handleAccountLinked = () => {
     // Refresh vendors list to get updated accountId
+    invalidateCache(); // Invalidate search cache when data changes
     fetchVendors();
     setIsAccountFormOpen(false);
     setSelectedVendorForAccount(null);
@@ -330,7 +343,10 @@ const VendorManagement: React.FC = () => {
         selectedVendor={selectedVendor}
         setSelectedVendor={setSelectedVendor}
         serviceTypes={[...SERVICE_TYPES] as unknown as string[]}
-        onVendorSaved={fetchVendors}
+        onVendorSaved={() => {
+          invalidateCache(); // Invalidate search cache when data changes
+          fetchVendors();
+        }}
       />
 
       {/* Account Management Modal */}

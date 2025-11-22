@@ -7,6 +7,7 @@ import { GetVendors } from '../../application/useCases/vendor/GetVendors';
 import { GetAccount } from '../../application/useCases/account/GetAccount';
 import { ServiceType } from '../../models/FirestoreTypes';
 import { shouldUnmask } from '../../utils/unmask';
+import { setAuditContext } from '../../middleware/auditLogger';
 
 export class VendorController {
   async create(req: Request, res: Response) {
@@ -168,11 +169,18 @@ export class VendorController {
 
   async update(req: Request, res: Response) {
     try {
+      const getVendorsUseCase = container.resolve(GetVendors);
       const useCase = container.resolve(UpdateVendor);
       const orgId = req.user?.orgId!;
       const updatedBy = req.user?.id!;
       const { id } = req.params;
       const unmask = shouldUnmask(req);
+
+      // Capture before state for audit log
+      const beforeVendor = await getVendorsUseCase.findById(id, orgId);
+      if (beforeVendor) {
+        setAuditContext(req, 'vendors', id, beforeVendor.toApiResponse(unmask));
+      }
 
       const vendor = await useCase.execute(id, req.body, orgId, updatedBy);
 
@@ -190,9 +198,17 @@ export class VendorController {
 
   async delete(req: Request, res: Response) {
     try {
+      const getVendorsUseCase = container.resolve(GetVendors);
       const useCase = container.resolve(DeleteVendor);
       const orgId = req.user?.orgId!;
       const { id } = req.params;
+      const unmask = shouldUnmask(req);
+
+      // Capture before state for audit log
+      const beforeVendor = await getVendorsUseCase.findById(id, orgId);
+      if (beforeVendor) {
+        setAuditContext(req, 'vendors', id, beforeVendor.toApiResponse(unmask));
+      }
 
       await useCase.delete(id, orgId);
 

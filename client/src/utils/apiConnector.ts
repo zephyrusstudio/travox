@@ -6,6 +6,15 @@ import { errorToast } from "./toasts";
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
 const TOKEN_KEY = "token";
 
+// Logout utility function
+export const handleLogout = () => {
+  localStorage?.clear();
+  sessionStorage?.clear();
+  
+  // Redirect to auth page
+  window.location.href = "/auth";
+};
+
 export const api = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
@@ -21,6 +30,22 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Handle authentication errors
+api.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    // Check for authentication errors (401 Unauthorized or 403 Forbidden)
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      errorToast("Session expired. Please login again.");
+      // Small delay to show the toast before redirect
+      setTimeout(() => {
+        handleLogout();
+      }, 500);
+    }
+    return Promise.reject(error);
+  }
+);
 
 export class ApiError extends Error {
   status?: number;

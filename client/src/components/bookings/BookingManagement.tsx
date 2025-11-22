@@ -424,9 +424,11 @@ const BookingManagement: React.FC = () => {
 
   // Use search results when searching, otherwise use paginated bookings
   const filteredBookings = useMemo(() => {
+    let bookingsToSort: BookingRow[];
+    
     if (searchTerm) {
       // Hydrate search results with customer names
-      return searchResults.map((booking) => {
+      bookingsToSort = searchResults.map((booking) => {
         const mappedName =
           customersMap.get(booking.customer_id) ||
           booking.customer_name ||
@@ -437,8 +439,16 @@ const BookingManagement: React.FC = () => {
         }
         return booking;
       });
+    } else {
+      bookingsToSort = hydratedBookings;
     }
-    return hydratedBookings;
+    
+    // Sort by createdAt (newest first)
+    return [...bookingsToSort].sort((a, b) => {
+      const dateA = (a as any).createdAt ? new Date((a as any).createdAt).getTime() : 0;
+      const dateB = (b as any).createdAt ? new Date((b as any).createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
   }, [searchTerm, searchResults, hydratedBookings, customersMap]);
 
   console.log(filteredBookings);

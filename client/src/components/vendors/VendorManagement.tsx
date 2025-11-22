@@ -338,7 +338,7 @@ const VendorManagement: React.FC = () => {
       <VendorFormModal
         isOpen={isFormOpen}
         setIsFormOpen={setIsFormOpen}
-        title={selectedVendor ? "Edit Vendor" : "Add New Vendor"}
+        title={selectedVendor ? "Edit Vendor" : "Create Vendor"}
         isEditing={Boolean(selectedVendor)}
         selectedVendor={selectedVendor}
         setSelectedVendor={setSelectedVendor}

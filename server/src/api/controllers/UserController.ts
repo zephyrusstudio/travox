@@ -4,12 +4,15 @@ import { ManageUserRoles } from '../../application/useCases/user/ManageUserRoles
 import { IUserRepository } from '../../application/repositories/IUserRepository';
 import { UserRole } from '../../models/FirestoreTypes';
 import { shouldUnmask } from '../../utils/unmask';
+import { setAuditContext } from '../../middleware/auditLogger';
 
 export class UserController {
   async changeRole(req: Request, res: Response) {
     try {
+      const userRepo = container.resolve<IUserRepository>('IUserRepository');
       const useCase = container.resolve(ManageUserRoles);
       const { userId, role } = req.body;
+      const unmask = shouldUnmask(req);
       
       if (!userId || !role) {
         return res.status(400).json({
@@ -24,6 +27,12 @@ export class UserController {
           status: 'error',
           data: { message: `Invalid role: ${role}` }
         });
+      }
+
+      // Capture before state for audit log
+      const beforeUser = await userRepo.findById(userId);
+      if (beforeUser) {
+        setAuditContext(req, 'users', userId, beforeUser.toApiResponse(unmask));
       }
 
       const user = await useCase.changeRole(
@@ -93,8 +102,18 @@ export class UserController {
 
   async activate(req: Request, res: Response) {
     try {
+      const userRepo = container.resolve<IUserRepository>('IUserRepository');
       const useCase = container.resolve(ManageUserRoles);
-      const user = await useCase.activateUser(req.params.id, req.user?.orgId!, req.user?.id!);
+      const unmask = shouldUnmask(req);
+      const userId = req.params.id;
+
+      // Capture before state for audit log
+      const beforeUser = await userRepo.findById(userId);
+      if (beforeUser) {
+        setAuditContext(req, 'users', userId, beforeUser.toApiResponse(unmask));
+      }
+
+      const user = await useCase.activateUser(userId, req.user?.orgId!, req.user?.id!);
       res.json({
         status: 'success',
         data: { message: 'User activated successfully', user }
@@ -109,8 +128,18 @@ export class UserController {
 
   async deactivate(req: Request, res: Response) {
     try {
+      const userRepo = container.resolve<IUserRepository>('IUserRepository');
       const useCase = container.resolve(ManageUserRoles);
-      const user = await useCase.deactivateUser(req.params.id, req.user?.orgId!, req.user?.id!);
+      const unmask = shouldUnmask(req);
+      const userId = req.params.id;
+
+      // Capture before state for audit log
+      const beforeUser = await userRepo.findById(userId);
+      if (beforeUser) {
+        setAuditContext(req, 'users', userId, beforeUser.toApiResponse(unmask));
+      }
+
+      const user = await useCase.deactivateUser(userId, req.user?.orgId!, req.user?.id!);
       res.json({
         status: 'success',
         data: { message: 'User deactivated successfully', user }
@@ -159,7 +188,9 @@ export class UserController {
   async updateProfile(req: Request, res: Response) {
     try {
       const userRepo = container.resolve<IUserRepository>('IUserRepository');
-      const user = await userRepo.findById(req.user?.id!);
+      const unmask = shouldUnmask(req);
+      const userId = req.user?.id!;
+      const user = await userRepo.findById(userId);
       
       if (!user) {
         return res.status(404).json({
@@ -167,6 +198,9 @@ export class UserController {
           data: { message: 'User not found' }
         });
       }
+
+      // Capture before state for audit log
+      setAuditContext(req, 'users', userId, user.toApiResponse(unmask));
 
       const { name, phone, preferences } = req.body;
       

@@ -7,6 +7,7 @@ import { DeleteCustomer } from '../../application/useCases/customer/DeleteCustom
 import { GetBookings } from '../../application/useCases/booking/GetBookings';
 import { GetAccount } from '../../application/useCases/account/GetAccount';
 import { shouldUnmask } from '../../utils/unmask';
+import { setAuditContext } from '../../middleware/auditLogger';
 
 export class CustomerController {
   async create(req: Request, res: Response) {
@@ -32,11 +33,18 @@ export class CustomerController {
 
   async update(req: Request, res: Response) {
     try {
+      const getCustomersUseCase = container.resolve(GetCustomers);
       const useCase = container.resolve(UpdateCustomer);
       const orgId = req.user?.orgId!;
       const updatedBy = req.user?.id!;
       const { id } = req.params;
       const unmask = shouldUnmask(req);
+
+      // Capture before state for audit log
+      const beforeCustomer = await getCustomersUseCase.findById(id, orgId);
+      if (beforeCustomer) {
+        setAuditContext(req, 'customers', id, beforeCustomer.toApiResponse(unmask));
+      }
 
       const customer = await useCase.execute(id, req.body, orgId, updatedBy);
 
@@ -261,9 +269,17 @@ export class CustomerController {
 
   async delete(req: Request, res: Response) {
     try {
+      const getCustomersUseCase = container.resolve(GetCustomers);
       const useCase = container.resolve(DeleteCustomer);
       const orgId = req.user?.orgId!;
       const { id } = req.params;
+      const unmask = shouldUnmask(req);
+
+      // Capture before state for audit log
+      const beforeCustomer = await getCustomersUseCase.findById(id, orgId);
+      if (beforeCustomer) {
+        setAuditContext(req, 'customers', id, beforeCustomer.toApiResponse(unmask));
+      }
 
       await useCase.delete(id, orgId);
 

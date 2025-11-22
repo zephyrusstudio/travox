@@ -50,6 +50,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       .where('org_id', '==', orgId)
       .where('customer_id', '==', customerId)
       .where('is_deleted', '==', false)
+      .orderBy('created_at', 'desc')
       .get();
 
     return snapshot.docs.map(doc => this.fromFirestore(doc));
@@ -74,6 +75,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       .where('org_id', '==', orgId)
       .where('status', '==', status)
       .where('is_deleted', '==', false)
+      .orderBy('created_at', 'desc')
       .get();
 
     return snapshot.docs.map(doc => this.fromFirestore(doc));
@@ -85,6 +87,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       .where('booking_date', '>=', Timestamp.fromDate(startDate))
       .where('booking_date', '<=', Timestamp.fromDate(endDate))
       .where('is_deleted', '==', false)
+      .orderBy('created_at', 'desc')
       .get();
 
     return snapshot.docs.map(doc => this.fromFirestore(doc));
@@ -93,7 +96,8 @@ export class BookingRepositoryFirestore implements IBookingRepository {
   async findAll(orgId: string, limit?: number, offset?: number): Promise<Booking[]> {
     let query = this.collection
       .where('org_id', '==', orgId)
-      .where('is_deleted', '==', false);
+      .where('is_deleted', '==', false)
+      .orderBy('created_at', 'desc');
       
     if (offset) {
       query = query.offset(offset);
@@ -176,6 +180,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       .where('travel_start_at', '>=', now)
       .where('travel_start_at', '<=', futureDate)
       .where('is_deleted', '==', false)
+      .orderBy('created_at', 'desc')
       .get();
 
     return snapshot.docs.map(doc => this.fromFirestore(doc));
@@ -187,6 +192,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       .where('travel_start_at', '>=', Timestamp.fromDate(startDate))
       .where('travel_start_at', '<=', Timestamp.fromDate(endDate))
       .where('is_deleted', '==', false)
+      .orderBy('created_at', 'desc')
       .get();
 
     return snapshot.docs.map(doc => this.fromFirestore(doc));
@@ -240,6 +246,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       .where('travel_end_at', '<', Timestamp.fromDate(now))
       .where('is_deleted', '==', false)
       .where('status', 'in', [BookingStatus.CONFIRMED, BookingStatus.TICKETED, BookingStatus.IN_PROGRESS])
+      .orderBy('created_at', 'desc')
       .get();
 
     const bookings = snapshot.docs.map(doc => this.fromFirestore(doc));
@@ -282,6 +289,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
         booking_id: p.bookingId,
         pax_name: p.paxName,
         pax_type: p.paxType,
+        sex: p.sex || null,
         passport_no: p.passportNo || null,
         dob: p.dob ? Timestamp.fromDate(p.dob) : null,
         created_at: Timestamp.fromDate(p.createdAt),
@@ -350,6 +358,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
         p.booking_id,
         p.pax_name,
         p.pax_type as PAXType,
+        p.sex,
         p.passport_no,
         p.dob?.toDate(),
         p.created_at.toDate(),

@@ -1,4 +1,4 @@
-import { PAXType } from '../models/FirestoreTypes';
+import { PAXType, Sex } from '../models/FirestoreTypes';
 import { v4 as uuidv4 } from 'uuid';
 
 export class BookingPax {
@@ -8,6 +8,7 @@ export class BookingPax {
     public bookingId: string,
     public paxName: string,
     public paxType: PAXType,
+    public sex?: Sex,
     public passportNo?: string,
     public dob?: Date,
     public createdAt: Date = new Date(),
@@ -20,6 +21,7 @@ export class BookingPax {
     paxName: string,
     paxType: PAXType,
     options?: {
+      sex?: Sex;
       passportNo?: string;
       dob?: Date;
     }
@@ -31,6 +33,7 @@ export class BookingPax {
       bookingId,
       paxName,
       paxType,
+      options?.sex,
       options?.passportNo,
       options?.dob,
       now,
@@ -53,6 +56,7 @@ export class BookingPax {
       bookingId: this.bookingId,
       paxName: this.paxName,
       paxType: this.paxType,
+      sex: this.sex,
       passportNo: unmask ? this.passportNo : this.getMaskedPassport(),
       dob: this.dob,
       createdAt: this.createdAt,

@@ -99,6 +99,7 @@ const normalizeAmount = (value: unknown): number => {
 const createPassenger = (overrides: Partial<Pax> = {}): Pax => ({
   name: "",
   paxType: PaxTypeOption.ADT,
+  sex: undefined,
   passportNo: "",
   dob: "",
   age: undefined,

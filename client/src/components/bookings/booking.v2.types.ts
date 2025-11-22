@@ -13,6 +13,12 @@ export enum PAXType {
   INF = 'INF'
 }
 
+export enum Sex {
+  MALE = 'Male',
+  FEMALE = 'Female',
+  TRANSGENDER = 'Transgender'
+}
+
 export enum ModeOfJourney {
   FLIGHT = 'FLIGHT',
   TRAIN = 'TRAIN',
@@ -39,6 +45,7 @@ export enum BookingStatus {
 export interface PaxDTO {
   paxName: string;
   paxType: PAXType;
+  sex?: Sex;
   passportNo?: string;
   dob?: Date | string; // Date for payload, string for form input
 }
@@ -97,6 +104,7 @@ export interface CreateBookingDTO {
 export interface PaxFormState {
   paxName: string;
   paxType: PAXType | '';
+  sex: Sex | '';
   passportNo: string;
   dob: string; // YYYY-MM-DD format
 }
@@ -174,6 +182,7 @@ export interface OCRExtractedData {
   pax?: Array<{
     paxName: string;
     paxType?: PAXType;
+    sex?: Sex;
     passportNo?: string;
     dob?: string;
   }>;

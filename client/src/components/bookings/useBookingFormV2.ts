@@ -47,6 +47,7 @@ const normalizeAmount = (value: unknown): number => {
 const createEmptyPax = (): PaxFormState => ({
   paxName: '',
   paxType: PAXType.ADT,
+  sex: '',
   passportNo: '',
   dob: '',
 });
@@ -128,6 +129,7 @@ const transformPaxToDTO = (pax: PaxFormState): PaxDTO | null => {
   return {
     paxName: pax.paxName.trim(),
     paxType: pax.paxType as PAXType,
+    sex: pax.sex || undefined,
     passportNo: pax.passportNo.trim() || undefined,
     dob: toISODate(pax.dob),
   };
@@ -267,6 +269,7 @@ export function useBookingFormV2({
           selectedBooking.pax.map((p: any) => ({
             paxName: p.paxName || '',
             paxType: p.paxType || PAXType.ADT,
+            sex: p.sex || '',
             passportNo: p.passportNo || '',
             dob: fromISODate(p.dob, false),
           }))
@@ -360,6 +363,7 @@ export function useBookingFormV2({
               extracted.pax.map((p) => ({
                 paxName: p.paxName || '',
                 paxType: p.paxType || PAXType.ADT,
+                sex: p.sex || '',
                 passportNo: p.passportNo || '',
                 dob: fromISODate(p.dob, false),
               }))

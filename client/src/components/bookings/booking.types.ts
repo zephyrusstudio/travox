@@ -16,6 +16,13 @@ export enum BookingStatus {
   REFUNDED = "Refunded",
 }
 
+export enum Sex {
+  MALE = "Male",
+  FEMALE = "Female",
+  TRANSGENDER = "Transgender",
+}
+
+// Legacy Gender enum kept for backward compatibility
 export enum Gender {
   Male = "Male",
   Female = "Female",
@@ -39,10 +46,11 @@ export enum ModeOfJourneyOption {
 export interface Pax {
   name: string;
   paxType: PaxTypeOption | "";
+  sex?: Sex | string;
   passportNo?: string;
   dob?: string;
   age?: number;
-  gender?: Gender | string;
+  gender?: Gender | string; // Kept for backward compatibility
   isPrimary: boolean;
 }
 

@@ -789,7 +789,7 @@ const TicketUploadManager: React.FC = () => {
       {/* <Modal
         isOpen={isAddCustomerModalOpen}
         onClose={() => setIsAddCustomerModalOpen(false)}
-        title="Add New Customer"
+        title="Create Customer"
         size="lg"
       >
         <div className="space-y-4">

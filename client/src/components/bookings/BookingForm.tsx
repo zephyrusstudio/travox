@@ -8,6 +8,7 @@ import {
   ModeOfJourneyOption,
   NewCustomerData,
   PaxTypeOption,
+  Sex,
   TravelCategory,
 } from "./booking.types";
 import { useBookingForm } from "./useBookingForm";
@@ -459,6 +460,23 @@ const BookingForm: React.FC<Props> = (props) => {
                       </select>
                     </label>
                     <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                      <span>Sex</span>
+                      <select
+                        value={pax.sex || ""}
+                        onChange={(e) =>
+                          updatePassenger(index, "sex", e.target.value as Sex)
+                        }
+                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select</option>
+                        {Object.values(Sex).map((sexOption) => (
+                          <option key={sexOption} value={sexOption}>
+                            {sexOption}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
                       <span>Passport Number</span>
                       <input
                         type="text"
@@ -560,14 +578,14 @@ const BookingForm: React.FC<Props> = (props) => {
                     variant="outline"
                     onClick={ui.toggleAddCustomer}
                   >
-                    Add New
+                    Create
                   </Button>
                 </div>
               ) : (
                 <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
                   <div className="flex items-center justify-between mb-3">
                     <h5 className="font-medium text-gray-900">
-                      Add New Customer
+                      Create Customer
                     </h5>
                     <Button
                       type="button"

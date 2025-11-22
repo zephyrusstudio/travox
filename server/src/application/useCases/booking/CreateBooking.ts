@@ -3,7 +3,7 @@ import { IBookingRepository } from '../../repositories/IBookingRepository';
 import { ICustomerRepository } from '../../repositories/ICustomerRepository';
 import { IVendorRepository } from '../../repositories/IVendorRepository';
 import { Booking } from '../../../domain/Booking';
-import { BookingStatus, ModeOfJourney, PAXType } from '../../../models/FirestoreTypes';
+import { BookingStatus, ModeOfJourney, PAXType, Sex } from '../../../models/FirestoreTypes';
 import { BookingPax } from '../../../domain/BookingPax';
 import { BookingItinerary } from '../../../domain/BookingItinerary';
 import { BookingSegment } from '../../../domain/BookingSegment';
@@ -12,6 +12,7 @@ import { BookingSegment } from '../../../domain/BookingSegment';
 interface PaxDTO {
   paxName: string;
   paxType: PAXType;
+  sex?: Sex;
   passportNo?: string;
   dob?: Date;
 }
@@ -115,7 +116,7 @@ export class CreateBooking {
     // --- Domain Object Creation ---
     const tempBookingId = 'temp-id'; // Will be replaced by the real one in Booking.create
 
-    const pax = data.pax.map(p => BookingPax.create(orgId, tempBookingId, p.paxName, p.paxType, { dob: p.dob, passportNo: p.passportNo }));
+    const pax = data.pax.map(p => BookingPax.create(orgId, tempBookingId, p.paxName, p.paxType, { sex: p.sex, dob: p.dob, passportNo: p.passportNo }));
     
     const itineraries = (data.itineraries || []).map(i => {
       // Create segments first with temporary itinerary ID

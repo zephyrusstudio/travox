@@ -2,7 +2,7 @@ import { Booking } from '../domain/Booking';
 import { BookingPax } from '../domain/BookingPax';
 import { BookingItinerary } from '../domain/BookingItinerary';
 import { BookingSegment } from '../domain/BookingSegment';
-import { PAXType, ModeOfJourney, BookingStatus } from '../models/FirestoreTypes';
+import { PAXType, ModeOfJourney, BookingStatus, Sex } from '../models/FirestoreTypes';
 
 /**
  * Service for dynamically generating OCR extraction schemas based on current domain models.
@@ -27,6 +27,7 @@ export class SchemaReflectionService {
       pax: [{
         paxName: "string - Full passenger name",
         paxType: `${this.getEnumValues('PAXType')} - Adult, Child, or Infant`,
+        sex: `${this.getEnumValues('Sex')} (optional) - Male, Female, or Transgender`,
         passportNo: "string (optional) - Passport number",
         dob: "string (optional) - Date of birth YYYY-MM-DD"
       }],
@@ -99,6 +100,8 @@ export class SchemaReflectionService {
         return Object.values(ModeOfJourney).join('|');
       case 'BookingStatus':
         return Object.values(BookingStatus).join('|');
+      case 'Sex':
+        return Object.values(Sex).join('|');
       default:
         return 'string';
     }
@@ -118,7 +121,7 @@ ${JSON.stringify(schema, null, 2)}
 
 IMPORTANT RULES:
 1. Return ONLY valid JSON, no markdown or extra text
-2. Use exact enum values: PAXType (${this.getEnumValues('PAXType')}), ModeOfJourney (${this.getEnumValues('ModeOfJourney')})
+2. Use exact enum values: PAXType (${this.getEnumValues('PAXType')}), ModeOfJourney (${this.getEnumValues('ModeOfJourney')}), Sex (${this.getEnumValues('Sex')})
 3. All dates in ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)
 4. Handle multiple passengers and segments correctly
 5. If information is unclear, mark confidence as LOW and explain in notes
@@ -127,6 +130,13 @@ IMPORTANT RULES:
 8. For hotel vouchers: focus on guest names, hotel details, check-in/out dates
 9. For train tickets: focus on PNR, passenger names, train details, journey dates
 10. Always include sequence numbers for proper ordering
+
+SEX FIELD INFERENCE:
+- Deduce passenger sex from name prefixes:
+  * Mr., Shri, Sri → Male
+  * Mrs., Miss, Ms., Smt., Kumari → Female
+  * Mx. → Transgender
+- If no prefix or ambiguous, leave sex field empty
 
 FIELD MAPPING GUIDE:
 - For flights/trains/buses: Use depAt/arrAt, depCode/arrCode, carrierCode, serviceNumber
@@ -164,6 +174,9 @@ Example extractedFields:
       data.pax.forEach((pax: any, index: number) => {
         if (pax.paxType && !Object.values(PAXType).includes(pax.paxType)) {
           errors.push(`Invalid PAXType "${pax.paxType}" at pax[${index}]. Valid values: ${Object.values(PAXType).join(', ')}`);
+        }
+        if (pax.sex && !Object.values(Sex).includes(pax.sex)) {
+          errors.push(`Invalid Sex "${pax.sex}" at pax[${index}]. Valid values: ${Object.values(Sex).join(', ')}`);
         }
       });
     }

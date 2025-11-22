@@ -44,6 +44,12 @@ export enum PAXType {
   INF = 'INF'  
 }
 
+export enum Sex {
+  MALE = 'Male',
+  FEMALE = 'Female',
+  TRANSGENDER = 'Transgender'
+}
+
 export enum ModeOfJourney {
   FLIGHT = 'FLIGHT',
   TRAIN = 'TRAIN',
@@ -207,6 +213,7 @@ export interface BookingPAXDocument extends BaseDocument {
   booking_id: string;
   pax_name: string;
   pax_type: PAXType;
+  sex?: Sex;
   passport_no?: string; 
   dob?: Timestamp; 
 }

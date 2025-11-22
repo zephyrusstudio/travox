@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { BookingStatus, ModeOfJourney, PAXType } from '../models/FirestoreTypes';
+import { BookingStatus, ModeOfJourney, PAXType, Sex } from '../models/FirestoreTypes';
 import { SchemaReflectionService } from './SchemaReflectionService';
 
 export interface OCRExtractedBooking {
@@ -15,6 +15,7 @@ export interface OCRExtractedBooking {
   pax: {
     paxName: string;
     paxType: PAXType;
+    sex?: Sex;
     passportNo?: string;
     dob?: string; // ISO date string
   }[];

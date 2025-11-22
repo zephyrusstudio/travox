@@ -15,6 +15,9 @@ interface CreateCustomerDTO {
 
 @injectable()
 export class CreateCustomer {
+  private static readonly DEFAULT_EMAIL = 'esanchar@gmail.com';
+  private static readonly DEFAULT_PHONE = '+91-9332100485';
+
   constructor(
     @inject('ICustomerRepository') private customerRepo: ICustomerRepository
   ) {}
@@ -39,15 +42,15 @@ export class CreateCustomer {
       throw new Error('GSTIN must be exactly 15 characters');
     }
 
-    // Validate if customer already exists
-    if (data.email) {
+    // Validate if customer already exists (skip validation for default email/phone)
+    if (data.email && data.email !== CreateCustomer.DEFAULT_EMAIL) {
       const existingByEmail = await this.customerRepo.findByEmail(data.email, orgId);
       if (existingByEmail) {
         throw new Error('Customer with this email already exists');
       }
     }
 
-    if (data.phone) {
+    if (data.phone && data.phone !== CreateCustomer.DEFAULT_PHONE) {
       const existingByPhone = await this.customerRepo.findByPhone(data.phone, orgId);
       if (existingByPhone) {
         throw new Error('Customer with this phone already exists');

@@ -391,6 +391,7 @@ export class OCRController {
           paxData.paxName,
           paxData.paxType || PAXType.ADT,
           {
+            sex: paxData.sex,
             passportNo: paxData.passportNo,
             dob: paxData.dob ? new Date(paxData.dob) : undefined
           }

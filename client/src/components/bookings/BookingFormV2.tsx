@@ -17,6 +17,7 @@ import {
   NewCustomerData,
   PAXType,
   SEGMENT_FIELDS_BY_MODE,
+  Sex,
   VendorLite,
 } from './booking.v2.types';
 import { useBookingFormV2 } from './useBookingFormV2';
@@ -489,6 +490,23 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                         {Object.values(PAXType).map((type) => (
                           <option key={type} value={type}>
                             {type}
+                          </option>
+                        ))}
+                      </select>
+                    </Labeled>
+
+                    <Labeled label="Sex">
+                      <select
+                        value={pax.sex}
+                        onChange={(e) =>
+                          updatePax(idx, 'sex', e.target.value as Sex)
+                        }
+                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select</option>
+                        {Object.values(Sex).map((sexOption) => (
+                          <option key={sexOption} value={sexOption}>
+                            {sexOption}
                           </option>
                         ))}
                       </select>

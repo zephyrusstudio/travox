@@ -157,7 +157,7 @@ const CustomerManagement: React.FC = () => {
           >
             Refresh
           </Button>
-          <Button onClick={() => openForm()} icon={Plus} className="flex gap-3">
+          <Button onClick={() => openForm()} className="flex gap-3">
             Create Customer
           </Button>
         </div>
@@ -332,7 +332,7 @@ const CustomerManagement: React.FC = () => {
       <CustomerFormModal
         isOpen={isFormOpen}
         setIsFormOpen={setIsFormOpen}
-        title={selectedCustomer ? "Edit Customer" : "Add New Customer"}
+        title={selectedCustomer ? "Edit Customer" : "Create Customer"}
         isEditing={Boolean(selectedCustomer)}
         selectedCustomer={selectedCustomer}
         setSelectedCustomer={setSelectedCustomer}

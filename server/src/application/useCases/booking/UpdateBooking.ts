@@ -1,7 +1,7 @@
 import { injectable, inject } from 'tsyringe';
 import { IBookingRepository } from '../../repositories/IBookingRepository';
 import { Booking } from '../../../domain/Booking';
-import { BookingStatus, ModeOfJourney, PAXType } from '../../../models/FirestoreTypes';
+import { BookingStatus, ModeOfJourney, PAXType, Sex } from '../../../models/FirestoreTypes';
 import { BookingPax } from '../../../domain/BookingPax';
 import { BookingItinerary } from '../../../domain/BookingItinerary';
 import { BookingSegment } from '../../../domain/BookingSegment';
@@ -10,6 +10,7 @@ import { BookingSegment } from '../../../domain/BookingSegment';
 interface PaxDTO {
   paxName: string;
   paxType: PAXType;
+  sex?: Sex;
   passportNo?: string;
   dob?: Date;
 }

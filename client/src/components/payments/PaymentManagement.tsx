@@ -6,6 +6,7 @@ import { errorToast, successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
+import Pagination from "../ui/Pagination";
 import Table, {
   TableBody,
   TableCell,
@@ -71,6 +72,9 @@ const PaymentManagement: React.FC = () => {
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
   const [saveInFlight, setSaveInFlight] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
 
   const customersMap = useMemo(() => {
     const map = new Map<string, ApiCustomer>();
@@ -256,10 +260,11 @@ const PaymentManagement: React.FC = () => {
   const fetchPayments = useCallback(async () => {
     setLoadingPayments(true);
     try {
+      const offset = (currentPage - 1) * itemsPerPage;
       const res = await apiRequest<any>({
         method: "GET",
         url: "/payments",
-        params: { limit: 200 },
+        params: { limit: itemsPerPage, offset },
       });
 
       const items = Array.isArray(res?.data) ? res.data : [];
@@ -274,6 +279,8 @@ const PaymentManagement: React.FC = () => {
       );
 
       setPayments(mapped);
+      // Use count from API response if available
+      setTotalItems(res?.count ?? mapped.length);
     } catch (error) {
       const err = error as ApiError;
       if (err?.message) {
@@ -282,7 +289,7 @@ const PaymentManagement: React.FC = () => {
     } finally {
       setLoadingPayments(false);
     }
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchCustomers();
@@ -613,6 +620,18 @@ const PaymentManagement: React.FC = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {!loadingPayments && filteredPayments.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+          itemsPerPageOptions={[5, 10, 20, 50, 100]}
+        />
+      )}
 
       {/* Record Payment Modal */}
       <PaymentForm

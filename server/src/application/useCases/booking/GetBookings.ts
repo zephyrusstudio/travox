@@ -10,6 +10,7 @@ interface GetBookingsFilters {
   endDate?: Date;
   pnr?: string;
   limit?: number;
+  offset?: number;
 }
 
 @injectable()
@@ -41,7 +42,11 @@ export class GetBookings {
     }
 
     // Otherwise, get all bookings
-    return await this.bookingRepo.findAll(orgId, filters.limit);
+    return await this.bookingRepo.findAll(orgId, filters.limit, filters.offset);
+  }
+
+  async count(orgId: string): Promise<number> {
+    return await this.bookingRepo.countAll(orgId);
   }
 
   async getById(bookingId: string, orgId: string): Promise<Booking | null> {

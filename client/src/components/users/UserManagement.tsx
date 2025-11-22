@@ -10,6 +10,7 @@ import { useApp } from "../../contexts/AppContext";
 import { User, userService } from "../../services/userService";
 import { USER_ROLES, UserRole } from "../../utils/roleAccess";
 import { errorToast, successToast } from "../../utils/toasts";
+import Pagination from "../ui/Pagination";
 
 type RoleFilter = "all" | UserRole;
 type StatusFilter = "all" | "active" | "inactive";
@@ -56,6 +57,9 @@ const UserManagement: React.FC = () => {
   const { currentUser } = useApp();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(
     null
   );
@@ -66,8 +70,11 @@ const UserManagement: React.FC = () => {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const response = await userService.getUsers();
-      setUsers(response);
+      const offset = (currentPage - 1) * itemsPerPage;
+      const response = await userService.getUsers(itemsPerPage, offset);
+      setUsers(response.users);
+      // Use count from API response if available
+      setTotalItems(response.count ?? response.users.length);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to load users";
@@ -80,7 +87,7 @@ const UserManagement: React.FC = () => {
 
   useEffect(() => {
     void loadUsers();
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -410,6 +417,18 @@ const UserManagement: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Pagination */}
+      {!loading && filteredUsers.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+          itemsPerPageOptions={[5, 10, 20, 50, 100]}
+        />
+      )}
     </div>
   );
 };

@@ -8,7 +8,8 @@ export interface IBookingRepository {
   findByPNR(pnr: string, orgId: string): Promise<Booking | null>;
   findByStatus(status: BookingStatus, orgId: string): Promise<Booking[]>;
   findByDateRange(startDate: Date, endDate: Date, orgId: string): Promise<Booking[]>;
-  findAll(orgId: string, limit?: number): Promise<Booking[]>;
+  findAll(orgId: string, limit?: number, offset?: number): Promise<Booking[]>;
+  countAll(orgId: string): Promise<number>;
   update(booking: Booking, orgId: string): Promise<Booking>;
   updateFields(id: string, fields: Record<string, any>, orgId: string): Promise<boolean>;
   softDelete(id: string, orgId: string, updatedBy: string): Promise<boolean>;

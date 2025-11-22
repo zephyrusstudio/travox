@@ -85,12 +85,16 @@ export class CustomerController {
       const useCase = container.resolve(GetCustomers);
       const orgId = req.user?.orgId!;
       const unmask = shouldUnmask(req);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : undefined;
       
-      const customers = await useCase.getAllActive(orgId);
+      const customers = await useCase.getAllActive(orgId, limit, offset);
+      const count = await useCase.countActive(orgId);
       
       res.json({
         status: 'success',
-        data: customers.map(c => c.toApiResponse(unmask))
+        data: customers.map(c => c.toApiResponse(unmask)),
+        count
       });
     } catch (error: any) {
       res.status(500).json({

@@ -13,6 +13,7 @@ import { errorToast, successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
+import Pagination from "../ui/Pagination";
 import Table, {
   TableBody,
   TableCell,
@@ -64,6 +65,9 @@ const ExpenseManagement: React.FC = () => {
   const [loadingVendors, setLoadingVendors] = useState(false);
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [saveInFlight, setSaveInFlight] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
 
   const vendorMap = useMemo(() => {
     const map = new Map<string, VendorOption>();
@@ -173,10 +177,11 @@ const ExpenseManagement: React.FC = () => {
   const fetchExpenses = useCallback(async () => {
     setLoadingExpenses(true);
     try {
+      const offset = (currentPage - 1) * itemsPerPage;
       const res = await apiRequest<any>({
         method: "GET",
         url: "/payments",
-        params: { limit: 200 },
+        params: { limit: itemsPerPage, offset },
       });
       const items = Array.isArray(res?.data) ? res.data : [];
       const mapped: ExpenseRow[] = items
@@ -203,6 +208,18 @@ const ExpenseManagement: React.FC = () => {
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
       setExpenses(mapped);
+      // Use count from API response if available
+      // For expenses, we need to count only EXPENSE type payments
+      // If count is not in response, estimate based on results
+      if (res?.count !== undefined) {
+        setTotalItems(res.count);
+      } else if (mapped.length < itemsPerPage && currentPage === 1) {
+        setTotalItems(mapped.length);
+      } else if (mapped.length < itemsPerPage) {
+        setTotalItems(offset + mapped.length);
+      } else {
+        setTotalItems(offset + mapped.length + 1);
+      }
     } catch (error) {
       const err = error as ApiError;
       errorToast(err.message || "Failed to load expenses");
@@ -210,7 +227,7 @@ const ExpenseManagement: React.FC = () => {
     } finally {
       setLoadingExpenses(false);
     }
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchVendors();
@@ -496,6 +513,18 @@ const ExpenseManagement: React.FC = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {!loadingExpenses && filteredExpenses.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+          itemsPerPageOptions={[5, 10, 20, 50, 100]}
+        />
+      )}
 
       <ExpenseForm
         isOpen={isModalOpen}

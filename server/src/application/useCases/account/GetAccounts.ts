@@ -8,7 +8,11 @@ export class GetAccounts {
     @inject('IAccountRepository') private accountRepo: IAccountRepository
   ) {}
 
-  async execute(orgId: string): Promise<Account[]> {
-    return this.accountRepo.findByOrgId(orgId);
+  async execute(orgId: string, limit?: number, offset?: number): Promise<Account[]> {
+    return this.accountRepo.findByOrgId(orgId, limit, offset);
+  }
+
+  async count(orgId: string): Promise<number> {
+    return this.accountRepo.countByOrgId(orgId);
   }
 }

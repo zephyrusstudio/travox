@@ -26,7 +26,6 @@ if (missingEnvVars.length > 0) {
 // Start the server
 async function main() {
     try {
-    console.log('Initializing TMS API...');
         await startServer();
     } catch (error) {
         console.error('Failed to start server:', error);

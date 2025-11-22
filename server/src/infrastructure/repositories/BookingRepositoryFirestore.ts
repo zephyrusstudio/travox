@@ -90,17 +90,30 @@ export class BookingRepositoryFirestore implements IBookingRepository {
     return snapshot.docs.map(doc => this.fromFirestore(doc));
   }
 
-  async findAll(orgId: string, limit?: number): Promise<Booking[]> {
+  async findAll(orgId: string, limit?: number, offset?: number): Promise<Booking[]> {
     let query = this.collection
       .where('org_id', '==', orgId)
       .where('is_deleted', '==', false);
       
+    if (offset) {
+      query = query.offset(offset);
+    }
+
     if (limit) {
       query = query.limit(limit);
     }
     
     const snapshot = await query.get();
     return snapshot.docs.map(doc => this.fromFirestore(doc));
+  }
+
+  async countAll(orgId: string): Promise<number> {
+    const snapshot = await this.collection
+      .where('org_id', '==', orgId)
+      .where('is_deleted', '==', false)
+      .count()
+      .get();
+    return snapshot.data().count;
   }
 
   async update(booking: Booking, orgId: string): Promise<Booking> {

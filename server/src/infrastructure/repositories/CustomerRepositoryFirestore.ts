@@ -210,16 +210,33 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
       .slice(0, limit);
   }
 
-  async getActiveCustomers(orgId: string): Promise<Customer[]> {
-    const query = this.collection
+  async getActiveCustomers(orgId: string, limit?: number, offset?: number): Promise<Customer[]> {
+    let query = this.collection
       .where('org_id', '==', orgId)
       .where('is_deleted', '==', false);
+
+    if (offset) {
+      query = query.offset(offset);
+    }
+
+    if (limit) {
+      query = query.limit(limit);
+    }
 
     const snapshot = await query.get();
     return snapshot.docs.map(doc => {
       const data = doc.data() as CustomerDocument;
       return this.documentToDomain(data, doc.id);
     });
+  }
+
+  async countActiveCustomers(orgId: string): Promise<number> {
+    const snapshot = await this.collection
+      .where('org_id', '==', orgId)
+      .where('is_deleted', '==', false)
+      .count()
+      .get();
+    return snapshot.data().count;
   }
 
   async getCustomerBookingStats(customerId: string, orgId: string): Promise<{

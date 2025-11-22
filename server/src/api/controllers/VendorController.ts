@@ -35,12 +35,15 @@ export class VendorController {
       const useCase = container.resolve(GetVendors);
       const orgId = req.user?.orgId!;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : undefined;
       const unmask = shouldUnmask(req);
 
-      const vendors = await useCase.execute(orgId, { limit });
+      const vendors = await useCase.execute(orgId, { limit, offset });
+      const count = await useCase.count(orgId);
       res.json({
         status: 'success',
-        data: vendors.map(v => v.toApiResponse(unmask))
+        data: vendors.map(v => v.toApiResponse(unmask)),
+        count
       });
     } catch (error: any) {
       res.status(500).json({

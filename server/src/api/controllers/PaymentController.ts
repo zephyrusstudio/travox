@@ -97,10 +97,12 @@ export class PaymentController {
         limit ? Number(limit) : undefined, 
         offset ? Number(offset) : undefined
       );
+      const count = await getPayments.count(req.user?.orgId!);
       
       res.json({
         status: 'success',
-        data: payments
+        data: payments,
+        count
       });
     } catch (error: any) {
       res.status(500).json({

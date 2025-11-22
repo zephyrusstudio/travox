@@ -9,6 +9,7 @@ import { ApiError, apiRequest } from "../../utils/apiConnector";
 import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
 import Modal from "../ui/Modal";
+import Pagination from "../ui/Pagination";
 import AccountFormModal, {
   AccountFormState,
 } from "../ui/common/AccountFormModal";
@@ -21,6 +22,9 @@ const CustomerManagement: React.FC = () => {
   // ── State ────────────────────────────────────────────────────────────────────
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] =
@@ -48,11 +52,15 @@ const CustomerManagement: React.FC = () => {
     setLoading(true);
     setErrorMsg(null);
     try {
+      const offset = (currentPage - 1) * itemsPerPage;
       const res = await apiRequest<any>({
         method: "GET",
-        url: "/customers?unmask=true",
+        url: `/customers?unmask=true&limit=${itemsPerPage}&offset=${offset}`,
       });
-      setCustomers(res?.data ?? []);
+      const data = res?.data ?? [];
+      setCustomers(data);
+      // Use count from API response if available
+      setTotalItems(res?.count ?? data.length);
     } catch (e) {
       const err = e as ApiError;
       setErrorMsg(err.message || "Failed to fetch customers");
@@ -134,7 +142,7 @@ const CustomerManagement: React.FC = () => {
   // ── Effects ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -350,6 +358,18 @@ const CustomerManagement: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Pagination */}
+      {!loading && filtered.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+          itemsPerPageOptions={[5, 10, 20, 50, 100]}
+        />
+      )}
     </div>
   );
 };

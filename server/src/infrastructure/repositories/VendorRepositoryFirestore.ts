@@ -114,9 +114,13 @@ export class VendorRepositoryFirestore implements IVendorRepository {
     return querySnapshot.docs.map(doc => this.mapFirestoreToVendor(doc.data() as VendorDocument, doc.id));
   }
 
-  async findAll(orgId: string, limit?: number): Promise<Vendor[]> {
+  async findAll(orgId: string, limit?: number, offset?: number): Promise<Vendor[]> {
     // Simplified query for testing - just filter by org_id
     let query = this.collection.where('org_id', '==', orgId);
+
+    if (offset) {
+      query = query.offset(offset);
+    }
 
     if (limit) {
       query = query.limit(limit);
@@ -127,6 +131,21 @@ export class VendorRepositoryFirestore implements IVendorRepository {
     return querySnapshot.docs
       .map(doc => this.mapFirestoreToVendor(doc.data() as VendorDocument, doc.id))
       .filter(vendor => !vendor.isDeleted);
+  }
+
+  async countAll(orgId: string): Promise<number> {
+    const snapshot = await this.collection
+      .where('org_id', '==', orgId)
+      .count()
+      .get();
+    const totalCount = snapshot.data().count;
+    // Get count of deleted vendors
+    const deletedSnapshot = await this.collection
+      .where('org_id', '==', orgId)
+      .where('is_deleted', '==', true)
+      .count()
+      .get();
+    return totalCount - deletedSnapshot.data().count;
   }
 
   async update(vendor: Vendor, orgId: string): Promise<Vendor> {

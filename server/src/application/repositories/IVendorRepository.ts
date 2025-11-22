@@ -9,7 +9,8 @@ export interface IVendorRepository {
   findByNameAndServiceType(name: string, serviceType: ServiceType, orgId: string): Promise<Vendor | null>;
   findByAccountId(accountId: string, orgId: string): Promise<Vendor | null>;
   findByServiceType(serviceType: ServiceType, orgId: string): Promise<Vendor[]>;
-  findAll(orgId: string, limit?: number): Promise<Vendor[]>;
+  findAll(orgId: string, limit?: number, offset?: number): Promise<Vendor[]>;
+  countAll(orgId: string): Promise<number>;
   update(vendor: Vendor, orgId: string): Promise<Vendor>;
   softDelete(id: string, orgId: string, updatedBy: string): Promise<boolean>;
   delete(id: string, orgId: string): Promise<boolean>;

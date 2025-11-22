@@ -149,6 +149,15 @@ export class PaymentRepositoryFirestore implements IPaymentRepository {
     });
   }
 
+  async countAll(orgId: string): Promise<number> {
+    const snapshot = await this.collection
+      .where('org_id', '==', orgId)
+      .where('is_deleted', '==', false)
+      .count()
+      .get();
+    return snapshot.data().count;
+  }
+
   async findByVendorId(vendorId: string, orgId: string): Promise<Payment[]> {
     const snapshot = await this.collection
       .where('org_id', '==', orgId)

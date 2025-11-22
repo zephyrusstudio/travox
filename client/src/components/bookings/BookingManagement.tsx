@@ -18,6 +18,7 @@ import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
 import Modal from "../ui/Modal";
+import Pagination from "../ui/Pagination";
 import Table, {
   TableBody,
   TableCell,
@@ -45,6 +46,9 @@ const BookingManagement: React.FC = () => {
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
   const [customers, setCustomers] = useState<CustomerLite[]>([]);
   const [customersLoading, setCustomersLoading] = useState(false);
   const [customersError, setCustomersError] = useState<string | null>(null);
@@ -232,10 +236,11 @@ const BookingManagement: React.FC = () => {
     setBookingsLoading(true);
     setBookingsError(null);
     try {
+      const offset = (currentPage - 1) * itemsPerPage;
       const res = await apiRequest<any>({
         method: "GET",
         url: "/bookings",
-        params: { limit: 50, unmask: true },
+        params: { limit: itemsPerPage, offset, unmask: true },
       });
       const items: any[] = Array.isArray(res?.data) ? res.data : [];
       const normalizeStatus = (status: string): BookingStatus => {
@@ -306,13 +311,15 @@ const BookingManagement: React.FC = () => {
       });
 
       setBookings(mapped);
+      // Use count from API response if available
+      setTotalItems(res?.count ?? mapped.length);
     } catch (error) {
       const apiError = error as ApiError;
       setBookingsError(apiError.message);
     } finally {
       setBookingsLoading(false);
     }
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchBookings();
@@ -889,6 +896,18 @@ const BookingManagement: React.FC = () => {
           />
         )}
       </Modal>
+
+      {/* Pagination */}
+      {!bookingsLoading && filteredBookings.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+          itemsPerPageOptions={[5, 10, 20, 50, 100]}
+        />
+      )}
     </div>
   );
 };

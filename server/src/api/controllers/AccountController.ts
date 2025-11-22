@@ -12,11 +12,15 @@ export class AccountController {
   async getAccounts(req: Request, res: Response) {
     try {
       const getAccounts = container.resolve(GetAccounts);
-      const accounts = await getAccounts.execute(req.user?.orgId!);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : undefined;
+      const accounts = await getAccounts.execute(req.user?.orgId!, limit, offset);
+      const count = await getAccounts.count(req.user?.orgId!);
       
       res.json({
         status: 'success',
-        data: accounts
+        data: accounts,
+        count
       });
     } catch (error: any) {
       res.status(500).json({ 

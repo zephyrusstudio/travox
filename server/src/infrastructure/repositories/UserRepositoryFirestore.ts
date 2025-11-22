@@ -95,11 +95,20 @@ export class UserRepositoryFirestore implements IUserRepository {
         return null;
     }
 
-    async findByOrganizationId(orgId: string): Promise<User[]> {
+    async findByOrganizationId(orgId: string, limit?: number, offset?: number): Promise<User[]> {
         try {
-            const snapshot = await this.collection
-                .where('org_id', '==', orgId)
-                .get();
+            let query = this.collection
+                .where('org_id', '==', orgId);
+
+            if (offset) {
+                query = query.offset(offset);
+            }
+
+            if (limit) {
+                query = query.limit(limit);
+            }
+
+            const snapshot = await query.get();
 
             return snapshot.docs.map((doc) => {
                 const data = { id: doc.id, ...doc.data() } as UserDocument;
@@ -107,6 +116,19 @@ export class UserRepositoryFirestore implements IUserRepository {
             });
         } catch (error) {
             console.error('Error finding users by organization:', error);
+            throw error;
+        }
+    }
+
+    async countByOrganizationId(orgId: string): Promise<number> {
+        try {
+            const snapshot = await this.collection
+                .where('org_id', '==', orgId)
+                .count()
+                .get();
+            return snapshot.data().count;
+        } catch (error) {
+            console.error('Error counting users by organization:', error);
             throw error;
         }
     }

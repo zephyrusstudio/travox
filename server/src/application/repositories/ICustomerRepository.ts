@@ -7,13 +7,14 @@ export interface ICustomerRepository {
   findByPhone(phone: string, orgId: string): Promise<Customer | null>;
   findByPassport(passportNo: string, orgId: string): Promise<Customer | null>;
   findByAccountId(accountId: string, orgId: string): Promise<Customer | null>;
-  findAll(orgId: string, limit?: number): Promise<Customer[]>;
+  findAll(orgId: string, limit?: number, offset?: number): Promise<Customer[]>;
   update(customer: Customer, orgId: string): Promise<Customer>;
   softDelete(id: string, orgId: string, updatedBy: string): Promise<boolean>;
   delete(id: string, orgId: string): Promise<boolean>;
   archive(id: string, orgId: string, updatedBy: string): Promise<boolean>;
   search(query: string, orgId: string, limit?: number): Promise<Customer[]>;
-  getActiveCustomers(orgId: string): Promise<Customer[]>;
+  getActiveCustomers(orgId: string, limit?: number, offset?: number): Promise<Customer[]>;
+  countActiveCustomers(orgId: string): Promise<number>;
   getCustomerBookingStats(customerId: string, orgId: string): Promise<{
     totalBookings: number;
     totalSpent: number;

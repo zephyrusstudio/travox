@@ -5,6 +5,7 @@ import { ServiceType } from '../../../models/FirestoreTypes';
 
 interface GetVendorsOptions {
   limit?: number;
+  offset?: number;
   serviceType?: ServiceType;
 }
 
@@ -19,7 +20,11 @@ export class GetVendors {
       return await this.vendorRepo.findByServiceType(options.serviceType, orgId);
     }
     
-    return await this.vendorRepo.findAll(orgId, options?.limit);
+    return await this.vendorRepo.findAll(orgId, options?.limit, options?.offset);
+  }
+
+  async count(orgId: string): Promise<number> {
+    return await this.vendorRepo.countAll(orgId);
   }
 
   async findById(vendorId: string, orgId: string): Promise<Vendor | null> {

@@ -17,6 +17,7 @@ export interface User {
 export interface ApiResponse<T> {
   status: "success" | "error";
   data: T;
+  count?: number;
 }
 
 const extractErrorMessage = (payload: unknown, fallback: string): string => {
@@ -32,10 +33,15 @@ const extractErrorMessage = (payload: unknown, fallback: string): string => {
 class UserService {
   private userCache = new Map<string, User>();
 
-  async getUsers(): Promise<User[]> {
+  async getUsers(limit?: number, offset?: number): Promise<{ users: User[]; count?: number }> {
+    const params: Record<string, number> = {};
+    if (limit !== undefined) params.limit = limit;
+    if (offset !== undefined) params.offset = offset;
+
     const response = await apiRequest<ApiResponse<User[]>>({
       method: "GET",
       url: "/users",
+      params,
     });
 
     if (response.status === "success") {
@@ -49,7 +55,7 @@ class UserService {
         this.userCache.set(user.id, user);
       });
 
-      return normalizedUsers;
+      return { users: normalizedUsers, count: response.count };
     }
 
     throw new Error("Failed to fetch users");

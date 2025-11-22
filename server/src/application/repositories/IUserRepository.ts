@@ -7,5 +7,6 @@ export interface IUserRepository {
     findById(id: string): Promise<User | null>;
     update(user: User): Promise<User>;
     delete(id: string): Promise<void>;
-    findByOrganizationId(orgId: string): Promise<User[]>;
+    findByOrganizationId(orgId: string, limit?: number, offset?: number): Promise<User[]>;
+    countByOrganizationId(orgId: string): Promise<number>;
 }

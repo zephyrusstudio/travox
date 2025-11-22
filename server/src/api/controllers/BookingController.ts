@@ -36,13 +36,16 @@ export class BookingController {
         startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
         endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
         pnr: req.query.pnr as string,
-        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+        offset: req.query.offset ? parseInt(req.query.offset as string) : undefined
       };
 
       const bookings = await useCase.execute(filters, req.user?.orgId!);
+      const count = await useCase.count(req.user?.orgId!);
       res.json({
         status: 'success',
-        data: bookings.map(b => b.toApiResponse(unmask))
+        data: bookings.map(b => b.toApiResponse(unmask)),
+        count
       });
     } catch (error: any) {
       res.status(500).json({

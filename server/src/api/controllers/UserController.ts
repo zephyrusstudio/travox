@@ -47,12 +47,16 @@ export class UserController {
   async getAll(req: Request, res: Response) {
     try {
       const userRepo = container.resolve<IUserRepository>('IUserRepository');
-      const users = await userRepo.findByOrganizationId(req.user?.orgId!);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : undefined;
+      const users = await userRepo.findByOrganizationId(req.user?.orgId!, limit, offset);
+      const count = await userRepo.countByOrganizationId(req.user?.orgId!);
       const unmask = shouldUnmask(req);
       
       res.json({
         status: 'success',
-        data: users.map(user => user.toApiResponse(unmask))
+        data: users.map(user => user.toApiResponse(unmask)),
+        count
       });
     } catch (error: any) {
       res.status(500).json({

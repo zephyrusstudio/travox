@@ -20,8 +20,12 @@ export class GetCustomers {
     return await this.customerRepo.findByPhone(phone, orgId);
   }
 
-  async getAllActive(orgId: string): Promise<Customer[]> {
-    return await this.customerRepo.getActiveCustomers(orgId);
+  async getAllActive(orgId: string, limit?: number, offset?: number): Promise<Customer[]> {
+    return await this.customerRepo.getActiveCustomers(orgId, limit, offset);
+  }
+
+  async countActive(orgId: string): Promise<number> {
+    return await this.customerRepo.countActiveCustomers(orgId);
   }
 
   async search(query: string, orgId: string, limit?: number): Promise<Customer[]> {

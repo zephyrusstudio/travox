@@ -12,4 +12,8 @@ export class GetPayments {
   async execute(orgId: string, limit?: number, offset?: number): Promise<Payment[]> {
     return await this.paymentRepo.findAll(orgId, limit, offset);
   }
+
+  async count(orgId: string): Promise<number> {
+    return await this.paymentRepo.countAll(orgId);
+  }
 }

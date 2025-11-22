@@ -66,15 +66,33 @@ export class AccountRepositoryFirestore implements IAccountRepository {
     return this.mapFromFirestore(doc.id, data);
   }
 
-  async findByOrgId(orgId: string): Promise<Account[]> {
-    const snapshot = await this.collection
+  async findByOrgId(orgId: string, limit?: number, offset?: number): Promise<Account[]> {
+    let query = this.collection
       .where('org_id', '==', orgId)
-      .where('archived_at', '==', null)
-      .get();
+      .where('archived_at', '==', null);
+
+    if (offset) {
+      query = query.offset(offset);
+    }
+
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    const snapshot = await query.get();
     
     return snapshot.docs.map(doc => 
       this.mapFromFirestore(doc.id, doc.data() as AccountFirestoreDoc)
     );
+  }
+
+  async countByOrgId(orgId: string): Promise<number> {
+    const snapshot = await this.collection
+      .where('org_id', '==', orgId)
+      .where('archived_at', '==', null)
+      .count()
+      .get();
+    return snapshot.data().count;
   }
 
   async create(accountData: CreateAccountDTO, orgId: string, userId: string): Promise<Account> {

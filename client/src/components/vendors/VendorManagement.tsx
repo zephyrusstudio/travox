@@ -4,6 +4,7 @@ import { Vendor } from "../../types";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
+import Pagination from "../ui/Pagination";
 import AccountFormModal, { AccountFormState } from "../ui/common/AccountFormModal";
 import VendorFormModal, { VendorFormState } from "./VendorFormModal";
 import VendorGrid from "./VendorGrid";
@@ -33,6 +34,9 @@ const VendorManagement: React.FC = () => {
   // State
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<VendorFormState | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -73,8 +77,15 @@ const VendorManagement: React.FC = () => {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await apiRequest<any>({ method: "GET", url: "/vendors?unmask=true" });
-      setVendors(res?.data ?? []);
+      const offset = (currentPage - 1) * itemsPerPage;
+      const res = await apiRequest<any>({ 
+        method: "GET", 
+        url: `/vendors?unmask=true&limit=${itemsPerPage}&offset=${offset}` 
+      });
+      const data = res?.data ?? [];
+      setVendors(data);
+      // Use count from API response if available
+      setTotalItems(res?.count ?? data.length);
     } catch (e) {
       const err = e as ApiError;
       setErrorMsg(err.message || "Failed to fetch vendors");
@@ -164,7 +175,7 @@ const VendorManagement: React.FC = () => {
 
   useEffect(() => {
     fetchVendors();
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   // Render
   return (
@@ -333,6 +344,18 @@ const VendorManagement: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Pagination */}
+      {!loading && filteredVendors.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+          itemsPerPageOptions={[5, 10, 20, 50, 100]}
+        />
+      )}
     </div>
   );
 };

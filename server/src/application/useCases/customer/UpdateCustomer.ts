@@ -26,8 +26,11 @@ export class UpdateCustomer {
       throw new Error('Customer not found');
     }
 
+    // Skip uniqueness checks for specific email and phone
+    const skipUniquenessCheck = data.email === 'esanchar@gmail.com' && data.phone === '+91-9332100485';
+
     // Validate if email conflicts with another customer
-    if (data.email && data.email !== existingCustomer.email) {
+    if (!skipUniquenessCheck && data.email && data.email !== existingCustomer.email) {
       const existingByEmail = await this.customerRepo.findByEmail(data.email, orgId);
       if (existingByEmail && existingByEmail.id !== customerId) {
         throw new Error('Customer with this email already exists');
@@ -35,7 +38,7 @@ export class UpdateCustomer {
     }
 
     // Validate if phone conflicts with another customer
-    if (data.phone && data.phone !== existingCustomer.phone) {
+    if (!skipUniquenessCheck && data.phone && data.phone !== existingCustomer.phone) {
       const existingByPhone = await this.customerRepo.findByPhone(data.phone, orgId);
       if (existingByPhone && existingByPhone.id !== customerId) {
         throw new Error('Customer with this phone already exists');

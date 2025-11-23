@@ -7,7 +7,7 @@ import admin from 'firebase-admin';
 // Or without npm script:
 //   ORG_ID=<orgId> npx ts-node server/src/scripts/importCustomers.ts --csv=./customer.csv
 
-const DEFAULT_PHONE = '9332100485';
+const DEFAULT_PHONE = '+91-9332100486';
 const DEFAULT_EMAIL = 'esanchar@gmail.com';
 
 // Regex pattern for Indian GSTIN: 2 digits (state code) + 10 alphanumeric (PAN) + 1 digit (entity number) + 1 letter (Z) + 1 alphanumeric (checksum)

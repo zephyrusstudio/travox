@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Plane } from "lucide-react";
 import { apiRequest } from "../../utils/apiConnector";
 
 // src/pages/AuthPage.tsx
@@ -116,80 +117,48 @@ const AuthPage: React.FC = () => {
   }, [btnRef.current]);
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        display: "grid",
-        placeItems: "center",
-        background: "#fff",
-        padding: 16,
-      }}
-    >
+    <div className="min-h-screen grid place-items-center bg-white p-4">
       <div
         role="main"
         aria-busy={loading}
+        className="max-w-md px-4 py-12 shadow-2xl overflow-hidden relative bg-cover bg-center rounded-2xl border-gray-400 border-4"
         style={{
-          width: "100%",
-          maxWidth: 380,
-          background: "#0f141a",
-          border: "1px solid #1f2a37",
-          borderRadius: 16,
-          padding: 24,
-          boxShadow: "0 8px 24px rgba(0,0,0,.24)",
+          backgroundImage: "url('https://images.unsplash.com/photo-1548266652-99cf27701ced')",
         }}
       >
-        <h1
-          style={{
-            margin: "0 0 4px",
-            font: "600 20px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
-            color: "#e5e7eb",
-          }}
-        >
-          Sign in
+        {/* Black overlay */}
+        <div className="absolute inset-0 bg-black/50" />
+        
+        {/* Content wrapper */}
+        <div className="relative z-10">
+        {/* Travel Icon */}
+        <Plane className="mx-auto mb-4 text-white" size={100} />
+
+        {/* App Name */}
+        <h1 className="text-5xl font-bold text-white text-center mb-3 tracking-tight">
+          Travox
         </h1>
-        <p
-          style={{
-            margin: "0 0 16px",
-            font: "400 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
-            color: "#9ca3af",
-          }}
-        >
-          Use Google to continue
+
+        {/* Tagline */}
+        <p className="text-base font-medium text-white/90 text-center mb-10">
+          Enterprise Travel Management
         </p>
 
+        <h2 className="text-lg font-semibold text-white text-center mb-5">
+          Sign up / Sign in
+        </h2>
+
         {err && (
-          <div
-            style={{
-              margin: "0 0 12px",
-              padding: "10px 12px",
-              borderRadius: 10,
-              background: "#2a1111",
-              color: "#fda4af",
-              border: "1px solid #7f1d1d",
-              fontSize: 13,
-            }}
-          >
+          <div className="mb-4 px-3.5 py-3 rounded-xl bg-red-50/95 text-red-800 border border-red-200/50 text-sm font-medium">
             {err}
           </div>
         )}
 
         {/* Google renders the real button here */}
-        <div
-          style={{
-            position: "relative",
-            display: "grid",
-            placeItems: "center",
-            minHeight: 44,
-          }}
-        >
+        <div className="relative grid place-items-center min-h-[44px]">
           <div
             ref={btnRef}
-            style={{
-              display: "grid",
-              placeItems: "center",
-              minHeight: 44,
-              opacity: loading ? 0.65 : 1,
-            }}
+            className={`grid place-items-center min-h-[44px] transition-opacity ${loading ? 'opacity-65' : 'opacity-100'}`}
           />
           {loading && (
             <>
@@ -198,61 +167,18 @@ const AuthPage: React.FC = () => {
               </style>
               <div
                 aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  borderRadius: 12,
-                  background: "rgba(15,20,26,0.55)",
-                  display: "grid",
-                  placeItems: "center",
-                  pointerEvents: "all",
-                }}
+                className="absolute inset-0 rounded-xl bg-blue-600/15 grid place-items-center pointer-events-auto"
               >
-                <div
-                  style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: "50%",
-                    border: "3px solid rgba(156,169,191,0.45)",
-                    borderTopColor: "#f9fafb",
-                    animation: "authSpin 0.75s linear infinite",
-                  }}
-                />
+                <div className="w-6 h-6 rounded-full border-3 border-white/30 border-t-white animate-spin" />
               </div>
             </>
           )}
         </div>
 
-        {/* Fallback if GIS failed to load */}
-        {/* {!(window as any).google?.accounts?.id && (
-          <button
-            onClick={() => window.location.reload()}
-            disabled={loading}
-            style={{
-              width: "100%",
-              height: 44,
-              border: "1px solid #334155",
-              borderRadius: 10,
-              background: "#111827",
-              color: "#e5e7eb",
-              font: "600 14px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
-              cursor: loading ? "default" : "pointer",
-            }}
-          >
-            {loading ? "Signing in…" : "Load Google Sign-In"}
-          </button>
-        )} */}
-
-        <p
-          style={{
-            margin: "12px 0 0",
-            font: "400 12px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
-            color: "#6b7280",
-            textAlign: "center",
-          }}
-        >
-          By continuing, you agree to the Terms and Privacy Policy.
+        <p className="mt-4 text-xs text-white/70 text-center">
+          By continuing, you agree to the <span className="underline">Terms of Service</span> and <span className="underline">Privacy Policy</span>.
         </p>
+        </div>
       </div>
     </div>
   );

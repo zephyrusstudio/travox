@@ -149,10 +149,16 @@ export class PaymentRepositoryFirestore implements IPaymentRepository {
     });
   }
 
-  async countAll(orgId: string): Promise<number> {
-    const snapshot = await this.collection
+  async countAll(orgId: string, paymentType?: PaymentType): Promise<number> {
+    let query = this.collection
       .where('org_id', '==', orgId)
-      .where('is_deleted', '==', false)
+      .where('is_deleted', '==', false);
+    
+    if (paymentType) {
+      query = query.where('payment_type', '==', paymentType);
+    }
+    
+    const snapshot = await query
       .count()
       .get();
     return snapshot.data().count;
@@ -230,10 +236,16 @@ export class PaymentRepositoryFirestore implements IPaymentRepository {
     });
   }
 
-  async findAll(orgId: string, limit: number = 20, offset: number = 0): Promise<Payment[]> {
-    const snapshot = await this.collection
+  async findAll(orgId: string, limit: number = 20, offset: number = 0, paymentType?: PaymentType): Promise<Payment[]> {
+    let query = this.collection
       .where('org_id', '==', orgId)
-      .where('is_deleted', '==', false)
+      .where('is_deleted', '==', false);
+    
+    if (paymentType) {
+      query = query.where('payment_type', '==', paymentType);
+    }
+    
+    const snapshot = await query
       .limit(limit)
       .offset(offset)
       .get();
@@ -310,7 +322,7 @@ export class PaymentRepositoryFirestore implements IPaymentRepository {
     const snapshot = await this.collection
       .where('org_id', '==', orgId)
       .where('booking_id', '==', bookingId)
-      .where('payment_type', '==', 'receivable')
+      .where('payment_type', '==', PaymentType.RECEIVABLE)
       .where('is_deleted', '==', false)
       .get();
 
@@ -321,7 +333,7 @@ export class PaymentRepositoryFirestore implements IPaymentRepository {
     const snapshot = await this.collection
       .where('org_id', '==', orgId)
       .where('vendor_id', '==', vendorId)
-      .where('payment_type', '==', 'expense')
+      .where('payment_type', '==', PaymentType.EXPENSE)
       .where('is_deleted', '==', false)
       .get();
 

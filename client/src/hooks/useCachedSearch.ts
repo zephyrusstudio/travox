@@ -47,7 +47,8 @@ export function useCachedSearch<T = any>(options: UseCachedSearchOptions<T>) {
         if (limit) params.append("limit", limit.toString());
 
         const queryString = params.toString();
-        const url = `${endpoint}${queryString ? `?${queryString}` : ""}`;
+        const separator = endpoint.includes('?') ? '&' : '?';
+        const url = `${endpoint}${queryString ? `${separator}${queryString}` : ""}`;
 
         const response = await apiRequest<any>({
           method: "GET",

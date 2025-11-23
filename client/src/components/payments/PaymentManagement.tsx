@@ -83,18 +83,14 @@ const PaymentManagement: React.FC = () => {
     setSearchTerm,
     searchResults,
     invalidateCache,
-  } = useCachedSearch<PaymentRow>({
-    endpoint: "/payments",
+  } = useCachedSearch<any>({
+    endpoint: "/payments?type=RECEIVABLE",
     searchFields: (payment) => [
-      payment.receipt_number || "",
+      payment.receipt_number || payment.receiptNo || payment.receipt_no || "",
       payment.notes || "",
     ],
     initialFetch: true,
     unmask: true,
-    filterFn: (item: any) => {
-      const type = item?.paymentType ?? item?.payment_type;
-      return String(type || "").toUpperCase() === "RECEIVABLE";
-    },
   });
 
   const customersMap = useMemo(() => {
@@ -285,7 +281,7 @@ const PaymentManagement: React.FC = () => {
       const res = await apiRequest<any>({
         method: "GET",
         url: "/payments",
-        params: { limit: itemsPerPage, offset },
+        params: { type: "RECEIVABLE", limit: itemsPerPage, offset },
       });
 
       const items = Array.isArray(res?.data) ? res.data : [];
@@ -403,28 +399,17 @@ const PaymentManagement: React.FC = () => {
     [payments]
   );
 
+  // Map search results to PaymentRow format
+  const mappedSearchResults = useMemo(() => {
+    return searchResults
+      .map((record: any) => mapPaymentRecord(record))
+      .filter((item: PaymentRow | null): item is PaymentRow => Boolean(item));
+  }, [searchResults, mapPaymentRecord]);
+
   // Use search results when searching, otherwise use receivable payments
   const filteredPayments = useMemo(() => {
-    if (searchTerm) {
-      // Filter search results to only receivable payments and enrich with booking info
-      return searchResults
-        .filter((payment) => payment.payment_type?.toUpperCase() === "RECEIVABLE")
-        .map((payment) => {
-          const booking = bookingsMap.get(payment.booking_id);
-          // Search also checks booking info
-          if (booking) {
-            const q = searchTerm.trim().toLowerCase();
-            const packageMatch = booking.package_name?.toLowerCase().includes(q) ?? false;
-            const customerMatch = booking.customer_name?.toLowerCase().includes(q) ?? false;
-            if (packageMatch || customerMatch) {
-              return payment;
-            }
-          }
-          return payment;
-        });
-    }
-    return receivablePayments;
-  }, [searchTerm, searchResults, receivablePayments, bookingsMap]);
+    return searchTerm ? mappedSearchResults : receivablePayments;
+  }, [searchTerm, mappedSearchResults, receivablePayments]);
 
   const isLoading = loadingPayments || loadingBookings || loadingCustomers;
 

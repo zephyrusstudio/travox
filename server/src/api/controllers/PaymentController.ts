@@ -91,13 +91,15 @@ export class PaymentController {
   async getPayments(req: Request, res: Response) {
     try {
       const getPayments = container.resolve(GetPayments);
-      const { limit, offset } = req.query;
+      const { limit, offset, type } = req.query;
+      const paymentType = type ? String(type).toUpperCase() : undefined;
       const payments = await getPayments.execute(
         req.user?.orgId!, 
         limit ? Number(limit) : undefined, 
-        offset ? Number(offset) : undefined
+        offset ? Number(offset) : undefined,
+        paymentType as any
       );
-      const count = await getPayments.count(req.user?.orgId!);
+      const count = await getPayments.count(req.user?.orgId!, paymentType as any);
       
       res.json({
         status: 'success',

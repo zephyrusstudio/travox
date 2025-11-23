@@ -12,7 +12,7 @@ export function registerUserRoutes(app: Express) {
     app.get('/users/me', requireAuth(), userCtrl.getCurrentUser);
     app.put('/users/me', requireAuth(), auditLogger('users'), userCtrl.updateProfile);
     app.get('/users/:id', requireAuth([UserRole.ADMIN, UserRole.OWNER]), userCtrl.getById);
-    app.post('/users/change-role', requireAuth([UserRole.ADMIN, UserRole.OWNER]), auditLogger('users'), userCtrl.changeRole);
-    app.post('/users/:id/activate', requireAuth([UserRole.ADMIN, UserRole.OWNER]), auditLogger('users'), userCtrl.activate);
-    app.post('/users/:id/deactivate', requireAuth([UserRole.ADMIN, UserRole.OWNER]), auditLogger('users'), userCtrl.deactivate);
+    app.patch('/users/change-role', requireAuth([UserRole.ADMIN, UserRole.OWNER]), auditLogger('users'), userCtrl.changeRole);
+    app.patch('/users/:id/activate', requireAuth([UserRole.ADMIN, UserRole.OWNER]), auditLogger('users'), userCtrl.activate);
+    app.patch('/users/:id/deactivate', requireAuth([UserRole.ADMIN, UserRole.OWNER]), auditLogger('users'), userCtrl.deactivate);
 }

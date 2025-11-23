@@ -171,7 +171,7 @@
  *               $ref: '#/components/schemas/Error'
  * 
  * /users/change-role:
- *   post:
+ *   patch:
  *     tags: [Users]
  *     summary: Change user role
  *     description: Change the role of a user in the organization (admin only)
@@ -234,7 +234,7 @@
  *               $ref: '#/components/schemas/Error'
  * 
  * /users/{id}/activate:
- *   post:
+ *   patch:
  *     tags: [Users]
  *     summary: Activate user
  *     description: Activate a user account (admin only)
@@ -284,7 +284,7 @@
  *               $ref: '#/components/schemas/Error'
  * 
  * /users/{id}/deactivate:
- *   post:
+ *   patch:
  *     tags: [Users]
  *     summary: Deactivate user
  *     description: Deactivate a user account (admin only)

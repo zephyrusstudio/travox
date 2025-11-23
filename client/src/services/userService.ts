@@ -128,7 +128,7 @@ class UserService {
 
   async changeRole(userId: string, role: UserRole): Promise<User> {
     const response = await apiRequest<ApiResponse<User>>({
-      method: "POST",
+      method: "PATCH",
       url: "/users/change-role",
       data: { userId, role },
     });
@@ -155,7 +155,7 @@ class UserService {
     const response = await apiRequest<
       ApiResponse<{ message: string; user: User }>
     >({
-      method: "POST",
+      method: "PATCH",
       url: `/users/${userId}/activate`,
     });
 
@@ -181,7 +181,7 @@ class UserService {
     const response = await apiRequest<
       ApiResponse<{ message: string; user: User }>
     >({
-      method: "POST",
+      method: "PATCH",
       url: `/users/${userId}/deactivate`,
     });
 

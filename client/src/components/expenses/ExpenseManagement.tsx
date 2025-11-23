@@ -76,20 +76,16 @@ const ExpenseManagement: React.FC = () => {
     setSearchTerm,
     searchResults,
     invalidateCache,
-  } = useCachedSearch<ExpenseRow>({
-    endpoint: "/payments",
+  } = useCachedSearch<any>({
+    endpoint: "/payments?type=EXPENSE",
     searchFields: (expense) => [
-      expense.vendor_name_resolved || expense.vendor_name || "",
+      expense.vendor_name_resolved || expense.vendor_name || expense.vendorName || "",
       expense.category || "",
-      expense.receipt_number || "",
+      expense.receipt_number || expense.receiptNo || expense.receipt_no || "",
       expense.notes || "",
     ],
     initialFetch: true,
     unmask: true,
-    filterFn: (item: any) => {
-      const type = item?.paymentType ?? item?.payment_type;
-      return String(type || "").toUpperCase() === "EXPENSE";
-    },
   });
 
   const vendorMap = useMemo(() => {
@@ -204,14 +200,10 @@ const ExpenseManagement: React.FC = () => {
       const res = await apiRequest<any>({
         method: "GET",
         url: "/payments",
-        params: { limit: itemsPerPage, offset },
+        params: { type: "EXPENSE", limit: itemsPerPage, offset },
       });
       const items = Array.isArray(res?.data) ? res.data : [];
       const mapped: ExpenseRow[] = items
-        .filter((item: any) => {
-          const type = item?.paymentType ?? item?.payment_type;
-          return String(type || "").toUpperCase() === "EXPENSE";
-        })
         .map((item: any) => ({
           expense_id: item?.id ? String(item.id) : String(item?.payment_id),
           vendor_id: item?.vendorId ?? item?.vendor_id ?? undefined,
@@ -261,10 +253,29 @@ const ExpenseManagement: React.FC = () => {
   const isLoading =
     loadingExpenses || loadingVendors || loadingAccounts || saveInFlight;
 
+  // Map search results to ExpenseRow format
+  const mappedSearchResults = useMemo((): ExpenseRow[] => {
+    return searchResults.map((item: any): ExpenseRow => ({
+      expense_id: item?.id ? String(item.id) : String(item?.payment_id),
+      vendor_id: item?.vendorId ?? item?.vendor_id ?? undefined,
+      vendor_name: item?.vendorName ?? item?.vendor_name ?? undefined,
+      amount: Number(item?.amount ?? 0) || 0,
+      currency: item?.currency || "INR",
+      payment_mode: fromBackendPaymentMode(
+        item?.paymentMode ?? item?.payment_mode
+      ),
+      category: item?.category ?? "",
+      receipt_number: item?.receiptNo ?? item?.receipt_no ?? "",
+      notes: item?.notes ?? "",
+      created_at: ensureIsoString(item?.createdAt ?? item?.created_at),
+    }));
+  }, [searchResults]);
+
   // Use search results when searching, otherwise use paginated expenses
   // Enrich with vendor names
   const filteredExpenses = useMemo(() => {
-    const source = searchTerm ? searchResults : enrichedExpenses;
+    const source = searchTerm ? mappedSearchResults : enrichedExpenses;
+    // Enrich search results with vendor names if needed
     return source.map((expense) => {
       if (expense.vendor_name_resolved) return expense;
       const vendor = expense.vendor_id
@@ -276,7 +287,7 @@ const ExpenseManagement: React.FC = () => {
           vendor?.vendor_name ?? expense.vendor_name ?? "Unlinked Vendor",
       };
     });
-  }, [searchTerm, searchResults, enrichedExpenses, vendorMap]);
+  }, [searchTerm, mappedSearchResults, enrichedExpenses, vendorMap]);
 
   const stats = useMemo(() => {
     const totalExpenses = expenses.length;

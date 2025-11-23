@@ -112,30 +112,32 @@ export class CachedPaymentRepository implements IPaymentRepository {
     return payments;
   }
 
-  async countAll(orgId: string): Promise<number> {
-    const cacheKey = `${COLLECTION_NAME}:${orgId}:count`;
+  async countAll(orgId: string, paymentType?: PaymentType): Promise<number> {
+    const cacheKey = paymentType 
+      ? `${COLLECTION_NAME}:${orgId}:count:${paymentType}`
+      : `${COLLECTION_NAME}:${orgId}:count`;
     
     const cached = await this.cache.get<number>(cacheKey);
     if (cached !== null) {
       return cached;
     }
 
-    const count = await this.baseRepo.countAll(orgId);
+    const count = await this.baseRepo.countAll(orgId, paymentType);
     
     await this.cache.set(cacheKey, count, LIST_TTL);
     
     return count;
   }
 
-  async findAll(orgId: string, limit: number = 20, offset: number = 0): Promise<Payment[]> {
-    const cacheKey = this.cache.generateListKey(COLLECTION_NAME, orgId, { limit, offset });
+  async findAll(orgId: string, limit: number = 20, offset: number = 0, paymentType?: PaymentType): Promise<Payment[]> {
+    const cacheKey = this.cache.generateListKey(COLLECTION_NAME, orgId, { limit, offset, paymentType });
     
     const cached = await this.cache.get<Payment[]>(cacheKey);
     if (cached) {
       return cached.map(p => this.rehydratePayment(p));
     }
 
-    const payments = await this.baseRepo.findAll(orgId, limit, offset);
+    const payments = await this.baseRepo.findAll(orgId, limit, offset, paymentType);
     
     if (payments.length > 0) {
       await this.cache.set(cacheKey, payments, LIST_TTL);

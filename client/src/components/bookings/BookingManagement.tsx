@@ -652,7 +652,7 @@ const BookingManagement: React.FC = () => {
           >
             Refresh
           </Button>
-          <Button
+          {/*<Button
             onClick={() => handleOpenModal(undefined, "create", false)}
             icon={Plus}
             variant="outline"
@@ -660,12 +660,13 @@ const BookingManagement: React.FC = () => {
           >
             Create Booking
           </Button>
+          */}
           <Button
             onClick={() => handleOpenModal(undefined, "create", true)}
             icon={Plus}
             className="flex gap-3"
           >
-            Create Booking v2
+            Create Booking
           </Button>
         </div>
       </div>

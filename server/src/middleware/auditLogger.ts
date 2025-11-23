@@ -35,14 +35,29 @@ export function auditLogger(entity?: string) {
       entity: entityFromUrl
     };
 
+    // Flag to prevent double logging (res.json calls res.send internally)
+    let auditLogged = false;
+
     // Override response methods to capture the result
     res.send = function(data: any) {
-      logAuditEntry(req, res, data);
+      if (!auditLogged) {
+        auditLogged = true;
+        // Don't await - let it run in background to not delay response
+        logAuditEntry(req, res, data).catch(err => {
+          console.error('[Audit Middleware] Error in logAuditEntry:', err);
+        });
+      }
       return originalSend.call(this, data);
     };
 
     res.json = function(data: any) {
-      logAuditEntry(req, res, data);
+      if (!auditLogged) {
+        auditLogged = true;
+        // Don't await - let it run in background to not delay response
+        logAuditEntry(req, res, data).catch(err => {
+          console.error('[Audit Middleware] Error in logAuditEntry:', err);
+        });
+      }
       return originalJson.call(this, data);
     };
 
@@ -79,15 +94,27 @@ export async function logAuditEntry(
     const actorId = req.user?.sub || req.user?.id || 'system';
     const orgId = req.user?.orgId || 'default-org';
     
-    // Create diff based on operation type
+    // Extract actual data from response wrapper
+    const actualResponseData = extractDataFromResponse(responseData);
+    
+    // Create diff based on operation type - store as JSON strings
     let diff: Record<string, any> = {};
     
-    if (action === 'CREATE' && responseData) {
-      diff = AuditLog.createDiffForCreate(responseData);
-    } else if (action === 'UPDATE' && req.auditContext.beforeData && responseData) {
-      diff = AuditLog.createDiffForUpdate(req.auditContext.beforeData, responseData);
+    if (action === 'CREATE' && actualResponseData) {
+      diff = {
+        before: null,
+        after: JSON.stringify(actualResponseData)
+      };
+    } else if (action === 'UPDATE' && req.auditContext.beforeData && actualResponseData) {
+      diff = {
+        before: JSON.stringify(req.auditContext.beforeData),
+        after: JSON.stringify(actualResponseData)
+      };
     } else if (action === 'DELETE' && req.auditContext.beforeData) {
-      diff = AuditLog.createDiffForDelete(req.auditContext.beforeData);
+      diff = {
+        before: JSON.stringify(req.auditContext.beforeData),
+        after: null
+      };
     }
 
     const auditLog = AuditLog.create(
@@ -117,7 +144,13 @@ export function setAuditContext(
   entityId?: string, 
   beforeData?: any
 ): void {
+  // Preserve existing audit context if it exists
+  if (!req.auditContext) {
+    req.auditContext = {};
+  }
+  
   req.auditContext = {
+    ...req.auditContext,
     entity,
     entityId,
     beforeData
@@ -154,10 +187,26 @@ function extractIdFromResponse(responseData: any): string | undefined {
   
   // Try to extract ID from common response patterns
   if (typeof responseData === 'object') {
-    return responseData.id || responseData._id || responseData.customerId || responseData.vendorId;
+    // Handle wrapped response format { status: 'success', data: {...} }
+    const actualData = responseData.data || responseData;
+    return actualData.id || actualData._id || actualData.customerId || actualData.vendorId;
   }
   
   return undefined;
+}
+
+/**
+ * Extract actual data from standard API response format
+ */
+function extractDataFromResponse(responseData: any): any {
+  if (!responseData) return undefined;
+  
+  // Handle standard response format { status: 'success', data: {...} }
+  if (typeof responseData === 'object' && responseData.data !== undefined) {
+    return responseData.data;
+  }
+  
+  return responseData;
 }
 
 function getClientIp(req: Request): string {

@@ -7,6 +7,7 @@ import { CreateAccount } from '../../application/useCases/account/CreateAccount'
 import { UpdateAccount } from '../../application/useCases/account/UpdateAccount';
 import { DeleteAccount } from '../../application/useCases/account/DeleteAccount';
 import { ArchiveAccount } from '../../application/useCases/account/ArchiveAccount';
+import { setAuditContext } from '../../middleware/auditLogger';
 
 export class AccountController {
   async getAccounts(req: Request, res: Response) {
@@ -81,8 +82,17 @@ export class AccountController {
 
   async updateAccount(req: Request, res: Response) {
     try {
+      const getAccount = container.resolve(GetAccount);
       const updateAccount = container.resolve(UpdateAccount);
-      const account = await updateAccount.execute(req.params.id, req.body, req.user?.id!);
+      const { id } = req.params;
+      
+      // Capture before state for audit log
+      const beforeAccount = await getAccount.execute(id);
+      if (beforeAccount) {
+        setAuditContext(req, 'accounts', id, beforeAccount);
+      }
+      
+      const account = await updateAccount.execute(id, req.body, req.user?.id!);
       
       if (!account) {
         return res.status(404).json({ 
@@ -115,7 +125,8 @@ export class AccountController {
     try {
       // First check if account exists and belongs to the organization
       const getAccount = container.resolve(GetAccount);
-      const account = await getAccount.execute(req.params.id);
+      const { id } = req.params;
+      const account = await getAccount.execute(id);
       
       if (!account) {
         return res.status(404).json({ 
@@ -130,9 +141,12 @@ export class AccountController {
           data: { message: 'Access denied' }
         });
       }
+      
+      // Capture before state for audit log
+      setAuditContext(req, 'accounts', id, account);
 
       const deleteAccount = container.resolve(DeleteAccount);
-      const success = await deleteAccount.execute(req.params.id);
+      const success = await deleteAccount.execute(id);
       
       if (!success) {
         return res.status(500).json({ 
@@ -157,7 +171,8 @@ export class AccountController {
     try {
       // First check if account exists and belongs to the organization
       const getAccount = container.resolve(GetAccount);
-      const existingAccount = await getAccount.execute(req.params.id);
+      const { id } = req.params;
+      const existingAccount = await getAccount.execute(id);
       
       if (!existingAccount) {
         return res.status(404).json({ 
@@ -172,9 +187,12 @@ export class AccountController {
           data: { message: 'Access denied' }
         });
       }
+      
+      // Capture before state for audit log
+      setAuditContext(req, 'accounts', id, existingAccount);
 
       const archiveAccount = container.resolve(ArchiveAccount);
-      const account = await archiveAccount.execute(req.params.id, req.user?.id!);
+      const account = await archiveAccount.execute(id, req.user?.id!);
       
       if (!account) {
         return res.status(500).json({ 

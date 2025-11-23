@@ -164,7 +164,7 @@ const CustomerManagement: React.FC = () => {
             Refresh
           </Button>
           <Button onClick={() => openForm()} className="flex gap-3">
-            Create Customer
+            Save / Add Customer
           </Button>
         </div>
       </div>

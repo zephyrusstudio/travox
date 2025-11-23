@@ -6,6 +6,7 @@ import { UpdateBooking } from '../../application/useCases/booking/UpdateBooking'
 import { DeleteBooking } from '../../application/useCases/booking/DeleteBooking';
 import { BookingStatus } from '../../models/FirestoreTypes';
 import { shouldUnmask } from '../../utils/unmask';
+import { setAuditContext } from '../../middleware/auditLogger';
 
 export class BookingController {
   async create(req: Request, res: Response) {
@@ -99,9 +100,18 @@ export class BookingController {
 
   async update(req: Request, res: Response) {
     try {
+      const getBookingsUseCase = container.resolve(GetBookings);
       const useCase = container.resolve(UpdateBooking);
       const unmask = shouldUnmask(req);
-      const booking = await useCase.execute(req.params.id, req.body, req.user?.orgId!, req.user?.id!);
+      const { id } = req.params;
+      
+      // Capture before state for audit log
+      const beforeBooking = await getBookingsUseCase.getById(id, req.user?.orgId!);
+      if (beforeBooking) {
+        setAuditContext(req, 'bookings', id, beforeBooking.toApiResponse(unmask));
+      }
+      
+      const booking = await useCase.execute(id, req.body, req.user?.orgId!, req.user?.id!);
       res.json({
         status: 'success',
         data: booking.toApiResponse(unmask)
@@ -141,8 +151,11 @@ export class BookingController {
 
   async updateStatus(req: Request, res: Response) {
     try {
+      const getBookingsUseCase = container.resolve(GetBookings);
       const useCase = container.resolve(UpdateBooking);
       const { status } = req.body;
+      const { id } = req.params;
+      const unmask = shouldUnmask(req);
       
       if (!Object.values(BookingStatus).includes(status)) {
         return res.status(400).json({
@@ -150,8 +163,14 @@ export class BookingController {
           data: { message: 'Invalid status' }
         });
       }
+      
+      // Capture before state for audit log
+      const beforeBooking = await getBookingsUseCase.getById(id, req.user?.orgId!);
+      if (beforeBooking) {
+        setAuditContext(req, 'bookings', id, beforeBooking.toApiResponse(unmask));
+      }
 
-      const booking = await useCase.updateStatus(req.params.id, status, req.user?.orgId!, req.user?.id!);
+      const booking = await useCase.updateStatus(id, status, req.user?.orgId!, req.user?.id!);
       res.json({
         status: 'success',
         data: booking
@@ -166,8 +185,18 @@ export class BookingController {
 
   async cancel(req: Request, res: Response) {
     try {
+      const getBookingsUseCase = container.resolve(GetBookings);
       const useCase = container.resolve(UpdateBooking);
-      const booking = await useCase.cancel(req.params.id, req.user?.orgId!, req.user?.id!);
+      const { id } = req.params;
+      const unmask = shouldUnmask(req);
+      
+      // Capture before state for audit log
+      const beforeBooking = await getBookingsUseCase.getById(id, req.user?.orgId!);
+      if (beforeBooking) {
+        setAuditContext(req, 'bookings', id, beforeBooking.toApiResponse(unmask));
+      }
+      
+      const booking = await useCase.cancel(id, req.user?.orgId!, req.user?.id!);
       res.json({
         status: 'success',
         data: booking
@@ -182,8 +211,18 @@ export class BookingController {
 
   async confirm(req: Request, res: Response) {
     try {
+      const getBookingsUseCase = container.resolve(GetBookings);
       const useCase = container.resolve(UpdateBooking);
-      const booking = await useCase.confirm(req.params.id, req.user?.orgId!, req.user?.id!);
+      const { id } = req.params;
+      const unmask = shouldUnmask(req);
+      
+      // Capture before state for audit log
+      const beforeBooking = await getBookingsUseCase.getById(id, req.user?.orgId!);
+      if (beforeBooking) {
+        setAuditContext(req, 'bookings', id, beforeBooking.toApiResponse(unmask));
+      }
+      
+      const booking = await useCase.confirm(id, req.user?.orgId!, req.user?.id!);
       res.json({
         status: 'success',
         data: booking
@@ -198,9 +237,19 @@ export class BookingController {
 
   async complete(req: Request, res: Response) {
     try {
+      const getBookingsUseCase = container.resolve(GetBookings);
       const useCase = container.resolve(UpdateBooking);
+      const { id } = req.params;
       const adminOverride = req.body?.adminOverride === true;
-      const booking = await useCase.complete(req.params.id, req.user?.orgId!, req.user?.id!, adminOverride);
+      const unmask = shouldUnmask(req);
+      
+      // Capture before state for audit log
+      const beforeBooking = await getBookingsUseCase.getById(id, req.user?.orgId!);
+      if (beforeBooking) {
+        setAuditContext(req, 'bookings', id, beforeBooking.toApiResponse(unmask));
+      }
+      
+      const booking = await useCase.complete(id, req.user?.orgId!, req.user?.id!, adminOverride);
       res.json({
         status: 'success',
         data: booking
@@ -215,8 +264,18 @@ export class BookingController {
 
   async delete(req: Request, res: Response) {
     try {
+      const getBookingsUseCase = container.resolve(GetBookings);
       const useCase = container.resolve(DeleteBooking);
-      const success = await useCase.execute(req.params.id, req.user?.orgId!, req.user?.id!);
+      const { id } = req.params;
+      const unmask = shouldUnmask(req);
+      
+      // Capture before state for audit log
+      const beforeBooking = await getBookingsUseCase.getById(id, req.user?.orgId!);
+      if (beforeBooking) {
+        setAuditContext(req, 'bookings', id, beforeBooking.toApiResponse(unmask));
+      }
+      
+      const success = await useCase.execute(id, req.user?.orgId!, req.user?.id!);
       res.json({
         status: 'success',
         data: { success }

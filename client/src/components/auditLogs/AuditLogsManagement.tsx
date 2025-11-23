@@ -490,98 +490,116 @@ const AuditLogsManagement: React.FC = () => {
           size="xl"
         >
           <div className="max-w-full">
-            <div className="space-y-4">
-              {/* Basic Info */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-gray-500">ID:</span>
-                  <div className="mt-1 font-mono text-xs bg-gray-100 p-2 rounded">
-                    {selectedLog.id}
+            <div className="space-y-6">
+              {/* Header Card */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-lg font-semibold text-gray-900 uppercase">
+                        {selectedLog.entity}
+                      </span>
+                      <Badge variant={getActionVariant(selectedLog.action)} className="text-sm">
+                        {selectedLog.action}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Calendar className="w-4 h-4" />
+                      <span>{formatTimestamp(selectedLog.createdAt)}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500 mb-1">Performed by</div>
+                    <div className="flex items-center gap-2 justify-end">
+                      <User className="w-4 h-4 text-gray-600" />
+                      <span className="font-medium text-gray-900">
+                        {getUserDisplayName(selectedLog.actorId).name}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <span className="font-medium text-gray-500">Timestamp:</span>
-                  <div className="mt-1">
-                    {formatTimestamp(selectedLog.createdAt)}
+              </div>
+
+              {/* Entity ID Card */}
+              {selectedLog.entityId && selectedLog.entityId !== "unknown" && (
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                    Entity ID
                   </div>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-500">Action:</span>
-                  <div className="mt-1">
-                    <Badge variant={getActionVariant(selectedLog.action)}>
-                      {selectedLog.action}
-                    </Badge>
-                  </div>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-500">Entity:</span>
-                  <div className="mt-1 uppercase font-medium">
-                    {selectedLog.entity}
-                  </div>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-500">Entity ID:</span>
-                  <div className="mt-1 font-mono text-xs">
+                  <div className="font-mono text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded border border-gray-200 break-all">
                     {selectedLog.entityId}
                   </div>
                 </div>
-                <div>
-                  <span className="font-medium text-gray-500">Actor:</span>
-                  <div className="mt-1">
-                    {getUserDisplayName(selectedLog.actorId).name}
-                  </div>
-                </div>
-              </div>
+              )}
 
               {/* Diff Details */}
-              <div>
-                <span className="font-medium text-gray-500 mb-2 block">
-                  Changes (Diff):
-                </span>
-                <div className="bg-gray-50 border rounded-lg p-4">
-                  {selectedLog.diff &&
-                  Object.keys(selectedLog.diff).length > 0 ? (
-                    <div className="space-y-3">
-                      {selectedLog.diff.before && (
-                        <div>
-                          <div className="text-sm font-medium text-red-600 mb-1">
-                            Before:
-                          </div>
-                          <pre className="text-xs bg-red-50 p-3 rounded border overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
+              <div className="space-y-3">
+                <div className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                  <div className="h-px flex-1 bg-gray-200"></div>
+                  <span>Changes</span>
+                  <div className="h-px flex-1 bg-gray-200"></div>
+                </div>
+                {selectedLog.diff && Object.keys(selectedLog.diff).length > 0 ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {selectedLog.diff.before && (
+                      <div className="bg-white border border-red-200 rounded-lg overflow-hidden">
+                        <div className="bg-red-50 px-4 py-2 border-b border-red-200">
+                          <span className="text-sm font-semibold text-red-700">Before</span>
+                        </div>
+                        <div className="p-4 max-h-96 overflow-auto">
+                          <pre className="text-xs text-gray-800 font-mono leading-relaxed whitespace-pre-wrap break-all">
                             {formatJsonForDisplay(selectedLog.diff.before)}
                           </pre>
                         </div>
-                      )}
-                      {selectedLog.diff.after && (
-                        <div>
-                          <div className="text-sm font-medium text-green-600 mb-1">
-                            After:
-                          </div>
-                          <pre className="text-xs bg-green-50 p-3 rounded border overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
+                      </div>
+                    )}
+                    {selectedLog.diff.after && (
+                      <div className="bg-white border border-green-200 rounded-lg overflow-hidden">
+                        <div className="bg-green-50 px-4 py-2 border-b border-green-200">
+                          <span className="text-sm font-semibold text-green-700">After</span>
+                        </div>
+                        <div className="p-4 max-h-96 overflow-auto">
+                          <pre className="text-xs text-gray-800 font-mono leading-relaxed whitespace-pre-wrap break-all">
                             {formatJsonForDisplay(selectedLog.diff.after)}
                           </pre>
                         </div>
-                      )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
+                    <Activity className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm">No change data available</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Metadata Footer */}
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                      IP Address
                     </div>
-                  ) : (
-                    <div className="text-gray-500 text-sm">
-                      No diff data available
+                    <div className="font-mono text-sm text-gray-900 bg-white px-3 py-2 rounded border border-gray-200">
+                      {selectedLog.ip}
                     </div>
-                  )}
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                      User Agent
+                    </div>
+                    <div className="text-xs text-gray-700 bg-white px-3 py-2 rounded border border-gray-200 break-all line-clamp-2" title={selectedLog.userAgent}>
+                      {selectedLog.userAgent}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Additional Info */}
-              <div className="grid grid-cols-2 gap-4 text-sm pt-4 border-t">
-                <div>
-                  <span className="font-medium text-gray-500">IP Address:</span>
-                  <div className="mt-1 font-mono">{selectedLog.ip}</div>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-500">User Agent:</span>
-                  <div className="mt-1 text-xs break-all">
-                    {selectedLog.userAgent}
-                  </div>
+              {/* Log ID Footer */}
+              <div className="text-center pt-2 border-t border-gray-200">
+                <div className="text-xs text-gray-400">
+                  Log ID: <span className="font-mono">{selectedLog.id}</span>
                 </div>
               </div>
             </div>

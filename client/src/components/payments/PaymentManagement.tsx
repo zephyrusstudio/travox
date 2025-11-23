@@ -91,6 +91,10 @@ const PaymentManagement: React.FC = () => {
     ],
     initialFetch: true,
     unmask: true,
+    filterFn: (item: any) => {
+      const type = item?.paymentType ?? item?.payment_type;
+      return String(type || "").toUpperCase() === "RECEIVABLE";
+    },
   });
 
   const customersMap = useMemo(() => {
@@ -175,7 +179,7 @@ const PaymentManagement: React.FC = () => {
     return new Date().toISOString();
   };
 
-  const mapPaymentRecord = (record: any): PaymentRow | null => {
+  const mapPaymentRecord = useCallback((record: any): PaymentRow | null => {
     if (!record) return null;
     const paymentId = record?.id ?? record?.payment_id;
     const bookingId = record?.bookingId ?? record?.booking_id ?? "";
@@ -203,7 +207,7 @@ const PaymentManagement: React.FC = () => {
       currency: record?.currency ? String(record.currency) : undefined,
       payment_type: record?.paymentType ?? record?.payment_type,
     };
-  };
+  }, []);
 
   const fetchCustomers = useCallback(async () => {
     setLoadingCustomers(true);
@@ -287,10 +291,10 @@ const PaymentManagement: React.FC = () => {
       const items = Array.isArray(res?.data) ? res.data : [];
       const mapped = items
         .map((item: any) => mapPaymentRecord(item))
-        .filter((item): item is PaymentRow => Boolean(item));
+        .filter((item: PaymentRow | null): item is PaymentRow => Boolean(item));
 
       mapped.sort(
-        (a, b) =>
+        (a: PaymentRow, b: PaymentRow) =>
           new Date(b.payment_date).getTime() -
           new Date(a.payment_date).getTime()
       );
@@ -306,7 +310,7 @@ const PaymentManagement: React.FC = () => {
     } finally {
       setLoadingPayments(false);
     }
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, mapPaymentRecord]);
 
   useEffect(() => {
     fetchCustomers();

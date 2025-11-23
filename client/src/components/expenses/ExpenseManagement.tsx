@@ -77,7 +77,7 @@ const ExpenseManagement: React.FC = () => {
     searchResults,
     invalidateCache,
   } = useCachedSearch<ExpenseRow>({
-    endpoint: "/expenses",
+    endpoint: "/payments",
     searchFields: (expense) => [
       expense.vendor_name_resolved || expense.vendor_name || "",
       expense.category || "",
@@ -86,6 +86,10 @@ const ExpenseManagement: React.FC = () => {
     ],
     initialFetch: true,
     unmask: true,
+    filterFn: (item: any) => {
+      const type = item?.paymentType ?? item?.payment_type;
+      return String(type || "").toUpperCase() === "EXPENSE";
+    },
   });
 
   const vendorMap = useMemo(() => {
@@ -127,7 +131,7 @@ const ExpenseManagement: React.FC = () => {
           service_type: item?.serviceType,
           account_id: item?.accountId || item?.account_id || "",
         }))
-        .filter((option) => option.vendor_id);
+        .filter((option: VendorOption) => option.vendor_id);
       setVendors(mapped);
     } catch (error) {
       const err = error as ApiError;

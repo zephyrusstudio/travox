@@ -7,6 +7,7 @@ interface UseCachedSearchOptions<T> {
   searchFields: (item: T) => string[];
   initialFetch?: boolean;
   unmask?: boolean;
+  filterFn?: (item: any) => boolean;
 }
 
 interface SearchCache<T> {
@@ -19,7 +20,7 @@ const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 const INITIAL_SEARCH_LIMIT = 500;
 
 export function useCachedSearch<T = any>(options: UseCachedSearchOptions<T>) {
-  const { endpoint, searchFields, initialFetch = true, unmask = true } = options;
+  const { endpoint, searchFields, initialFetch = true, unmask = true, filterFn } = options;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<T[]>([]);
@@ -54,8 +55,13 @@ export function useCachedSearch<T = any>(options: UseCachedSearchOptions<T>) {
         });
 
         // apiRequest returns response directly, check for data property
-        const data = response?.data ?? response ?? [];
-        return Array.isArray(data) ? data : [];
+        let data = response?.data ?? response ?? [];
+        data = Array.isArray(data) ? data : [];
+        // Apply filter function if provided
+        if (filterFn && Array.isArray(data)) {
+          data = data.filter(filterFn);
+        }
+        return data;
       } catch (error) {
         console.error("Failed to fetch search cache:", error);
         throw error;

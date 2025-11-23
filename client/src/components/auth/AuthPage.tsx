@@ -127,7 +127,7 @@ const AuthPage: React.FC = () => {
         }}
       >
         {/* Black overlay */}
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 bg-black/70" />
         
         {/* Content wrapper */}
         <div className="relative z-10">

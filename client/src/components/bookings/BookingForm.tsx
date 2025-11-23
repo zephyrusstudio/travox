@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Bot, CheckCircle, ChevronDown, Loader, Upload, X } from "lucide-react";
+import { Bot, CheckCircle, ChevronDown, Upload, X } from "lucide-react";
 import React, { useRef } from "react";
 import Button from "../ui/Button";
+import Spinner from "../ui/Spinner";
 import {
   BookingStatus,
   CustomerLite,
@@ -219,7 +220,7 @@ const BookingForm: React.FC<Props> = (props) => {
           <div className="text-center">
             {ui.isProcessing ? (
               <>
-                <Loader className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-3" />
+                <Spinner size="xl" className="mx-auto mb-3" />
                 <h3 className="text-lg font-semibold text-blue-900 mb-1">
                   Processing Ticket...
                 </h3>
@@ -667,7 +668,7 @@ const BookingForm: React.FC<Props> = (props) => {
                       type="button"
                       onClick={handleAddNewCustomer}
                       size="sm"
-                      className="flex gap-3"
+                     
                       disabled={
                         !newCustomerData.full_name.trim() ||
                         !newCustomerData.email.trim() ||
@@ -840,25 +841,27 @@ const BookingForm: React.FC<Props> = (props) => {
                   required
                   min={0}
                   value={formData.total_amount}
-                  onChange={(e) =>
-                    syncBookingAmount(parseFloat(e.target.value) || 0)
-                  }
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    syncBookingAmount(value ? Math.ceil(value) : 0);
+                  }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </Labeled>
               <Labeled label="Paid Amount">
                 <input
                   type="number"
-                  step="0.01"
+                  step="1"
                   min={0}
                   max={formData.total_amount}
                   value={formData.advance_received}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
                     setFormField(
                       "advance_received",
-                      parseFloat(e.target.value) || 0
-                    )
-                  }
+                      value ? Math.ceil(value) : 0
+                    );
+                  }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </Labeled>

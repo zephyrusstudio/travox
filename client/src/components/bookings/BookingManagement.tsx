@@ -21,6 +21,7 @@ import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
 import Modal from "../ui/Modal";
 import Pagination from "../ui/Pagination";
+import Spinner from "../ui/Spinner";
 import Table, {
   TableBody,
   TableCell,
@@ -647,7 +648,6 @@ const BookingManagement: React.FC = () => {
             onClick={fetchBookings}
             icon={RefreshCw}
             variant="outline"
-            className="flex gap-3"
             disabled={bookingsLoading}
           >
             Refresh
@@ -656,7 +656,7 @@ const BookingManagement: React.FC = () => {
             onClick={() => handleOpenModal(undefined, "create", false)}
             icon={Plus}
             variant="outline"
-            className="flex gap-3"
+           
           >
             Create Booking
           </Button>
@@ -664,7 +664,6 @@ const BookingManagement: React.FC = () => {
           <Button
             onClick={() => handleOpenModal(undefined, "create", true)}
             icon={Plus}
-            className="flex gap-3"
           >
             Create Booking
           </Button>
@@ -732,24 +731,7 @@ const BookingManagement: React.FC = () => {
       )}
 
       {/* Pagination */}
-      {bookingsLoading ? (
-        <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
-          <div className="flex flex-1 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-52"></div>
-              <div className="flex items-center gap-2">
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
-                <div className="h-8 bg-gray-200 rounded-md animate-pulse w-16"></div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-24"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
-            </div>
-          </div>
-        </div>
-      ) : (
+      {!bookingsLoading && (
         filteredBookings.length > 0 && (
           <Pagination
             currentPage={currentPage}
@@ -763,42 +745,46 @@ const BookingManagement: React.FC = () => {
       )}
 
       {/* Table */}
-      <Card>
-        <CardHeader>
-          <h3 className="text-lg font-semibold text-gray-900">All Bookings</h3>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableCell header>Package</TableCell>
-                <TableCell header>Customer</TableCell>
-                <TableCell header>Travel Dates</TableCell>
-                <TableCell header>Pax</TableCell>
-                <TableCell header>Amount</TableCell>
-                <TableCell header>Status</TableCell>
-                <TableCell header>Actions</TableCell>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {bookingsLoading ? (
+      {/* Bookings Table */}
+      {bookingsLoading ? (
+        <Card>
+          <CardContent className="flex items-center justify-center py-16">
+            <div className="flex items-center space-x-3">
+              <Spinner size="md" />
+              <span className="text-gray-600">Loading bookings...</span>
+            </div>
+          </CardContent>
+        </Card>
+      ) : filteredBookings.length === 0 ? (
+        <div className="text-center py-12">
+          <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Bookings Found
+          </h3>
+          <p className="text-gray-500">
+            No bookings found.
+          </p>
+        </div>
+      ) : (
+        <Card>
+          <CardHeader>
+            <h3 className="text-lg font-semibold text-gray-900">All Bookings</h3>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7}>
-                    <div className="py-8 text-center text-sm text-gray-500">
-                      Loading bookings...
-                    </div>
-                  </TableCell>
+                  <TableCell header>Package</TableCell>
+                  <TableCell header>Customer</TableCell>
+                  <TableCell header>Travel Dates</TableCell>
+                  <TableCell header>Pax</TableCell>
+                  <TableCell header>Amount</TableCell>
+                  <TableCell header>Status</TableCell>
+                  <TableCell header>Actions</TableCell>
                 </TableRow>
-              ) : filteredBookings.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7}>
-                    <div className="py-8 text-center text-sm text-gray-500">
-                      No bookings found.
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredBookings.map((b) => (
+              </TableHeader>
+              <TableBody>
+                {filteredBookings.map((b) => (
                   <TableRow key={b.booking_id}>
                     <TableCell>
                       <div>
@@ -866,28 +852,37 @@ const BookingManagement: React.FC = () => {
                           icon={Eye}
                           onClick={() => handleOpenModal(b, "view", true)}
                           title="View booking"
-                        />
+                        >
+                          View
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           icon={Edit}
                           onClick={() => handleOpenModal(b, "edit", true)}
-                        />
+                          title="Edit booking"
+                        >
+                          Edit
+                        </Button>
                         <Button
                           variant="danger"
                           size="sm"
                           icon={Trash2}
                           onClick={() => handleDelete(b.booking_id)}
-                        />
+                          title="Delete booking"
+                        >
+                          Delete
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))
-              )}
+              }
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+      )}
       {/* Delete Confirm Modal */}
       <Modal
         isOpen={isDeleteModalOpen}
@@ -952,7 +947,10 @@ const BookingManagement: React.FC = () => {
         size="xl"
       >
         {customersLoading && (
-          <div className="mb-4 text-sm text-gray-500">Loading customers...</div>
+          <div className="mb-4 flex items-center space-x-2">
+            <Spinner size="sm" />
+            <span className="text-sm text-gray-600">Loading customers...</span>
+          </div>
         )}
         {customersError && (
           <div className="mb-4 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
@@ -960,8 +958,9 @@ const BookingManagement: React.FC = () => {
           </div>
         )}
         {selectedBookingLoading && (
-          <div className="mb-4 text-sm text-gray-500">
-            Loading booking details...
+          <div className="mb-4 flex items-center space-x-2">
+            <Spinner size="sm" />
+            <span className="text-sm text-gray-600">Loading booking details...</span>
           </div>
         )}
         {selectedBookingError && (

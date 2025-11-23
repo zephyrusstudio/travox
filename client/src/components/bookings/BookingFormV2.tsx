@@ -2,7 +2,6 @@
 import {
   CheckCircle,
   ChevronDown,
-  Loader,
   Plus,
   Trash2,
   Upload,
@@ -10,6 +9,7 @@ import {
 } from 'lucide-react';
 import React, { useRef } from 'react';
 import Button from '../ui/Button';
+import Spinner from '../ui/Spinner';
 import {
   BookingStatus,
   CustomerLite,
@@ -205,7 +205,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
           <div className="text-center">
             {ui.isProcessing ? (
               <>
-                <Loader className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-3" />
+                <Spinner size="xl" className="mx-auto mb-3" />
                 <h3 className="text-lg font-semibold text-blue-900 mb-1">
                   Processing Ticket...
                 </h3>

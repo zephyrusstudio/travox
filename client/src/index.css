@@ -15,6 +15,12 @@
   body {
     @apply antialiased;
   }
+
+  /* Prevent horizontal scrolling on mobile */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
 }
 
 @layer utilities {
@@ -75,6 +81,24 @@
       transform: translateY(0);
     }
   }
+
+  @keyframes slide-right {
+    0%, 100% {
+      transform: translateX(-15px);
+    }
+    50% {
+      transform: translateX(15px);
+    }
+  }
+
+  @keyframes slide-left {
+    0%, 100% {
+      transform: translateX(15px);
+    }
+    50% {
+      transform: translateX(-15px);
+    }
+  }
   
   .gradient-text {
     @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
@@ -86,6 +110,20 @@
   
   .metric-card {
     @apply bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1;
+  }
+
+  /* Mobile-friendly responsive text sizes */
+  .responsive-heading {
+    @apply text-xl sm:text-2xl;
+  }
+
+  .responsive-subheading {
+    @apply text-sm sm:text-base;
+  }
+
+  /* Prevent text overflow on mobile */
+  .text-truncate-mobile {
+    @apply truncate sm:whitespace-normal;
   }
   
   .stat-gradient-1 {

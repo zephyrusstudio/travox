@@ -66,13 +66,19 @@ const VendorGrid: React.FC<VendorGridProps> = ({
                     size="sm"
                     icon={Edit}
                     onClick={() => onEdit(vendor)}
-                  />
+                    title="Edit Vendor"
+                  >
+                    Edit
+                  </Button>
                   <Button
                     variant="danger"
                     size="sm"
                     icon={Trash2}
                     onClick={() => onDelete(vendor.id)}
-                  />
+                    title="Delete Vendor"
+                  >
+                    Delete
+                  </Button>
                 </div>
               </div>
 

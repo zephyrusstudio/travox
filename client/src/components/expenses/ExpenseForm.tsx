@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { Receipt } from "lucide-react";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 import {
@@ -92,15 +93,16 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
               type="number"
               required
               min="0"
-              step="0.01"
+              step="1"
               value={formData.amount}
               disabled={isSubmitting}
-              onChange={(e) =>
+              onChange={(e) => {
+                const value = parseFloat(e.target.value);
                 setFormData((prev) => ({
                   ...prev,
-                  amount: parseFloat(e.target.value) || 0,
-                }))
-              }
+                  amount: value ? Math.ceil(value) : 0,
+                }));
+              }}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -224,7 +226,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
               type="submit"
               disabled={isSubmitting || !vendorHasAccount}
               loading={isSubmitting}
-              className="flex gap-3"
+              icon={Receipt}
             >
               Record Expense
             </Button>

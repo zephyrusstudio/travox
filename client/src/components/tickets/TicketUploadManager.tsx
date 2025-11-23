@@ -690,10 +690,12 @@ const TicketUploadManager: React.FC = () => {
               </label>
               <input
                 type="number"
+                step="1"
                 value={editData.finalAmount}
-                onChange={(e) =>
-                  updateField("finalAmount", parseFloat(e.target.value) || 0)
-                }
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                  updateField("finalAmount", value ? Math.ceil(value) : 0);
+                }}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -705,10 +707,12 @@ const TicketUploadManager: React.FC = () => {
               </label>
               <input
                 type="number"
+                step="1"
                 value={editData.discount}
-                onChange={(e) =>
-                  updateField("discount", parseFloat(e.target.value) || 0)
-                }
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                  updateField("discount", value ? Math.ceil(value) : 0);
+                }}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -720,13 +724,15 @@ const TicketUploadManager: React.FC = () => {
               </label>
               <input
                 type="number"
+                step="1"
                 value={editData.advanceReceived}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
                   updateField(
                     "advanceReceived",
-                    parseFloat(e.target.value) || 0
-                  )
-                }
+                    value ? Math.ceil(value) : 0
+                  );
+                }}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

@@ -5,6 +5,7 @@ import { ApiError, apiRequest } from "../../utils/apiConnector";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
+import Spinner from "../ui/Spinner";
 
 export type CustomerBookingsModalProps = {
   isOpen: boolean;
@@ -100,7 +101,7 @@ const CustomerBookingsModal: React.FC<CustomerBookingsModalProps> = ({
       <div>
         {loading ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <Spinner size="lg" className="mx-auto" />
             <p className="text-gray-500 mt-4">Loading bookings...</p>
           </div>
         ) : error ? (

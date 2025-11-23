@@ -99,23 +99,28 @@ const CustomerTable: React.FC<CustomerTableProps> & {
                         icon={FileText}
                         onClick={() => onViewTickets(customer)}
                         title="View Ticket History"
-                        className="h-9"
-                      />
+                      >
+                        Bookings
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         icon={Edit}
                         onClick={() => onEdit(customer)}
-                        className="h-9"
-                      />
+                        title="Edit Customer"
+                      >
+                        Edit
+                      </Button>
 
                       <Button
                         variant="danger"
                         size="sm"
                         icon={Trash2}
                         onClick={() => onDelete(customer.id)}
-                        className="h-9"
-                      />
+                        title="Delete Customer"
+                      >
+                        Delete
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

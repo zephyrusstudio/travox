@@ -8,6 +8,7 @@ import CustomerManagement from "./components/customers/CustomerManagement";
 import ExpenseManagement from "./components/expenses/ExpenseManagement";
 import PaymentManagement from "./components/payments/PaymentManagement";
 import Layout from "./components/ui/Layout";
+import UnsupportedDevice from "./components/ui/UnsupportedDevice";
 import UserManagement from "./components/users/UserManagement";
 import VendorManagement from "./components/vendors/VendorManagement";
 import { useApp } from "./contexts/AppContext";
@@ -19,8 +20,29 @@ import {
   isAppModule,
 } from "./utils/roleAccess";
 
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = React.useState(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return isMobile;
+};
+
 const AppContent: React.FC = () => {
   const { currentUser } = useApp();
+  const isMobile = useIsMobile();
   const accessibleModules = React.useMemo(
     () => getAccessibleModules(currentUser?.role),
     [currentUser?.role]
@@ -36,6 +58,11 @@ const AppContent: React.FC = () => {
     }
     return defaultModule;
   });
+
+  // Show unsupported device message on mobile
+  if (isMobile) {
+    return <UnsupportedDevice />;
+  }
 
   const renderCurrentPage = () => {
     switch (currentPage) {

@@ -1,4 +1,6 @@
 import React from "react";
+import { LucideIcon } from "lucide-react";
+import Spinner from "./Spinner";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger" | "outline" | "ghost";
@@ -20,7 +22,7 @@ const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseClasses =
-    "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95";
+    "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variantClasses = {
     primary:
@@ -34,26 +36,54 @@ const Button: React.FC<ButtonProps> = ({
     ghost: "text-gray-700 hover:bg-gray-100 focus:ring-gray-500",
   };
 
-  const sizeClasses = {
-    sm: "px-3 py-2 text-sm",
-    md: "px-4 py-2.5 text-sm",
-    lg: "px-6 py-3 text-base",
+  // Dynamic sizing based on whether button has children (text) or is icon-only
+  const getSizeClasses = () => {
+    const baseSize = {
+      sm: "text-xs sm:text-sm",
+      md: "text-xs sm:text-sm", 
+      lg: "text-sm sm:text-base"
+    };
+    
+    if (children) {
+      // Has text - use normal padding
+      const paddingSize = {
+        sm: "px-2.5 sm:px-3 py-1.5 sm:py-2",
+        md: "px-3 sm:px-4 py-2 sm:py-2.5",
+        lg: "px-4 sm:px-6 py-2.5 sm:py-3"
+      };
+      return `${paddingSize[size]} ${baseSize[size]}`;
+    } else {
+      // Icon-only - minimal padding for mobile, normal for desktop
+      const iconPaddingSize = {
+        sm: "px-1 sm:px-3 py-1 sm:py-2",
+        md: "px-1.5 sm:px-4 py-1.5 sm:py-2.5", 
+        lg: "px-2 sm:px-6 py-2 sm:py-3"
+      };
+      return `${iconPaddingSize[size]} ${baseSize[size]}`;
+    }
   };
 
-  const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
+  const classes = `${baseClasses} ${variantClasses[variant]} ${getSizeClasses()} ${className}`;
 
   return (
     <button className={classes} disabled={disabled || loading} {...props}>
       {loading ? (
-        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+        <>
+          <Spinner size="sm" color="white" />
+          {children && <span className="ml-0 sm:ml-2">{children}</span>}
+        </>
       ) : Icon && iconPosition === "left" ? (
-        <Icon className="w-4 h-4" />
-      ) : null}
-
-      {children}
-
-      {Icon && iconPosition === "right" && !loading && (
-        <Icon className="w-4 h-4 ml-2" />
+        <>
+          <Icon className="w-4 h-4" />
+          {children && <span className="ml-0 sm:ml-2">{children}</span>}
+        </>
+      ) : (
+        <>
+          {children}
+          {Icon && iconPosition === "right" && (
+            <Icon className="w-4 h-4 ml-0 sm:ml-2" />
+          )}
+        </>
       )}
     </button>
   );

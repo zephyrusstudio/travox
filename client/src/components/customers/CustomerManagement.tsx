@@ -10,6 +10,7 @@ import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
 import Modal from "../ui/Modal";
 import Pagination from "../ui/Pagination";
+import Spinner from "../ui/Spinner";
 import AccountFormModal, {
   AccountFormState,
 } from "../ui/common/AccountFormModal";
@@ -158,12 +159,11 @@ const CustomerManagement: React.FC = () => {
             onClick={fetchCustomers}
             icon={RefreshCw}
             variant="outline"
-            className="flex gap-3"
             disabled={loading}
           >
             Refresh
           </Button>
-          <Button onClick={() => openForm()} className="flex gap-3">
+          <Button onClick={() => openForm()} icon={Plus}>
             Save / Add Customer
           </Button>
         </div>
@@ -187,24 +187,7 @@ const CustomerManagement: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      {loading ? (
-        <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
-          <div className="flex flex-1 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-52"></div>
-              <div className="flex items-center gap-2">
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
-                <div className="h-8 bg-gray-200 rounded-md animate-pulse w-16"></div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-24"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
-            </div>
-          </div>
-        </div>
-      ) : (
+      {!loading && (
         !searchTerm && displayCustomers.length > 0 && (
           <Pagination
             currentPage={currentPage}
@@ -220,91 +203,10 @@ const CustomerManagement: React.FC = () => {
       {/* Table */}
       {loading ? (
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  All Customers
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Manage customer information and view booking history
-                </p>
-              </div>
-              <div className="flex items-center">
-                <RefreshCw className="w-5 h-5 animate-spin text-blue-500 mr-2" />
-                <span className="text-sm text-gray-600">
-                  Loading customers...
-                </span>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">
-                      Name
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">
-                      Contact
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">
-                      GSTIN
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">
-                      Bookings
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">
-                      Total Spent
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">
-                      Created
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...Array(5)].map((_, index) => (
-                    <tr key={index} className="border-b border-gray-100">
-                      <td className="py-4 px-4">
-                        <div className="space-y-2">
-                          <div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
-                          <div className="h-3 bg-gray-200 rounded animate-pulse w-24"></div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="space-y-2">
-                          <div className="h-3 bg-gray-200 rounded animate-pulse w-28"></div>
-                          <div className="h-3 bg-gray-200 rounded animate-pulse w-36"></div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="h-3 bg-gray-200 rounded animate-pulse w-24"></div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="h-6 bg-gray-200 rounded-full animate-pulse w-12"></div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="h-3 bg-gray-200 rounded animate-pulse w-20"></div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="h-3 bg-gray-200 rounded animate-pulse w-20"></div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex space-x-2">
-                          <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
-                          <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
-                          <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
-                          <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <CardContent className="flex items-center justify-center py-16">
+            <div className="flex items-center space-x-3">
+              <Spinner size="md" />
+              <span className="text-gray-600">Loading customers...</span>
             </div>
           </CardContent>
         </Card>

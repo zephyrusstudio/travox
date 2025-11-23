@@ -3,6 +3,7 @@ import {
   RefreshCw,
   ShieldCheck,
   ShieldOff,
+  Users,
   Users as UsersIcon,
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
@@ -11,7 +12,10 @@ import { useApp } from "../../contexts/AppContext";
 import { User, userService } from "../../services/userService";
 import { USER_ROLES, UserRole } from "../../utils/roleAccess";
 import { errorToast, successToast } from "../../utils/toasts";
+import Button from "../ui/Button";
+import Card, { CardContent } from "../ui/Card";
 import Pagination from "../ui/Pagination";
+import Spinner from "../ui/Spinner";
 
 type RoleFilter = "all" | UserRole;
 type StatusFilter = "all" | "active" | "inactive";
@@ -208,19 +212,15 @@ const UserManagement: React.FC = () => {
             their privileges in real time.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <button
+        <div className="flex items-center space-x-4">
+          <Button
             onClick={() => void loadUsers()}
+            icon={RefreshCw}
+            variant="outline"
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
             Refresh
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -244,110 +244,88 @@ const UserManagement: React.FC = () => {
         />
       </div>
 
-      {roleSummary.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {roleSummary.map(({ role, count }) => (
-            <span
-              key={role}
-              className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-4 py-1 text-sm font-medium text-gray-600"
-            >
-              <span className="h-2 w-2 rounded-full bg-gray-400" />
-              {role}
-              <span className="text-xs text-gray-500">({count})</span>
-            </span>
-          ))}
-        </div>
+      {/* Pagination */}
+      {!loading && filteredUsers.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+          itemsPerPageOptions={[5, 10, 20, 50, 100]}
+        />
       )}
 
-      {/* Pagination */}
+      {/* Users Table */}
       {loading ? (
-        <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
-          <div className="flex flex-1 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-52"></div>
-              <div className="flex items-center gap-2">
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
-                <div className="h-8 bg-gray-200 rounded-md animate-pulse w-16"></div>
-              </div>
+        <Card>
+          <CardContent className="flex items-center justify-center py-16">
+            <div className="flex items-center space-x-3">
+              <Spinner size="md" />
+              <span className="text-gray-600">Loading users...</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-24"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
-            </div>
-          </div>
+          </CardContent>
+        </Card>
+      ) : filteredUsers.length === 0 ? (
+        <div className="text-center py-12">
+          <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Users Found
+          </h3>
+          <p className="text-gray-500">
+            No users match your filters. Try adjusting the search or role
+            filters.
+          </p>
         </div>
       ) : (
-        filteredUsers.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalItems={totalItems}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={setItemsPerPage}
-            itemsPerPageOptions={[5, 10, 20, 50, 100]}
-          />
-        )
-      )}
-
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-gray-100 p-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-1 flex-wrap gap-3">
-            <div className="relative">
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search by name or email"
-                className="w-64 rounded-lg border border-gray-200 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-              />
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex flex-col gap-3 border-b border-gray-100 p-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-1 flex-wrap gap-3">
+              <div className="relative">
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search by name or email"
+                  className="w-64 rounded-lg border border-gray-200 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
+              <select
+                value={roleFilter}
+                onChange={(event) =>
+                  setRoleFilter(event.target.value as RoleFilter)
+                }
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              >
+                <option value="all">All roles</option>
+                {USER_ROLES.map((role) => (
+                  <option key={role} value={role}>
+                    {role}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={statusFilter}
+                onChange={(event) =>
+                  setStatusFilter(event.target.value as StatusFilter)
+                }
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              >
+                <option value="all">All statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
             </div>
-            <select
-              value={roleFilter}
-              onChange={(event) =>
-                setRoleFilter(event.target.value as RoleFilter)
-              }
-              className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-            >
-              <option value="all">All roles</option>
-              {USER_ROLES.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
-            <select
-              value={statusFilter}
-              onChange={(event) =>
-                setStatusFilter(event.target.value as StatusFilter)
-              }
-              className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-            >
-              <option value="all">All statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+            <div className="text-sm text-gray-500">
+              Signed in as{" "}
+              <span className="font-medium text-gray-700">
+                {currentUser?.name || currentUser?.email}
+              </span>{" "}
+              ({currentUser?.role})
+            </div>
           </div>
-          <div className="text-sm text-gray-500">
-            Signed in as{" "}
-            <span className="font-medium text-gray-700">
-              {currentUser?.name || currentUser?.email}
-            </span>{" "}
-            ({currentUser?.role})
-          </div>
-        </div>
 
-        <div className="overflow-x-auto">
-          {loading ? (
-            <div className="flex items-center justify-center p-12">
-              <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
-            </div>
-          ) : filteredUsers.length === 0 ? (
-            <div className="p-12 text-center text-sm text-gray-500">
-              No users match your filters. Try adjusting the search or role
-              filters.
-            </div>
-          ) : (
+          <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -458,9 +436,9 @@ const UserManagement: React.FC = () => {
                 })}
               </tbody>
             </table>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

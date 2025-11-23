@@ -16,6 +16,7 @@ import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
 import Pagination from "../ui/Pagination";
+import Spinner from "../ui/Spinner";
 import Table, {
   TableBody,
   TableCell,
@@ -411,12 +412,11 @@ const ExpenseManagement: React.FC = () => {
             onClick={fetchExpenses}
             icon={RefreshCw}
             variant="outline"
-            className="flex gap-3"
             disabled={loadingExpenses}
           >
             Refresh
           </Button>
-          <Button onClick={handleOpenModal} icon={Plus} className="flex gap-3">
+          <Button onClick={handleOpenModal} icon={Plus}>
             Record Expense
           </Button>
         </div>
@@ -466,74 +466,57 @@ const ExpenseManagement: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      {loadingExpenses ? (
-        <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
-          <div className="flex flex-1 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-52"></div>
-              <div className="flex items-center gap-2">
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
-                <div className="h-8 bg-gray-200 rounded-md animate-pulse w-16"></div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-24"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        filteredExpenses.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalItems={totalItems}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={setItemsPerPage}
-            itemsPerPageOptions={[5, 10, 20, 50, 100]}
-          />
-        )
+      {filteredExpenses.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+          itemsPerPageOptions={[5, 10, 20, 50, 100]}
+        />
       )}
 
-      <Card>
-        <CardHeader>
-          <h3 className="text-lg font-semibold text-gray-900">
-            Expense History
+      {/* Expenses Table */}
+      {isLoading ? (
+        <Card>
+          <CardContent className="flex items-center justify-center py-16">
+            <div className="flex items-center space-x-3">
+              <Spinner size="md" />
+              <span className="text-gray-600">Loading expenses...</span>
+            </div>
+          </CardContent>
+        </Card>
+      ) : filteredExpenses.length === 0 ? (
+        <div className="text-center py-12">
+          <Wallet className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Expenses Found
           </h3>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableCell header>Receipt</TableCell>
-                <TableCell header>Vendor</TableCell>
-                <TableCell header>Date</TableCell>
-                <TableCell header>Amount</TableCell>
-                <TableCell header>Payment Mode</TableCell>
-                <TableCell header>Category</TableCell>
-                <TableCell header>Notes</TableCell>
-              </TableRow>
-            </TableHeader>
+          <p className="text-gray-500">
+            No expenses recorded yet.
+          </p>
+        </div>
+      ) : (
+        <Card>
+          <CardHeader>
+            <h3 className="text-lg font-semibold text-gray-900">Expense History</h3>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableCell header>Receipt</TableCell>
+                  <TableCell header>Vendor</TableCell>
+                  <TableCell header>Date</TableCell>
+                  <TableCell header>Amount</TableCell>
+                  <TableCell header>Payment Mode</TableCell>
+                  <TableCell header>Category</TableCell>
+                  <TableCell header>Notes</TableCell>
+                </TableRow>
+              </TableHeader>
             <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={7}>
-                    <div className="py-6 text-center text-sm text-gray-500">
-                      Loading expenses...
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : filteredExpenses.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7}>
-                    <div className="py-6 text-center text-sm text-gray-500">
-                      No expenses recorded yet.
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredExpenses.map((expense) => (
+              {filteredExpenses.map((expense) => (
                   <TableRow key={expense.expense_id}>
                     <TableCell>
                       <div className="flex items-center space-x-2">
@@ -585,11 +568,12 @@ const ExpenseManagement: React.FC = () => {
                     </TableCell>
                   </TableRow>
                 ))
-              )}
+                }
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+      )}
 
       <ExpenseForm
         isOpen={isModalOpen}

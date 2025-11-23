@@ -62,10 +62,11 @@ interface TableCellProps {
   children: React.ReactNode;
   className?: string;
   header?: boolean;
+  colSpan?: number;
 }
 
-export const TableCell: React.FC<TableCellProps> = ({ children, className = '', header = false }) => {
-  const baseClasses = 'px-6 py-4 text-sm';
+export const TableCell: React.FC<TableCellProps> = ({ children, className = '', header = false, colSpan }) => {
+  const baseClasses = 'px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm';
   const cellClasses = header 
     ? `${baseClasses} font-medium text-gray-900 text-left tracking-wider uppercase`
     : `${baseClasses} text-gray-900`;
@@ -73,7 +74,7 @@ export const TableCell: React.FC<TableCellProps> = ({ children, className = '', 
   const Component = header ? 'th' : 'td';
   
   return (
-    <Component className={`${cellClasses} ${className}`}>
+    <Component className={`${cellClasses} ${className}`} colSpan={colSpan}>
       {children}
     </Component>
   );

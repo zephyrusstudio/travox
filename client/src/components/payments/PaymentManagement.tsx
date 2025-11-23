@@ -8,6 +8,7 @@ import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
 import Pagination from "../ui/Pagination";
+import Spinner from "../ui/Spinner";
 import Table, {
   TableBody,
   TableCell,
@@ -497,12 +498,12 @@ const PaymentManagement: React.FC = () => {
             onClick={fetchPayments}
             icon={RefreshCw}
             variant="outline"
-            className="flex gap-3"
             disabled={loadingPayments}
+            className="[&>svg]:hidden sm:[&>svg]:inline-flex"
           >
             Refresh
           </Button>
-          <Button onClick={handleOpenModal} icon={Plus} className="flex gap-3">
+          <Button onClick={handleOpenModal} icon={Plus} className="[&>svg]:hidden sm:[&>svg]:inline-flex">
             Record Payment
           </Button>
         </div>
@@ -554,24 +555,7 @@ const PaymentManagement: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      {loadingPayments ? (
-        <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
-          <div className="flex flex-1 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-52"></div>
-              <div className="flex items-center gap-2">
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
-                <div className="h-8 bg-gray-200 rounded-md animate-pulse w-16"></div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-24"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
-            </div>
-          </div>
-        </div>
-      ) : (
+      {!loadingPayments && (
         filteredPayments.length > 0 && (
           <Pagination
             currentPage={currentPage}
@@ -585,43 +569,46 @@ const PaymentManagement: React.FC = () => {
       )}
 
       {/* Payments Table */}
-      <Card>
-        <CardHeader>
-          <h3 className="text-lg font-semibold text-gray-900">
-            Payment History
+      {isLoading ? (
+        <Card>
+          <CardContent className="flex items-center justify-center py-16">
+            <div className="flex items-center space-x-3">
+              <Spinner size="md" />
+              <span className="text-gray-600">Loading payments...</span>
+            </div>
+          </CardContent>
+        </Card>
+      ) : filteredPayments.length === 0 ? (
+        <div className="text-center py-12">
+          <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Payments Found
           </h3>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableCell header>Receipt No.</TableCell>
-                <TableCell header>Booking Details</TableCell>
-                <TableCell header>Date</TableCell>
-                <TableCell header>Amount</TableCell>
-                <TableCell header>Payment Mode</TableCell>
-                <TableCell header>Notes</TableCell>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
+          <p className="text-gray-500">
+            No payments found.
+          </p>
+        </div>
+      ) : (
+        <Card>
+          <CardHeader>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Payment History
+            </h3>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6}>
-                    <div className="py-6 text-center text-sm text-gray-500">
-                      Loading payments...
-                    </div>
-                  </TableCell>
+                  <TableCell header>Receipt No.</TableCell>
+                  <TableCell header>Booking Details</TableCell>
+                  <TableCell header>Date</TableCell>
+                  <TableCell header>Amount</TableCell>
+                  <TableCell header>Payment Mode</TableCell>
+                  <TableCell header>Notes</TableCell>
                 </TableRow>
-              ) : filteredPayments.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6}>
-                    <div className="py-6 text-center text-sm text-gray-500">
-                      No payments found.
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredPayments.map((p) => {
+              </TableHeader>
+              <TableBody>
+                {filteredPayments.map((p) => {
                   const booking = bookingsMap.get(p.booking_id);
                   return (
                     <TableRow key={p.payment_id}>
@@ -669,11 +656,12 @@ const PaymentManagement: React.FC = () => {
                     </TableRow>
                   );
                 })
-              )}
+                }
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+      )}
 
       {/* Record Payment Modal */}
       <PaymentForm

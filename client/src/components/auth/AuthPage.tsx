@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Plane } from "lucide-react";
 import { apiRequest } from "../../utils/apiConnector";
+import Spinner from "../ui/Spinner";
+import UnsupportedDevice from "../ui/UnsupportedDevice";
 
 // src/pages/AuthPage.tsx
 import React, { useEffect, useRef, useState } from "react";
@@ -33,6 +35,26 @@ const AuthPage: React.FC = () => {
   const btnRef = useRef<HTMLDivElement>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Show unsupported device message on mobile
+  if (isMobile) {
+    return <UnsupportedDevice />;
+  }
 
   // Load GIS and init
   useEffect(() => {
@@ -71,7 +93,6 @@ const AuthPage: React.FC = () => {
         size: "large",
         shape: "pill",
         text: "continue_with",
-        width: 320,
       });
     }
   };
@@ -117,20 +138,17 @@ const AuthPage: React.FC = () => {
   }, [btnRef.current]);
 
   return (
-    <div className="min-h-screen grid place-items-center bg-white p-4">
+    <div className="min-h-screen grid place-items-center bg-gradient-to-br from-blue-300 to-blue-100">
       <div
         role="main"
         aria-busy={loading}
-        className="max-w-md px-4 py-12 shadow-2xl overflow-hidden relative bg-cover bg-center rounded-2xl border-gray-400 border-4"
-        style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1548266652-99cf27701ced')",
-        }}
+        className="w-full h-screen sm:h-auto sm:max-w-md px-8 py-24 sm:shadow-2xl overflow-hidden relative bg-gradient-to-t from-blue-600 to-blue-400 bg-cover bg-center sm:rounded-2xl sm:border-white sm:border-2 flex items-center justify-center"
+        //style={{
+        //  backgroundImage: "url('https://images.unsplash.com/photo-1548266652-99cf27701ced')",
+        //}}
       >
-        {/* Black overlay */}
-        <div className="absolute inset-0 bg-black/70" />
-        
         {/* Content wrapper */}
-        <div className="relative z-10">
+        <div className="relative z-10 w-full">
         {/* Travel Icon */}
         <Plane className="mx-auto mb-4 text-white" size={100} />
 
@@ -154,23 +172,17 @@ const AuthPage: React.FC = () => {
           </div>
         )}
 
-        {/* Google renders the real button here */}
-        <div className="relative grid place-items-center min-h-[44px]">
-          <div
-            ref={btnRef}
-            className={`grid place-items-center min-h-[44px] ${loading ? 'invisible' : 'visible'}`}
-          />
+        {/* Google Sign-In Button Container */}
+        <div className="relative flex justify-center mb-4">
+          <div ref={btnRef} className={loading ? 'opacity-0' : 'opacity-100'} />
           {loading && (
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 grid place-items-center"
-            >
-              <div className="w-6 h-6 rounded-full border-[3px] border-white/30 border-t-white animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Spinner size="md" color="white" />
             </div>
           )}
         </div>
 
-        <p className="mt-4 text-xs text-white/70 text-center">
+        <p className="mt-4 text-xs text-white text-center">
           By continuing, you agree to the <span className="underline">Terms of Service</span> and <span className="underline">Privacy Policy</span>.
         </p>
         </div>

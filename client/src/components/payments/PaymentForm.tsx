@@ -1,4 +1,5 @@
 import React from "react";
+import { CreditCard } from "lucide-react";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 import {
@@ -101,15 +102,16 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
               type="number"
               required
               min="0"
-              step="0.01"
+              step="1"
               value={formData.amount}
               disabled={isSubmitting}
-              onChange={(e) =>
+              onChange={(e) => {
+                const value = parseFloat(e.target.value);
                 setFormData({
                   ...formData,
-                  amount: parseFloat(e.target.value) || 0,
-                })
-              }
+                  amount: value ? Math.ceil(value) : 0,
+                });
+              }}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -180,7 +182,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting} loading={isSubmitting} className="flex gap-3">
+          <Button type="submit" disabled={isSubmitting} loading={isSubmitting} icon={CreditCard}>
             Record Payment
           </Button>
         </div>

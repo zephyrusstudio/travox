@@ -6,6 +6,7 @@ import {
   Filter,
   RefreshCw,
   User,
+  X,
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -20,6 +21,7 @@ import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
 import Modal from "../ui/Modal";
 import Pagination from "../ui/Pagination";
+import Spinner from "../ui/Spinner";
 
 const AuditLogsManagement: React.FC = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -179,23 +181,26 @@ const AuditLogsManagement: React.FC = () => {
         </div>
         <div className="flex items-center space-x-4">
           <Button
+            onClick={fetchAuditLogs}
+            icon={RefreshCw}
             variant="outline"
-            className="flex gap-3"
+            disabled={loading}
+          >
+            Refresh
+          </Button>
+          {/*<Button
+            variant="outline"
             onClick={() => setShowFilters(!showFilters)}
             icon={Filter}
           >
             Filters
-          </Button>
+          </Button>*/}
           <Button
             variant="outline"
-            className="flex gap-3"
             onClick={exportToCSV}
             icon={Download}
           >
             Export CSV
-          </Button>
-          <Button onClick={fetchAuditLogs} icon={RefreshCw} className="flex gap-3" disabled={loading}>
-            Refresh
           </Button>
         </div>
       </div>
@@ -268,7 +273,7 @@ const AuditLogsManagement: React.FC = () => {
               </div>
 
               <div className="md:col-span-2 lg:col-span-4 flex items-center space-x-4">
-                <Button variant="outline" onClick={clearFilters} size="sm">
+                <Button variant="outline" onClick={clearFilters} size="sm" icon={X}>
                   Clear All
                 </Button>
               </div>
@@ -278,105 +283,28 @@ const AuditLogsManagement: React.FC = () => {
       )}
 
       {/* Pagination */}
-      {loading ? (
-        <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
-          <div className="flex flex-1 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-52"></div>
-              <div className="flex items-center gap-2">
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
-                <div className="h-8 bg-gray-200 rounded-md animate-pulse w-16"></div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-24"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        auditLogs.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalItems={total}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={setItemsPerPage}
-            itemsPerPageOptions={[5, 10, 20, 50, 100]}
-          />
-        )
+      {!loading && auditLogs.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={total}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+          itemsPerPageOptions={[5, 10, 20, 50, 100]}
+        />
       )}
 
       {/* Audit Logs Table */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Audit Logs</h3>
-            <div className="text-sm text-gray-500">
-              Showing {auditLogs.length} of {total} records
+      {loading ? (
+        <Card>
+          <CardContent className="flex items-center justify-center py-16">
+            <div className="flex items-center space-x-3">
+              <Spinner size="md" />
+              <span className="text-gray-600">Loading audit logs...</span>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Timestamp
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Action
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Entity
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actor
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <tr key={index} className="animate-pulse">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-4 h-4 bg-gray-300 rounded mr-2"></div>
-                          <div className="h-4 bg-gray-300 rounded w-32"></div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-gray-300 rounded-full mr-3"></div>
-                          <div className="h-6 bg-gray-300 rounded w-16"></div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="h-4 bg-gray-300 rounded w-24 mb-1"></div>
-                          <div className="h-3 bg-gray-300 rounded w-20"></div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-4 h-4 bg-gray-300 rounded mr-2"></div>
-                          <div>
-                            <div className="h-4 bg-gray-300 rounded w-20 mb-1"></div>
-                            <div className="h-3 bg-gray-300 rounded w-16"></div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-4 bg-gray-300 rounded w-32"></div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : auditLogs.length === 0 ? (
+          </CardContent>
+        </Card>
+      ) : auditLogs.length === 0 ? (
             <div className="text-center py-12">
               <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -387,6 +315,16 @@ const AuditLogsManagement: React.FC = () => {
               </p>
             </div>
           ) : (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Audit Logs</h3>
+              <div className="text-sm text-gray-500">
+                Showing {auditLogs.length} of {total} records
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
@@ -474,9 +412,9 @@ const AuditLogsManagement: React.FC = () => {
                 </tbody>
               </table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Detail Modal */}
       {showDetailModal && selectedLog && (

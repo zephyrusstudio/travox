@@ -4,11 +4,13 @@ import { useCachedSearch } from "../../hooks/useCachedSearch";
 import { Vendor } from "../../types";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import Button from "../ui/Button";
+import Card, { CardContent } from "../ui/Card";
 import Modal from "../ui/Modal";
 import Pagination from "../ui/Pagination";
+import Spinner from "../ui/Spinner";
 import AccountFormModal, { AccountFormState } from "../ui/common/AccountFormModal";
 import VendorFormModal, { VendorFormState } from "./VendorFormModal";
-import VendorGrid from "./VendorGrid";
+import VendorTable from "./VendorTable";
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -208,12 +210,11 @@ const VendorManagement: React.FC = () => {
             onClick={fetchVendors}
             icon={RefreshCw}
             variant="outline"
-            className="flex gap-3"
             disabled={loading}
           >
             Refresh
           </Button>
-          <Button onClick={() => openForm()} icon={Plus} className="flex gap-3">
+          <Button onClick={() => openForm()} icon={Plus}>
             Create Vendor
           </Button>
         </div>
@@ -226,41 +227,16 @@ const VendorManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Search and Stats */}
-      <div className="grid grid-cols-1  gap-6">
-        <div className="">
-          <label className="relative block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search vendors..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </label>
-        </div>
+      {/* Search */}
+      <div className="grid grid-cols-1 gap-6">
+        <VendorTable.SearchBox
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
       </div>
 
       {/* Pagination */}
-      {loading ? (
-        <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
-          <div className="flex flex-1 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-52"></div>
-              <div className="flex items-center gap-2">
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
-                <div className="h-8 bg-gray-200 rounded-md animate-pulse w-16"></div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-24"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
-            </div>
-          </div>
-        </div>
-      ) : (
+      {!loading && (
         filteredVendors.length > 0 && (
           <Pagination
             currentPage={currentPage}
@@ -273,50 +249,16 @@ const VendorManagement: React.FC = () => {
         )
       )}
 
-      {/* Grid */}
+      {/* Table */}
       {loading ? (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, index) => (
-              <div key={index} className="bg-white rounded-lg shadow border border-gray-200 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-                    <div>
-                      <div className="h-4 bg-gray-200 rounded animate-pulse w-24 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
-                    </div>
-                  </div>
-                  <div className="h-6 bg-gray-200 rounded-full animate-pulse w-16"></div>
-                </div>
-
-                <div className="space-y-3 mb-4">
-                  <div className="flex justify-between">
-                    <div className="h-3 bg-gray-200 rounded animate-pulse w-12"></div>
-                    <div className="h-3 bg-gray-200 rounded animate-pulse w-20"></div>
-                  </div>
-                  <div className="flex justify-between">
-                    <div className="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
-                    <div className="h-3 bg-gray-200 rounded animate-pulse w-24"></div>
-                  </div>
-                  <div className="flex justify-between">
-                    <div className="h-3 bg-gray-200 rounded animate-pulse w-14"></div>
-                    <div className="h-3 bg-gray-200 rounded animate-pulse w-28"></div>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                  <div className="flex space-x-2">
-                    <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
-                    <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
-                    <div className="h-8 bg-gray-200 rounded animate-pulse w-8"></div>
-                  </div>
-                  <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
+        <Card>
+          <CardContent className="flex items-center justify-center py-16">
+            <div className="flex items-center space-x-3">
+              <Spinner size="md" />
+              <span className="text-gray-600">Loading vendors...</span>
+            </div>
+          </CardContent>
+        </Card>
       ) : vendors.length === 0 ? (
         <div className="text-center py-12">
           <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -324,7 +266,7 @@ const VendorManagement: React.FC = () => {
           <p className="text-gray-500">Get started by adding your first vendor.</p>
         </div>
       ) : (
-        <VendorGrid
+        <VendorTable
           vendors={filteredVendors}
           onEdit={openForm}
           onDelete={askDelete}

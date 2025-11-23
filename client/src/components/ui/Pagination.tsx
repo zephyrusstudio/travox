@@ -54,24 +54,24 @@ const Pagination: React.FC<PaginationProps> = ({
   }
 
   return (
-    <div className="flex items-center rounded-xl justify-between border border-gray-200 bg-white px-4 py-3 sm:px-6">
-      <div className="flex flex-1 items-center justify-between">
-        <div className="flex items-center gap-4">
-          <p className="text-sm text-gray-700">
+    <div className="flex flex-col sm:flex-row items-center rounded-xl justify-between border border-gray-200 bg-white px-3 sm:px-4 py-3 gap-3 sm:gap-0">
+      <div className="flex flex-col sm:flex-row flex-1 items-center justify-between w-full gap-3 sm:gap-0">
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full sm:w-auto">
+          <p className="text-xs sm:text-sm text-gray-700 text-center sm:text-left">
             Showing <span className="font-medium">{startItem}</span> to{" "}
             <span className="font-medium">{endItem}</span> of{" "}
             <span className="font-medium">{totalItems}</span> results
           </p>
           {showItemsPerPage && onItemsPerPageChange && (
             <div className="flex items-center gap-2">
-              <label htmlFor="itemsPerPage" className="text-sm text-gray-700">
+              <label htmlFor="itemsPerPage" className="text-xs sm:text-sm text-gray-700 whitespace-nowrap">
                 Items per page:
               </label>
               <select
                 id="itemsPerPage"
                 value={itemsPerPage}
                 onChange={handleItemsPerPageChange}
-                className="rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="rounded-md border border-gray-300 px-2 py-1 text-xs sm:text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 {itemsPerPageOptions.map((option) => (
                   <option key={option} value={option}>
@@ -94,7 +94,7 @@ const Pagination: React.FC<PaginationProps> = ({
             Previous
           </Button>
           <div className="flex items-center gap-1">
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-gray-700 whitespace-nowrap">
               Page {currentPage} of {totalPages}
             </span>
           </div>

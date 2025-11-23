@@ -241,9 +241,12 @@ const RefundManagement: React.FC = () => {
                 type="number"
                 required
                 min="0"
-                step="0.01"
+                step="1"
                 value={formData.refund_amount}
-                onChange={(e) => setFormData({ ...formData, refund_amount: parseFloat(e.target.value) || 0 })}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                  setFormData({ ...formData, refund_amount: value ? Math.ceil(value) : 0 });
+                }}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -280,7 +283,7 @@ const RefundManagement: React.FC = () => {
             <Button type="button" variant="outline" onClick={handleCloseModal}>
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" icon={RefreshCw}>
               Process Refund
             </Button>
           </div>

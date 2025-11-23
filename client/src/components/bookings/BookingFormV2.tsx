@@ -388,11 +388,12 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
               <input
                 type="number"
                 min="0"
-                step="0.01"
+                step="1"
                 value={formData.totalAmount}
-                onChange={(e) =>
-                  setFormField('totalAmount', parseFloat(e.target.value) || '')
-                }
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                  setFormField('totalAmount', value ? Math.ceil(value) : '');
+                }}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -402,11 +403,12 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
               <input
                 type="number"
                 min="0"
-                step="0.01"
+                step="1"
                 value={formData.advanceAmount}
-                onChange={(e) =>
-                  setFormField('advanceAmount', parseFloat(e.target.value) || '')
-                }
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                  setFormField('advanceAmount', value ? Math.ceil(value) : '');
+                }}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </Labeled>

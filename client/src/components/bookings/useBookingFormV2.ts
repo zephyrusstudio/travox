@@ -351,7 +351,9 @@ export function useBookingFormV2({
             ...prev,
             pnrNo: extracted.pnrNo || prev.pnrNo,
             bookingDate: extracted.bookingDate ? fromISODate(extracted.bookingDate, false) : prev.bookingDate,
-            totalAmount: extracted.totalAmount ?? prev.totalAmount,
+            totalAmount: extracted.totalAmount !== undefined && extracted.totalAmount !== null 
+              ? Math.ceil(Number(extracted.totalAmount)) 
+              : prev.totalAmount,
             currency: extracted.currency || prev.currency,
             packageName: extracted.packageName || prev.packageName,
             modeOfJourney: extracted.modeOfJourney || prev.modeOfJourney,

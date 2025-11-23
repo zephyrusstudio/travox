@@ -158,20 +158,15 @@ const AuthPage: React.FC = () => {
         <div className="relative grid place-items-center min-h-[44px]">
           <div
             ref={btnRef}
-            className={`grid place-items-center min-h-[44px] transition-opacity ${loading ? 'opacity-65' : 'opacity-100'}`}
+            className={`grid place-items-center min-h-[44px] ${loading ? 'invisible' : 'visible'}`}
           />
           {loading && (
-            <>
-              <style>
-                {`@keyframes authSpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}`}
-              </style>
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 rounded-xl bg-blue-600/15 grid place-items-center pointer-events-auto"
-              >
-                <div className="w-6 h-6 rounded-full border-3 border-white/30 border-t-white animate-spin" />
-              </div>
-            </>
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 grid place-items-center"
+            >
+              <div className="w-6 h-6 rounded-full border-[3px] border-white/30 border-t-white animate-spin" />
+            </div>
           )}
         </div>
 

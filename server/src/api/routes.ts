@@ -9,6 +9,7 @@ import { registerUserRoutes } from './routes/userRoutes';
 import { registerAccountRoutes } from './routes/accountRoutes';
 import { registerFileRoutes } from './routes/fileRoutes';
 import { registerOCRRoutes } from './routes/ocrRoutes';
+import { registerMetricsRoutes } from './routes/metricsRoutes';
 
 export function registerRoutes(app: Express) {
     registerAuthRoutes(app);
@@ -21,4 +22,5 @@ export function registerRoutes(app: Express) {
     registerAccountRoutes(app);
     registerFileRoutes(app);
     registerOCRRoutes(app);
+    registerMetricsRoutes(app);
 }

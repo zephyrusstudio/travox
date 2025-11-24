@@ -6,6 +6,7 @@ import path from "path";
 import { registerRoutes } from "./api/routes";
 import { setupSwagger } from "./config/swagger";
 import { dateParserMiddleware } from "./middleware/dateParser";
+import { dateSerializerMiddleware } from "./middleware/dateSerializer";
 import { errorHandler } from "./middleware/errorHandler";
 import { loggerMiddleware } from "./middleware/loggerMiddleware";
 
@@ -29,7 +30,8 @@ export async function startServer() {
 
   // Basic middleware
   app.use(json());
-  app.use(dateParserMiddleware); // Parse date strings to Date objects
+  app.use(dateParserMiddleware); // Parse date strings to Date objects and adjust for IST
+  app.use(dateSerializerMiddleware); // Adjust dates in responses for IST
   app.use(cookieParser());
   app.use(loggerMiddleware);
 

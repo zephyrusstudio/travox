@@ -60,10 +60,22 @@ export interface PaymentFormState {
   notes: string;
 }
 
-export const todayISO = (): string => new Date().toISOString().split("T")[0];
+export const todayISO = (): string => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
-export const formatDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString("en-IN");
+export const formatDate = (iso: string): string => {
+  const date = new Date(iso);
+  return date.toLocaleDateString("en-IN", {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+  });
+};
 
 const BACKEND_MODE_BY_FRONTEND: Record<PaymentMode, string> = {
   [PaymentMode.CASH]: "CASH",

@@ -5,6 +5,7 @@ import { BookingStatus, ModeOfJourney, PAXType, Sex } from '../../../models/Fire
 import { BookingPax } from '../../../domain/BookingPax';
 import { BookingItinerary } from '../../../domain/BookingItinerary';
 import { BookingSegment } from '../../../domain/BookingSegment';
+import { getCurrentISTDate } from '../../../utils/timezone';
 
 // Re-using DTOs from CreateBooking for consistency
 interface PaxDTO {
@@ -118,7 +119,7 @@ export class UpdateBooking {
     }
 
     booking.updatedBy = updatedBy;
-    booking.updatedAt = new Date();
+    booking.updatedAt = getCurrentISTDate();
 
     return await this.bookingRepo.update(booking, orgId);
   }

@@ -1,5 +1,6 @@
 import { injectable, inject } from 'tsyringe';
 import { IVendorRepository } from '../../repositories/IVendorRepository';
+import { getCurrentISTDate } from '../../../utils/timezone';
 import { IPaymentRepository } from '../../repositories/IPaymentRepository';
 
 @injectable()
@@ -25,7 +26,7 @@ export class UpdateVendorTotalExpense {
 
     // Update vendor
     vendor.totalExpense = totalExpense;
-    vendor.updatedAt = new Date();
+    vendor.updatedAt = getCurrentISTDate();
     await this.vendorRepo.update(vendor, orgId);
 
     return totalExpense;

@@ -13,7 +13,13 @@ const VendorLedger: React.FC = () => {
   const [serviceTypeFilter, setServiceTypeFilter] = useState('');
   const [dateRange, setDateRange] = useState({
     startDate: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0]
+    endDate: (() => {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    })()
   });
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedVendorData, setSelectedVendorData] = useState<any>(null);
@@ -93,7 +99,9 @@ const VendorLedger: React.FC = () => {
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', `vendor_ledger_${new Date().toISOString().split('T')[0]}.csv`);
+      const date = new Date();
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      link.setAttribute('download', `vendor_ledger_${dateStr}.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -102,7 +110,12 @@ const VendorLedger: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN');
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+    });
   };
 
   const getServiceTypeVariant = (serviceType: string) => {

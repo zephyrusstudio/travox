@@ -10,7 +10,13 @@ const DetailedRevenueView: React.FC = () => {
   const { payments, bookings, customers } = useApp();
   const [dateRange, setDateRange] = useState({
     startDate: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0]
+    endDate: (() => {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    })()
   });
 
   const filteredPayments = payments.filter(payment => {
@@ -35,7 +41,12 @@ const DetailedRevenueView: React.FC = () => {
   }, {} as Record<string, number>);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN');
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+    });
   };
 
   const getPaymentModeVariant = (mode: string) => {

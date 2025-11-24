@@ -1,4 +1,5 @@
 import { UserRole } from '../models/FirestoreTypes';
+import { getCurrentISTDate } from '../utils/timezone';
 
 export interface UserPreferences {
   timezone?: string;
@@ -20,39 +21,39 @@ export class User {
         public isActive: boolean = false,
         public preferences: UserPreferences = {},
         public lastLoginAt?: Date,
-        public createdAt: Date = new Date(),
-        public updatedAt: Date = new Date()
+        public createdAt: Date = getCurrentISTDate(),
+        public updatedAt: Date = getCurrentISTDate()
     ) { }
 
     static createFromGoogle(orgId: string, email: string, name: string, googleId: string, avatar?: string): User {
-        const now = new Date();
+        const now = getCurrentISTDate();
         return new User('', orgId, name, email, undefined, googleId, avatar, UserRole.ADMIN, true, {}, undefined, now, now);
     }
 
     updateProfile(name?: string, phone?: string): void {
         this.name = name;
         this.phone = phone;
-        this.updatedAt = new Date();
+        this.updatedAt = getCurrentISTDate();
     }
 
     updatePreferences(preferences: Partial<UserPreferences>): void {
         this.preferences = { ...this.preferences, ...preferences };
-        this.updatedAt = new Date();
+        this.updatedAt = getCurrentISTDate();
     }
 
     activate(): void {
         this.isActive = true;
-        this.updatedAt = new Date();
+        this.updatedAt = getCurrentISTDate();
     }
 
     deactivate(): void {
         this.isActive = false;
-        this.updatedAt = new Date();
+        this.updatedAt = getCurrentISTDate();
     }
 
     setRole(role: UserRole): void {
         this.role = role;
-        this.updatedAt = new Date();
+        this.updatedAt = getCurrentISTDate();
     }
 
     hasRole(role: UserRole): boolean {
@@ -64,8 +65,8 @@ export class User {
     }
 
     recordLogin(): void {
-        this.lastLoginAt = new Date();
-        this.updatedAt = new Date();
+        this.lastLoginAt = getCurrentISTDate();
+        this.updatedAt = getCurrentISTDate();
     }
 
     canAccess(resource: string, action: string): boolean {

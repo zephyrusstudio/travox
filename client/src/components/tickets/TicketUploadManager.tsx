@@ -155,7 +155,7 @@ const TicketUploadManager: React.FC = () => {
       const newTicket: TicketData = {
         id: ticketId,
         fileName: file.name,
-        uploadDate: new Date().toISOString(),
+        uploadDate: new Date().toISOString().replace('Z', ''),
         status: "processing",
         pdfUrl: URL.createObjectURL(file),
       };

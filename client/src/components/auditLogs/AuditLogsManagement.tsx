@@ -124,15 +124,18 @@ const AuditLogsManagement: React.FC = () => {
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     if (Number.isNaN(date.getTime())) return timestamp;
+    
+    // Use local date components
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const shortYear = String(date.getFullYear()).slice(-2);
-    const time = date.toLocaleTimeString(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    });
+    const hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12;
+    const time = `${String(displayHours).padStart(2, "0")}:${minutes}:${seconds} ${ampm}`;
+    
     return `${day}/${month}/${shortYear} - ${time}`;
   };
 

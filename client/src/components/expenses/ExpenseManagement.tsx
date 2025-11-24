@@ -173,7 +173,17 @@ const ExpenseManagement: React.FC = () => {
   }, []);
 
   const ensureIsoString = (value: unknown): string => {
-    if (!value) return new Date().toISOString();
+    if (!value) {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      const ms = String(date.getMilliseconds()).padStart(3, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${ms}`;
+    }
     if (value instanceof Date) return value.toISOString();
     if (typeof value === "string" || typeof value === "number") {
       const parsed = new Date(value);
@@ -191,7 +201,15 @@ const ExpenseManagement: React.FC = () => {
         return new Date(seconds * 1000).toISOString();
       }
     }
-    return new Date().toISOString();
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const ms = String(date.getMilliseconds()).padStart(3, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${ms}`;
   };
 
   const fetchExpenses = useCallback(async () => {

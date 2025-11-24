@@ -1,6 +1,7 @@
 import { injectable, inject } from 'tsyringe';
 import { IBookingRepository } from '../../repositories/IBookingRepository';
 import { ICustomerRepository } from '../../repositories/ICustomerRepository';
+import { getCurrentISTDate } from '../../../utils/timezone';
 
 @injectable()
 export class DeleteBooking {
@@ -27,7 +28,7 @@ export class DeleteBooking {
       const customer = await this.customerRepo.findById(booking.customerId, orgId);
       if (customer && customer.totalBookings > 0) {
         customer.totalBookings -= 1;
-        customer.updatedAt = new Date();
+        customer.updatedAt = getCurrentISTDate();
         await this.customerRepo.update(customer, orgId);
       }
     }

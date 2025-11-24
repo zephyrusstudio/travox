@@ -1,5 +1,6 @@
 import { AuditLog } from '../types';
 import { apiRequest } from '../utils/apiConnector';
+import { toISTISOString, parseISTDate, getCurrentISTDate } from '../utils/timezone';
 
 export interface AuditLogFilters {
   entity?: string;
@@ -21,15 +22,16 @@ export interface AuditLogsResponse {
 function convertFirestoreTimestamp(timestamp: { _seconds: number; _nanoseconds: number } | string | null | undefined): string {
   // Handle null/undefined cases
   if (!timestamp) {
-    return new Date().toISOString(); // Return current time as fallback
+    return toISTISOString(getCurrentISTDate()); // Return current time as fallback
   }
 
-  // Handle string timestamps (already ISO format)
+  // Handle string timestamps (already ISO format or date string)
   if (typeof timestamp === 'string') {
     try {
-      return new Date(timestamp).toISOString();
+      const date = parseISTDate(timestamp);
+      return toISTISOString(date);
     } catch {
-      return new Date().toISOString();
+      return toISTISOString(getCurrentISTDate());
     }
   }
 
@@ -41,7 +43,7 @@ function convertFirestoreTimestamp(timestamp: { _seconds: number; _nanoseconds: 
       const nanoseconds = Number(timestamp._nanoseconds || 0);
       
       if (isNaN(seconds) || isNaN(nanoseconds)) {
-        return new Date().toISOString();
+        return toISTISOString(getCurrentISTDate());
       }
       
       const milliseconds = seconds * 1000 + nanoseconds / 1000000;
@@ -49,17 +51,17 @@ function convertFirestoreTimestamp(timestamp: { _seconds: number; _nanoseconds: 
       
       // Check if the resulting date is valid
       if (isNaN(date.getTime())) {
-        return new Date().toISOString();
+        return toISTISOString(getCurrentISTDate());
       }
       
-      return date.toISOString();
+      return toISTISOString(date);
     } catch {
-      return new Date().toISOString();
+      return toISTISOString(getCurrentISTDate());
     }
   }
 
   // Fallback for any other format
-  return new Date().toISOString();
+  return toISTISOString(getCurrentISTDate());
 }
 
 // Interface for the API response log format
@@ -97,7 +99,7 @@ function transformAuditLog(apiLog: ApiAuditLog): AuditLog {
     };
   } catch (error) {
     console.warn('Error transforming audit log:', error, apiLog);
-    // Return a minimal audit log object with current timestamp
+    // Return a minimal audit log object with current timestamp in IST
     return {
       id: apiLog.id || 'unknown',
       orgId: apiLog.orgId || 'unknown',
@@ -108,8 +110,8 @@ function transformAuditLog(apiLog: ApiAuditLog): AuditLog {
       diff: {},
       ip: 'unknown',
       userAgent: 'unknown',
-      createdAt: new Date().toISOString(),
-      timestamp: new Date().toISOString(),
+      createdAt: toISTISOString(getCurrentISTDate()),
+      timestamp: toISTISOString(getCurrentISTDate()),
       actorName: 'Unknown User'
     };
   }
@@ -183,12 +185,13 @@ export const auditLogService = {
         responseType: 'blob',
       });
 
-      // Create download link
+      // Create download link with IST date
       const blob = new Blob([response], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const downloadUrl = URL.createObjectURL(blob);
+      const dateStr = toISTISOString(getCurrentISTDate()).split('T')[0];
       link.setAttribute('href', downloadUrl);
-      link.setAttribute('download', `audit-logs-${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute('download', `audit-logs-${dateStr}.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();

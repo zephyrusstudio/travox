@@ -1,6 +1,7 @@
 import { injectable, inject } from 'tsyringe';
 import { ICustomerRepository } from '../../repositories/ICustomerRepository';
 import { Customer } from '../../../domain/Customer';
+import { getCurrentISTDate } from '../../../utils/timezone';
 
 interface UpdateCustomerDTO {
   name?: string;
@@ -55,7 +56,7 @@ export class UpdateCustomer {
     if (data.gstin !== undefined) existingCustomer.gstin = data.gstin?.trim().toUpperCase();
     if (data.accountId !== undefined) existingCustomer.accountId = data.accountId;
 
-    existingCustomer.updatedAt = new Date();
+    existingCustomer.updatedAt = getCurrentISTDate();
     existingCustomer.updatedBy = updatedBy;
 
     return await this.customerRepo.update(existingCustomer, orgId);

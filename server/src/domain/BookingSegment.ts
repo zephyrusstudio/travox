@@ -1,6 +1,7 @@
 
 import { ModeOfJourney } from '../models/FirestoreTypes';
 import { v4 as uuidv4 } from 'uuid';
+import { getCurrentISTDate } from '../utils/timezone';
 
 export class BookingSegment {
   constructor(
@@ -27,8 +28,8 @@ export class BookingSegment {
     public boardingPoint?: string,
     public dropPoint?: string,
     public misc?: Record<string, any>,
-    public createdAt: Date = new Date(),
-    public updatedAt: Date = new Date()
+    public createdAt: Date = getCurrentISTDate(),
+    public updatedAt: Date = getCurrentISTDate()
   ) {}
 
   static create(
@@ -57,7 +58,7 @@ export class BookingSegment {
       misc?: Record<string, any>;
     }
   ): BookingSegment {
-    const now = new Date();
+    const now = getCurrentISTDate();
     return new BookingSegment(
       uuidv4(),
       orgId,

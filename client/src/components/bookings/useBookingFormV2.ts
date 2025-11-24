@@ -3,6 +3,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { apiRequest } from '../../utils/apiConnector';
 import { errorToast, successToast } from '../../utils/toasts';
 import {
+  parseISTDate,
+  toISTDateString,
+  toISTDateTimeLocalString,
+  toISTISOString,
+} from '../../utils/timezone';
+import {
   BookingFormStateV2,
   BookingStatus,
   CreateBookingDTO,
@@ -90,30 +96,32 @@ const toISODate = (dateString: string): string | undefined => {
   if (!trimmed) return undefined;
 
   try {
-    const date = new Date(trimmed);
+    const date = parseISTDate(trimmed);
     if (isNaN(date.getTime())) return undefined;
-    return date.toISOString();
+    return toISTISOString(date);
   } catch {
     return undefined;
   }
 };
 
 /**
- * Converts ISO date string to form input format (YYYY-MM-DD or YYYY-MM-DDTHH:mm)
+ * Converts ISO date string or Date to form input format (YYYY-MM-DD or YYYY-MM-DDTHH:mm)
+ * This handles dates coming from the server which are in ISO format
  */
 const fromISODate = (isoString?: string | Date, includeTime: boolean = false): string => {
   if (!isoString) return '';
   
   try {
+    // Parse the date - if it's an ISO string from server, it will be in UTC
     const date = typeof isoString === 'string' ? new Date(isoString) : isoString;
     if (isNaN(date.getTime())) return '';
     
     if (includeTime) {
-      // Format: YYYY-MM-DDTHH:mm
-      return date.toISOString().slice(0, 16);
+      // Format: YYYY-MM-DDTHH:mm (local time)
+      return toISTDateTimeLocalString(date);
     } else {
-      // Format: YYYY-MM-DD
-      return date.toISOString().slice(0, 10);
+      // Format: YYYY-MM-DD (local date)
+      return toISTDateString(date);
     }
   } catch {
     return '';
@@ -214,7 +222,7 @@ export function useBookingFormV2({
     customerId: '',
     currency: 'INR',
     totalAmount: '',
-    bookingDate: new Date().toISOString().slice(0, 10),
+    bookingDate: toISTDateString(new Date()),
     packageName: '',
     pnrNo: '',
     modeOfJourney: '',

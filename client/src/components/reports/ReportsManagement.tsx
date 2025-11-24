@@ -7,8 +7,20 @@ import Button from '../ui/Button';
 const ReportsManagement: React.FC = () => {
   const { bookings, payments, expenses, refunds, customers, vendors } = useApp();
   const [dateRange, setDateRange] = useState({
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0]
+    startDate: (() => {
+      const date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    })(),
+    endDate: (() => {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    })()
   });
 
   const filterByDateRange = (items: any[], dateField: string) => {

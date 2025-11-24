@@ -2,9 +2,20 @@ import { Request, Response, NextFunction } from 'express';
 
 /**
  * Middleware to automatically parse ISO date strings to Date objects in request body
- * This handles the common case where frontend sends dates as ISO strings
- * but backend expects Date objects
+ * and adjust for IST timezone.
+ * 
+ * THE PROBLEM:
+ * - Client sends dates like "2025-01-15T12:40" (IST local time)
+ * - JavaScript parses this as local time
+ * - Firestore stores it as UTC (converts 12:40 IST → 07:10 UTC)
+ * - When read back, it becomes 12:40 IST again (correct!)
+ * 
+ * BUT: We want to preserve the exact time "12:40" as UTC in the database.
+ * So we subtract the IST offset (5:30) before saving.
  */
+
+const IST_OFFSET_MINUTES = 330; // 5 hours 30 minutes
+
 export function dateParserMiddleware(req: Request, res: Response, next: NextFunction) {
   if (req.body && typeof req.body === 'object') {
     req.body = parseObjectDates(req.body);
@@ -14,7 +25,7 @@ export function dateParserMiddleware(req: Request, res: Response, next: NextFunc
 
 /**
  * Recursively parse date strings in an object to Date objects
- * Recognizes ISO date strings and converts them to Date objects
+ * and adjust for IST offset
  */
 function parseObjectDates(obj: any): any {
   if (obj === null || obj === undefined) {
@@ -28,8 +39,16 @@ function parseObjectDates(obj: any): any {
   if (typeof obj === 'string') {
     // Check if string looks like an ISO date
     if (isISODateString(obj)) {
-      const date = new Date(obj);
-      return isNaN(date.getTime()) ? obj : date;
+      try {
+        const date = new Date(obj);
+        if (isNaN(date.getTime())) return obj;
+        
+        // Subtract IST offset so that local time is preserved in UTC
+        date.setMinutes(date.getMinutes() - IST_OFFSET_MINUTES);
+        return date;
+      } catch {
+        return obj;
+      }
     }
     return obj;
   }
@@ -49,10 +68,8 @@ function parseObjectDates(obj: any): any {
 
 /**
  * Check if a string looks like an ISO date string
- * Matches formats like: 2025-09-05T10:00:00.000Z, 2025-09-05T10:00:00Z, 2025-09-05
  */
 function isISODateString(str: string): boolean {
-  // Basic check for ISO date format
-  const isoDateRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?)?$/;
+  const isoDateRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d{3})?)?(Z)?)?$/;
   return isoDateRegex.test(str);
 }

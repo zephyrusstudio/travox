@@ -74,8 +74,14 @@ export interface ExpenseFormState {
   from_account_id: string;
 }
 
-export const formatDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString("en-IN");
+export const formatDate = (iso: string): string => {
+  const date = new Date(iso);
+  return date.toLocaleDateString("en-IN", {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+  });
+};
 
 const BACKEND_MODE_BY_FRONTEND: Record<PaymentMode, string> = {
   [PaymentMode.CASH]: "CASH",

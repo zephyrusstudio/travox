@@ -2,6 +2,7 @@ import { injectable, inject } from 'tsyringe';
 import { IVendorRepository } from '../../repositories/IVendorRepository';
 import { Vendor } from '../../../domain/Vendor';
 import { ServiceType } from '../../../models/FirestoreTypes';
+import { getCurrentISTDate } from '../../../utils/timezone';
 
 @injectable()
 export class UpdateVendor {
@@ -33,7 +34,7 @@ export class UpdateVendor {
     if (updateData.accountId !== undefined) vendor.accountId = updateData.accountId;
     
     vendor.updatedBy = updatedBy;
-    vendor.updatedAt = new Date();
+    vendor.updatedAt = getCurrentISTDate();
 
     return await this.vendorRepo.update(vendor, orgId);
   }

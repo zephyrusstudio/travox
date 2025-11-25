@@ -3,14 +3,11 @@ import {
   Calendar,
   Download,
   Eye,
-  Filter,
   RefreshCw,
   User,
-  X,
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  AuditLogFilters,
   auditLogService,
   userService,
   User as UserType,
@@ -29,8 +26,6 @@ const AuditLogsManagement: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [filters, setFilters] = useState<AuditLogFilters>({});
-  const [showFilters, setShowFilters] = useState(false);
   const [users, setUsers] = useState<Map<string, UserType>>(new Map());
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -41,7 +36,6 @@ const AuditLogsManagement: React.FC = () => {
     try {
       const offset = (currentPage - 1) * itemsPerPage;
       const response = await auditLogService.getAuditLogs({
-        ...filters,
         limit: itemsPerPage,
         offset: offset,
       });
@@ -62,13 +56,13 @@ const AuditLogsManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters, currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage]);
 
   // Export to CSV
   const exportToCSV = async () => {
     try {
-      // Call API endpoint to export CSV with current filters
-      await auditLogService.exportToCSV(filters);
+      // Call API endpoint to export CSV
+      await auditLogService.exportToCSV({});
     } catch (error) {
       console.error("Failed to export audit logs:", error);
     }
@@ -153,21 +147,6 @@ const AuditLogsManagement: React.FC = () => {
     return { name: "Unknown User" };
   };
 
-  // Handle filter change
-  const handleFilterChange = (key: keyof AuditLogFilters, value: string) => {
-    setFilters((prev: AuditLogFilters) => ({
-      ...prev,
-      [key]: value || undefined,
-    }));
-  };
-
-  // Clear filters
-  const clearFilters = () => {
-    setFilters({});
-    setCurrentPage(1);
-    fetchAuditLogs();
-  };
-
   useEffect(() => {
     fetchAuditLogs();
   }, [fetchAuditLogs]);
@@ -191,13 +170,6 @@ const AuditLogsManagement: React.FC = () => {
           >
             Refresh
           </Button>
-          {/*<Button
-            variant="outline"
-            onClick={() => setShowFilters(!showFilters)}
-            icon={Filter}
-          >
-            Filters
-          </Button>*/}
           <Button
             variant="outline"
             onClick={exportToCSV}
@@ -207,83 +179,6 @@ const AuditLogsManagement: React.FC = () => {
           </Button>
         </div>
       </div>
-
-      {/* Filters */}
-      {showFilters && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Entity
-                </label>
-                <select
-                  value={filters.entity || ""}
-                  onChange={(e) => handleFilterChange("entity", e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">All Entities</option>
-                  <option value="customers">Customers</option>
-                  <option value="vendors">Vendors</option>
-                  <option value="bookings">Bookings</option>
-                  <option value="payments">Payments</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Action
-                </label>
-                <select
-                  value={filters.action || ""}
-                  onChange={(e) => handleFilterChange("action", e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">All Actions</option>
-                  <option value="CREATE">Create</option>
-                  <option value="UPDATE">Update</option>
-                  <option value="DELETE">Delete</option>
-                  <option value="VIEW">View</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  value={filters.startDate || ""}
-                  onChange={(e) =>
-                    handleFilterChange("startDate", e.target.value)
-                  }
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  value={filters.endDate || ""}
-                  onChange={(e) =>
-                    handleFilterChange("endDate", e.target.value)
-                  }
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="md:col-span-2 lg:col-span-4 flex items-center space-x-4">
-                <Button variant="outline" onClick={clearFilters} size="sm" icon={X}>
-                  Clear All
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Pagination */}
       {!loading && auditLogs.length > 0 && (

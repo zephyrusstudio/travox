@@ -1,22 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
 
 /**
- * Middleware to adjust dates in response body by adding IST offset
+ * Middleware to handle date serialization in responses
  * 
- * This reverses the adjustment made in dateParserMiddleware:
- * - Dates stored in DB as UTC (12:40 UTC)
- * - Add IST offset (+5:30) when sending to client
- * - Client receives 18:10 as Date object, but displays as 12:40 IST
+ * THE FLOW:
+ * 1. Firestore stores dates as UTC (e.g., 07:10 UTC for 12:40 IST)
+ * 2. Firestore .toDate() creates JavaScript Date object (represents 07:10 UTC internally)
+ * 3. We need to add IST offset back to get the time components the user expects
+ * 4. Format as ISO without Z so client interprets as local time
  * 
- * Wait, this won't work because Firestore already converts to local time...
- * 
- * Actually, let me think through this more carefully:
- * 1. Client sends "2025-01-15T12:40" (IST)
- * 2. dateParser subtracts 5:30 → Date object represents "07:10"
- * 3. Firestore saves via Timestamp.fromDate() → stores as 07:10 UTC
- * 4. Firestore reads via .toDate() → Returns Date representing 07:10 UTC → displays as 12:40 IST (CORRECT!)
- * 
- * So we DON'T need a response middleware! The dateParser alone fixes it.
+ * Example:
+ * - Stored in Firestore: 07:10 UTC (which is 12:40 IST)
+ * - Read as Date: represents 07:10 UTC
+ * - Add IST offset: 07:10 + 5:30 = 12:40
+ * - Send to client: "2025-12-07T12:40:00.000" (no Z)
+ * - Client displays: 12:40 IST ✓
  */
 
 const IST_OFFSET_MINUTES = 330; // 5 hours 30 minutes
@@ -26,7 +24,7 @@ export function dateSerializerMiddleware(req: Request, res: Response, next: Next
   
   res.json = function(body: any) {
     if (body && typeof body === 'object') {
-      body = adjustDatesInObject(body);
+      body = serializeDates(body);
     }
     return originalJson(body);
   };
@@ -35,31 +33,42 @@ export function dateSerializerMiddleware(req: Request, res: Response, next: Next
 }
 
 /**
- * Recursively adjust Date objects in response by adding IST offset
+ * Recursively convert Date objects to ISO strings without Z suffix
+ * Add IST offset so the time represents IST local time
  */
-function adjustDatesInObject(obj: any): any {
+function serializeDates(obj: any): any {
   if (obj === null || obj === undefined) {
     return obj;
   }
 
   if (obj instanceof Date) {
+    // Add IST offset to get back to IST time
     const adjusted = new Date(obj);
     adjusted.setMinutes(adjusted.getMinutes() + IST_OFFSET_MINUTES);
-    return adjusted;
+    
+    // Format as ISO but without Z, using UTC components of adjusted date
+    const year = adjusted.getUTCFullYear();
+    const month = String(adjusted.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(adjusted.getUTCDate()).padStart(2, '0');
+    const hours = String(adjusted.getUTCHours()).padStart(2, '0');
+    const minutes = String(adjusted.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(adjusted.getUTCSeconds()).padStart(2, '0');
+    const ms = String(adjusted.getUTCMilliseconds()).padStart(3, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${ms}`;
   }
 
   if (Array.isArray(obj)) {
-    return obj.map(adjustDatesInObject);
+    return obj.map(serializeDates);
   }
 
   if (typeof obj === 'object') {
-    const adjusted: any = {};
+    const serialized: any = {};
     for (const key in obj) {
       if (obj.hasOwnProperty(key)) {
-        adjusted[key] = adjustDatesInObject(obj[key]);
+        serialized[key] = serializeDates(obj[key]);
       }
     }
-    return adjusted;
+    return serialized;
   }
 
   return obj;

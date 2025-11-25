@@ -2,16 +2,16 @@ import { Request, Response, NextFunction } from 'express';
 
 /**
  * Middleware to automatically parse ISO date strings to Date objects in request body
- * and adjust for IST timezone.
  * 
- * THE PROBLEM:
- * - Client sends dates like "2025-01-15T12:40" (IST local time)
- * - JavaScript parses this as local time
- * - Firestore stores it as UTC (converts 12:40 IST → 07:10 UTC)
- * - When read back, it becomes 12:40 IST again (correct!)
+ * THE CORRECT UNDERSTANDING:
+ * - Client sends "2025-12-07T12:40" meaning 12:40 IST (user's local time)
+ * - We need to create a Date object that represents 12:40 IST
+ * - JavaScript Date internally stores UTC timestamp
+ * - When Firestore stores it, it should be 07:10 UTC (12:40 IST - 5:30 offset)
+ * - When Firestore console displays it in IST, it shows 12:40 IST ✓
  * 
- * BUT: We want to preserve the exact time "12:40" as UTC in the database.
- * So we subtract the IST offset (5:30) before saving.
+ * So we parse "2025-12-07T12:40" as LOCAL time components (IST), which creates
+ * a Date that internally represents 07:10 UTC.
  */
 
 const IST_OFFSET_MINUTES = 330; // 5 hours 30 minutes
@@ -40,10 +40,30 @@ function parseObjectDates(obj: any): any {
     // Check if string looks like an ISO date
     if (isISODateString(obj)) {
       try {
-        const date = new Date(obj);
+        // Client sends "2025-12-07T12:40" meaning 12:40 IST
+        // We need to parse this explicitly as UTC to avoid server timezone issues
+        
+        // Extract date/time components
+        const match = obj.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{3}))?)?)?/);
+        if (!match) return obj;
+        
+        const [, year, month, day, hours = '0', minutes = '0', seconds = '0', ms = '0'] = match;
+        
+        // Create date using UTC components, then subtract IST offset
+        // Example: 12:40 IST → parse as 12:40 UTC → subtract 5:30 → 07:10 UTC
+        const date = new Date(Date.UTC(
+          parseInt(year),
+          parseInt(month) - 1,
+          parseInt(day),
+          parseInt(hours),
+          parseInt(minutes),
+          parseInt(seconds),
+          parseInt(ms)
+        ));
+        
         if (isNaN(date.getTime())) return obj;
         
-        // Subtract IST offset so that local time is preserved in UTC
+        // Subtract IST offset to convert IST to UTC
         date.setMinutes(date.getMinutes() - IST_OFFSET_MINUTES);
         return date;
       } catch {

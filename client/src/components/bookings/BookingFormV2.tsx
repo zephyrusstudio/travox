@@ -145,6 +145,18 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
     ? { disableContent: true, forceOpen: true }
     : {};
 
+  const formatDateTime = (value?: string | Date | null): string => {
+    if (!value) return "-";
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  };
+
   const {
     formData,
     paxList,
@@ -359,6 +371,29 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                 ))}
               </select>
             </Labeled>
+
+            {/* Travel dates - View mode only */}
+            {isViewMode && selectedBooking?.travelStartAt && (
+              <Labeled label="Travel Start">
+                <input
+                  type="text"
+                  value={formatDateTime(selectedBooking.travelStartAt)}
+                  readOnly
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-700"
+                />
+              </Labeled>
+            )}
+
+            {isViewMode && selectedBooking?.travelEndAt && (
+              <Labeled label="Travel End">
+                <input
+                  type="text"
+                  value={formatDateTime(selectedBooking.travelEndAt)}
+                  readOnly
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-700"
+                />
+              </Labeled>
+            )}
           </div>
         </AccordionSection>
 

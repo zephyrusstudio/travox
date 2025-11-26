@@ -92,7 +92,19 @@ const BookingManagement: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
-  const normalizeBookingForForm = (record: any) => {
+  const formatDateTime = (value?: string | Date | null): string => {
+    if (!value) return "-";
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  };
+
+  const normalizeBookingForForm = useCallback((record: any) => {
     if (!record) return null;
 
     const itineraries = Array.isArray(record.itineraries)
@@ -192,7 +204,7 @@ const BookingManagement: React.FC = () => {
     };
 
     return normalized;
-  };
+  }, []);
 
   const loadBookingDetails = useCallback(
     async (bookingId: string) => {
@@ -245,7 +257,7 @@ const BookingManagement: React.FC = () => {
         setSelectedBookingLoading(false);
       }
     },
-    [normalizeBookingForForm, parseApiError]
+    [normalizeBookingForForm]
   );
   const customersMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -332,7 +344,12 @@ const BookingManagement: React.FC = () => {
           status: normalizeStatus(record?.status),
         };
 
-        return { ...booking, pnr: record?.pnrNo || undefined };
+        return {
+          ...booking,
+          pnr: record?.pnrNo || undefined,
+          travelStartAt: record?.travelStartAt || null,
+          travelEndAt: record?.travelEndAt || null,
+        };
       });
 
       setBookings(mapped);
@@ -518,8 +535,14 @@ const BookingManagement: React.FC = () => {
   };
 
   const formatDate = (d?: string | Date) => {
-    const formatted = formatToDateInput(d ?? null);
-    return formatted || "-";
+    if (!d) return "-";
+    const date = d instanceof Date ? d : new Date(d);
+    if (Number.isNaN(date.getTime())) return "-";
+    const day = date.getDate();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
   };
 
   const getStatusVariant = (status: string) => {
@@ -779,7 +802,9 @@ const BookingManagement: React.FC = () => {
                 <TableRow>
                   <TableCell header>Package</TableCell>
                   <TableCell header>Customer</TableCell>
-                  <TableCell header>Travel Dates</TableCell>
+                  <TableCell header>Booking Date</TableCell>
+                  <TableCell header>Travel Start</TableCell>
+                  <TableCell header>Travel End</TableCell>
                   <TableCell header>Pax</TableCell>
                   <TableCell header>Amount</TableCell>
                   <TableCell header>Status</TableCell>
@@ -794,9 +819,6 @@ const BookingManagement: React.FC = () => {
                         <p className="font-medium text-gray-900">
                           {b.package_name}
                         </p>
-                        <p className="text-sm text-gray-500">
-                          Booked: {formatDate(b.booking_date)}
-                        </p>
                         {(b as any).pnr && (
                           <p className="text-xs text-blue-600 font-mono">
                             PNR: {(b as any).pnr}
@@ -810,14 +832,19 @@ const BookingManagement: React.FC = () => {
                       </p>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <p className="text-sm text-gray-900">
-                          {formatDate(b.travel_start_date)}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          to {formatDate(b.travel_end_date)}
-                        </p>
-                      </div>
+                      <p className="text-sm text-gray-900">
+                        {formatDate(b.booking_date)}
+                      </p>
+                    </TableCell>
+                    <TableCell>
+                      <p className="text-sm text-gray-900">
+                        {formatDateTime((b as any).travelStartAt)}
+                      </p>
+                    </TableCell>
+                    <TableCell>
+                      <p className="text-sm text-gray-900">
+                        {formatDateTime((b as any).travelEndAt)}
+                      </p>
                     </TableCell>
                     <TableCell>
                       <Badge variant="default" size="sm">

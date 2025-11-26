@@ -1,5 +1,5 @@
 import { injectable } from 'tsyringe';
-import { ICustomerRepository } from '../../application/repositories/ICustomerRepository';
+import { ICustomerRepository, CustomerSearchParams } from '../../application/repositories/ICustomerRepository';
 import { Customer } from '../../domain/Customer';
 import { CustomerDocument } from '../../models/FirestoreTypes';
 import { firestore } from '../../config/firestore';
@@ -210,6 +210,50 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
         (customer.phone && customer.phone.includes(searchTerm))
       )
       .slice(0, limit);
+  }
+
+  async advancedSearch(params: CustomerSearchParams, orgId: string): Promise<Customer[]> {
+    // Get all active customers for filtering - no limit to ensure complete search
+    const allCustomers = await this.getActiveCustomers(orgId);
+    
+    const { q, name, email, phone, gstin } = params;
+    
+    return allCustomers
+      .filter(customer => {
+        // If general query 'q' is provided, search across all fields (OR logic)
+        if (q) {
+          const searchTerm = q.toLowerCase();
+          const matchesGeneral = 
+            customer.name.toLowerCase().includes(searchTerm) ||
+            (customer.email && customer.email.toLowerCase().includes(searchTerm)) ||
+            (customer.phone && customer.phone.includes(searchTerm)) ||
+            (customer.gstin && customer.gstin.toLowerCase().includes(searchTerm));
+          
+          if (!matchesGeneral) return false;
+        }
+        
+        // Field-specific searches (AND logic with each other)
+        if (name) {
+          const nameLower = name.toLowerCase();
+          if (!customer.name.toLowerCase().includes(nameLower)) return false;
+        }
+        
+        if (email) {
+          const emailLower = email.toLowerCase();
+          if (!customer.email || !customer.email.toLowerCase().includes(emailLower)) return false;
+        }
+        
+        if (phone) {
+          if (!customer.phone || !customer.phone.includes(phone)) return false;
+        }
+        
+        if (gstin) {
+          const gstinLower = gstin.toLowerCase();
+          if (!customer.gstin || !customer.gstin.toLowerCase().includes(gstinLower)) return false;
+        }
+        
+        return true;
+      });
   }
 
   async getActiveCustomers(orgId: string, limit?: number, offset?: number): Promise<Customer[]> {

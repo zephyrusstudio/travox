@@ -101,7 +101,7 @@ export class Customer {
   // Data masking methods for sensitive information
   getMaskedAadhaar(): string | undefined {
     if (!this.aadhaarNo) return undefined;
-    return `XXXX-XXXX-${this.aadhaarNo.slice(-4)}`;
+    return `XXXXXXXX${this.aadhaarNo.slice(-4)}`;
   }
 
   getMaskedPassport(): string | undefined {

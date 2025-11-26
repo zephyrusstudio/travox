@@ -1,5 +1,5 @@
 import { injectable, inject } from 'tsyringe';
-import { ICustomerRepository } from '../../application/repositories/ICustomerRepository';
+import { ICustomerRepository, CustomerSearchParams } from '../../application/repositories/ICustomerRepository';
 import { Customer } from '../../domain/Customer';
 import { CustomerRepositoryFirestore } from './CustomerRepositoryFirestore';
 import { RedisService } from '../services/RedisService';
@@ -172,6 +172,11 @@ export class CachedCustomerRepository implements ICustomerRepository {
   async search(query: string, orgId: string, limit?: number): Promise<Customer[]> {
     // Search results are dynamic, don't cache
     return this.baseRepo.search(query, orgId, limit);
+  }
+
+  async advancedSearch(params: CustomerSearchParams, orgId: string): Promise<Customer[]> {
+    // Search results are dynamic, don't cache
+    return this.baseRepo.advancedSearch(params, orgId);
   }
 
   async getActiveCustomers(orgId: string, limit?: number, offset?: number): Promise<Customer[]> {

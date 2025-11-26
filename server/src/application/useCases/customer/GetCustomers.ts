@@ -1,5 +1,5 @@
 import { injectable, inject } from 'tsyringe';
-import { ICustomerRepository } from '../../repositories/ICustomerRepository';
+import { ICustomerRepository, CustomerSearchParams } from '../../repositories/ICustomerRepository';
 import { Customer } from '../../../domain/Customer';
 
 @injectable()
@@ -30,6 +30,10 @@ export class GetCustomers {
 
   async search(query: string, orgId: string, limit?: number): Promise<Customer[]> {
     return await this.customerRepo.search(query, orgId, limit);
+  }
+
+  async advancedSearch(params: CustomerSearchParams, orgId: string): Promise<Customer[]> {
+    return await this.customerRepo.advancedSearch(params, orgId);
   }
 
   async getStats(customerId: string, orgId: string) {

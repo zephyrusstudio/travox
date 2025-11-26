@@ -561,7 +561,6 @@ export function useBookingFormV2({
 
     try {
       await onAddCustomer(newCustomerData);
-      successToast('Customer added successfully');
       setShowAddCustomer(false);
       setNewCustomerData({
         full_name: '',

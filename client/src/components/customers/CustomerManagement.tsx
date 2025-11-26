@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/components/customers/CustomerManagement.tsx
 import { Plus, RefreshCw, Users } from "lucide-react";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Customer } from "../../types";
 
-import { useCachedSearch } from "../../hooks/useCachedSearch";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import Button from "../ui/Button";
 import Card, { CardContent, CardHeader } from "../ui/Card";
@@ -43,25 +42,83 @@ const CustomerManagement: React.FC = () => {
   const [existingAccountData, setExistingAccountData] =
     useState<AccountFormState | null>(null);
 
-  // ── Search with caching ──────────────────────────────────────────────────────
-  const {
-    searchTerm,
-    setSearchTerm,
-    searchResults,
-    invalidateCache,
-  } = useCachedSearch<Customer>({
-    endpoint: "/customers",
-    searchFields: (customer) => [
-      customer.name || "",
-      customer.email || "",
-      customer.phone || "",
-    ],
-    initialFetch: true,
-    unmask: true,
-  });
+  // ── Search state ─────────────────────────────────────────────────────────────
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<Customer[]>([]);
+  const searchAbortControllerRef = useRef<AbortController | null>(null);
 
   // Use search results if searching, otherwise use paginated customers
   const displayCustomers = searchTerm ? searchResults : customers;
+
+  // ── Search function using /customers/search endpoint ────────────────────────
+  const performSearch = useCallback(async (term: string) => {
+    // Cancel any ongoing search
+    if (searchAbortControllerRef.current) {
+      searchAbortControllerRef.current.abort();
+    }
+
+    const trimmedTerm = term.trim();
+    if (!trimmedTerm) {
+      setSearchResults([]);
+      return;
+    }
+
+    const abortController = new AbortController();
+    searchAbortControllerRef.current = abortController;
+
+    try {
+      const params = new URLSearchParams();
+      params.append("q", trimmedTerm);
+      params.append("unmask", "true");
+
+      const res = await apiRequest<any>({
+        method: "GET",
+        url: `/customers/search?${params.toString()}`,
+      });
+
+      if (abortController.signal.aborted) return;
+
+      let data = res?.data ?? [];
+      // Sort by updatedAt descending (most recently updated first)
+      data = data.sort((a: Customer, b: Customer) => {
+        const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+        const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+        return dateB - dateA;
+      });
+      setSearchResults(data);
+    } catch (e) {
+      if (!abortController.signal.aborted) {
+        const err = e as ApiError;
+        setErrorMsg(err.message || "Search failed");
+      }
+    } finally {
+      if (!abortController.signal.aborted) {
+        searchAbortControllerRef.current = null;
+      }
+    }
+  }, []);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchTerm) {
+        performSearch(searchTerm);
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, performSearch]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (searchAbortControllerRef.current) {
+        searchAbortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
   const fetchCustomers = useCallback(async () => {
@@ -112,7 +169,10 @@ const CustomerManagement: React.FC = () => {
       });
       setIsDeleteOpen(false);
       setDeleteTargetId(null);
-      invalidateCache(); // Invalidate search cache when data changes
+      // Clear search results to force re-search if needed
+      if (searchTerm) {
+        performSearch(searchTerm);
+      }
       fetchCustomers();
     } catch (e) {
       const err = e as ApiError;
@@ -129,7 +189,10 @@ const CustomerManagement: React.FC = () => {
 
   const handleAccountLinked = () => {
     // Refresh customers list to get updated accountId
-    invalidateCache(); // Invalidate search cache when data changes
+    // Re-trigger search if active to refresh results
+    if (searchTerm) {
+      performSearch(searchTerm);
+    }
     fetchCustomers();
     setIsAccountFormOpen(false);
     setSelectedCustomerForAccount(null);

@@ -194,28 +194,49 @@
  *   get:
  *     tags: [Customers]
  *     summary: Search customers
- *     description: Search customers by name, email, or phone
+ *     description: Search customers by name, email, phone, or GSTIN. Supports partial matching. At least one search parameter is required. Returns an array of matching customers.
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - name: q
  *         in: query
- *         required: true
- *         description: Search query string
+ *         required: false
+ *         description: General search query (searches across name, email, phone, and GSTIN)
+ *         schema:
+ *           type: string
+ *           example: "john"
+ *       - name: name
+ *         in: query
+ *         required: false
+ *         description: Search by customer name (partial match supported)
  *         schema:
  *           type: string
  *           example: "john doe"
- *       - name: limit
+ *       - name: email
  *         in: query
  *         required: false
- *         description: Maximum number of results to return
+ *         description: Search by email address (partial match supported)
  *         schema:
- *           type: integer
- *           example: 10
+ *           type: string
+ *           example: "john@example"
+ *       - name: phone
+ *         in: query
+ *         required: false
+ *         description: Search by phone number (partial match supported)
+ *         schema:
+ *           type: string
+ *           example: "9876"
+ *       - name: gstin
+ *         in: query
+ *         required: false
+ *         description: Search by GST identification number (partial match supported)
+ *         schema:
+ *           type: string
+ *           example: "29ABCDE"
  *       - $ref: '#/components/parameters/unmask'
  *     responses:
  *       200:
- *         description: Search results
+ *         description: Search results - returns array of matching customers
  *         content:
  *           application/json:
  *             schema:
@@ -227,8 +248,32 @@
  *                       type: array
  *                       items:
  *                         $ref: '#/components/schemas/Customer'
+ *             examples:
+ *               multipleResults:
+ *                 summary: Multiple customers found
+ *                 value:
+ *                   status: success
+ *                   data:
+ *                     - id: "cust_123"
+ *                       name: "John Doe"
+ *                       email: "john@example.com"
+ *                       phone: "9876543210"
+ *                     - id: "cust_456"
+ *                       name: "Johnny Smith"
+ *                       email: "johnny@example.com"
+ *                       phone: "9876543211"
+ *               singleResult:
+ *                 summary: Exact match found
+ *                 value:
+ *                   status: success
+ *                   data:
+ *                     - id: "cust_123"
+ *                       name: "John Doe"
+ *                       email: "john.doe@example.com"
+ *                       phone: "9876543210"
+ *                       gstin: "29ABCDE1234F1Z5"
  *       400:
- *         description: Bad request - search query required
+ *         description: Bad request - at least one search parameter required
  *         content:
  *           application/json:
  *             schema:

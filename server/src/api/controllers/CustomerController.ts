@@ -116,17 +116,30 @@ export class CustomerController {
     try {
       const useCase = container.resolve(GetCustomers);
       const orgId = req.user?.orgId!;
-      const { q, limit } = req.query;
+      const { q, name, email, phone, gstin } = req.query;
       const unmask = shouldUnmask(req);
       
-      if (!q || typeof q !== 'string') {
+      // Check if at least one search parameter is provided
+      const hasSearchParams = q || name || email || phone || gstin;
+      
+      if (!hasSearchParams) {
         return res.status(400).json({
           status: 'error',
-          data: { message: 'Search query is required' }
+          data: { message: 'At least one search parameter is required (q, name, email, phone, or gstin)' }
         });
       }
       
-      const customers = await useCase.search(q, orgId, limit ? parseInt(limit as string) : undefined);
+      // Use advanced search - always searches all data for accurate results
+      const customers = await useCase.advancedSearch(
+        {
+          q: q as string | undefined,
+          name: name as string | undefined,
+          email: email as string | undefined,
+          phone: phone as string | undefined,
+          gstin: gstin as string | undefined,
+        },
+        orgId
+      );
       
       res.json({
         status: 'success',

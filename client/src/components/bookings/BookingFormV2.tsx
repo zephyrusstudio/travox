@@ -20,6 +20,7 @@ import {
   Sex,
   VendorLite,
 } from './booking.v2.types';
+import CustomerSearchDropdown from './CustomerSearchDropdown';
 import { useBookingFormV2 } from './useBookingFormV2';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -280,19 +281,17 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Labeled label="Customer" required>
-              <select
+              <CustomerSearchDropdown
                 value={formData.customerId}
-                onChange={(e) => setFormField('customerId', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Customer</option>
-                {customers.map((c) => (
-                  <option key={c.customer_id} value={c.customer_id}>
-                    {c.full_name}
-                  </option>
-                ))}
-              </select>
+                customers={customers}
+                onChange={(customerId) => setFormField('customerId', customerId)}
+                onCustomerCreated={(newCustomer) => {
+                  // Customer is already created by the dropdown component
+                  // Just add it to the local customers list for display
+                  customers.push(newCustomer);
+                }}
+                disabled={isViewMode}
+              />
             </Labeled>
 
             <Labeled label="Booking Date" required>

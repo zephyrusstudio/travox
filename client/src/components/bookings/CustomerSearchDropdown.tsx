@@ -3,6 +3,7 @@ import { ChevronDown, Loader2, Plus, Search, User, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { apiRequest } from '../../utils/apiConnector';
 import { errorToast, successToast } from '../../utils/toasts';
+import Loader from '../ui/Loader';
 import { CustomerLite } from './booking.v2.types';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -273,7 +274,7 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
           <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden">
             {/* Search Input */}
             <div className="p-2 border-b border-gray-100">
-              <div className="relative">
+              <div className="relative items-center">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   ref={inputRef}
@@ -283,9 +284,7 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
                   placeholder="Search by name, phone, email, or GSTIN..."
                   className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                {isSearching && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500 animate-spin" />
-                )}
+                <Loader isLoading={isSearching} />
               </div>
             </div>
 

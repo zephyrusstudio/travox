@@ -48,7 +48,7 @@ const Loader: React.FC<LoaderProps> = ({ isLoading, className = '' }) => {
   if (progress === 0) return null;
 
   return (
-    <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-blue-100 overflow-hidden rounded-full ${className}`}>
+    <div className={`absolute bottom-0 left-0 h-0.5 bg-blue-100 overflow-hidden w-[calc(100%-10px)] mx-[5px] ${className}`}>
       <div
         className="h-full bg-blue-500 transition-all duration-150 ease-out"
         style={{ width: `${progress}%` }}

@@ -36,6 +36,7 @@ import {
   ModeOfJourneyOption,
   NewCustomerData,
 } from "./booking.types";
+import Loader from "../ui/Loader";
 
 type BookingRow = Booking & { pnr?: string };
 
@@ -1064,6 +1065,7 @@ const BookingManagement: React.FC = () => {
             }}
             className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
+          <Loader isLoading={isSearching} />
         </div>
         <BookingFilter
           onFilter={(params) => {

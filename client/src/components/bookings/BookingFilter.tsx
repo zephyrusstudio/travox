@@ -33,7 +33,10 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -55,7 +58,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
   const handleApplyFilters = useCallback(() => {
     // Remove undefined/empty values
     const cleanedFilters: BookingFilterParams = {};
-    
+
     if (filters.status) {
       cleanedFilters.status = filters.status;
     }
@@ -160,7 +163,11 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange(
                       "paymentStatus",
-                      e.target.value as "paid" | "partial" | "unpaid" | undefined
+                      e.target.value as
+                        | "paid"
+                        | "partial"
+                        | "unpaid"
+                        | undefined
                     )
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
@@ -173,49 +180,47 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
               </div>
 
               {/* Due Amount Range */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Due Min
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Min"
-                    value={filters.dueAmountMin ?? ""}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "dueAmountMin",
-                        e.target.value ? parseFloat(e.target.value) : undefined
-                      )
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Due Max
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Max"
-                    value={filters.dueAmountMax ?? ""}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "dueAmountMax",
-                        e.target.value ? parseFloat(e.target.value) : undefined
-                      )
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Due Amount <span className="text-blue-500 text-xs">Minimum</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Min"
+                  value={filters.dueAmountMin ?? ""}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "dueAmountMin",
+                      e.target.value ? parseFloat(e.target.value) : undefined
+                    )
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Due Amount <span className="text-blue-500 text-xs">Maximum</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Max"
+                  value={filters.dueAmountMax ?? ""}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "dueAmountMax",
+                      e.target.value ? parseFloat(e.target.value) : undefined
+                    )
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                />
               </div>
 
               {/* Booking Date Range */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Booking Date From
+                  Booking Date <span className="text-blue-500 text-xs">Range From</span>
                 </label>
                 <input
                   type="date"
@@ -229,7 +234,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Booking Date To
+                  Booking Date <span className="text-blue-500 text-xs">Range To</span>
                 </label>
                 <input
                   type="date"
@@ -244,7 +249,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
               {/* Travel Start Date Range */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Travel Start From
+                  Travel Start <span className="text-blue-500 text-xs">Range From</span>
                 </label>
                 <input
                   type="datetime-local"
@@ -258,7 +263,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Travel Start To
+                  Travel Start <span className="text-blue-500 text-xs">Range To</span>
                 </label>
                 <input
                   type="datetime-local"
@@ -273,7 +278,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
               {/* Travel End Date Range */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Travel End From
+                  Travel End <span className="text-blue-500 text-xs">Range From</span>
                 </label>
                 <input
                   type="datetime-local"
@@ -287,7 +292,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Travel End To
+                  Travel End <span className="text-blue-500 text-xs">Range To</span>
                 </label>
                 <input
                   type="datetime-local"

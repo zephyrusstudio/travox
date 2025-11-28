@@ -1,6 +1,6 @@
 import { Booking } from '../../domain/Booking';
 import { BookingStatus } from '../../models/FirestoreTypes';
-import { BookingSearchParams } from '../useCases/booking/GetBookings';
+import { BookingSearchParams, BookingFilterParams } from '../useCases/booking/GetBookings';
 
 export interface IBookingRepository {
   create(booking: Booking, orgId: string): Promise<Booking>;
@@ -16,6 +16,7 @@ export interface IBookingRepository {
   softDelete(id: string, orgId: string, updatedBy: string): Promise<boolean>;
   archive(id: string, orgId: string, updatedBy: string): Promise<boolean>;
   search(params: BookingSearchParams, orgId: string, matchingCustomerIds?: string[]): Promise<Booking[]>;
+  filter(params: BookingFilterParams, orgId: string): Promise<Booking[]>;
   
   // Business-specific methods
   getUpcomingBookings(orgId: string, days?: number): Promise<Booking[]>;

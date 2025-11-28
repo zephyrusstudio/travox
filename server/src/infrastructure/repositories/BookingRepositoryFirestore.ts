@@ -8,7 +8,7 @@ import { Timestamp, DocumentSnapshot, DocumentData } from 'firebase-admin/firest
 import { BookingPax } from '../../domain/BookingPax';
 import { BookingItinerary } from '../../domain/BookingItinerary';
 import { BookingSegment } from '../../domain/BookingSegment';
-import { BookingSearchParams } from '../../application/useCases/booking/GetBookings';
+import { BookingSearchParams, BookingFilterParams } from '../../application/useCases/booking/GetBookings';
 
 const BOOKINGS_COLLECTION = 'bookings';
 
@@ -280,21 +280,6 @@ export class BookingRepositoryFirestore implements IBookingRepository {
     let bookings = snapshot.docs.map(doc => this.fromFirestore(doc));
 
     // Apply in-memory filters for fields that Firestore can't handle efficiently
-    if (params.bookingDate) {
-      const targetDate = params.bookingDate.toDateString();
-      bookings = bookings.filter(b => b.bookingDate.toDateString() === targetDate);
-    }
-
-    if (params.travelStartAt) {
-      const targetDate = params.travelStartAt.toDateString();
-      bookings = bookings.filter(b => b.travelStartAt?.toDateString() === targetDate);
-    }
-
-    if (params.travelEndAt) {
-      const targetDate = params.travelEndAt.toDateString();
-      bookings = bookings.filter(b => b.travelEndAt?.toDateString() === targetDate);
-    }
-
     if (params.packageName) {
       const searchTerm = params.packageName.toLowerCase();
       bookings = bookings.filter(b => b.packageName?.toLowerCase().includes(searchTerm));
@@ -326,6 +311,110 @@ export class BookingRepositoryFirestore implements IBookingRepository {
     } else if (matchingCustomerIds && matchingCustomerIds.length > 0) {
       // If customerName was provided (not q), filter by matching customer IDs
       bookings = bookings.filter(b => matchingCustomerIds.includes(b.customerId));
+    }
+
+    // Apply pagination
+    if (params.offset) {
+      bookings = bookings.slice(params.offset);
+    }
+
+    if (params.limit) {
+      bookings = bookings.slice(0, params.limit);
+    }
+
+    return bookings;
+  }
+
+  async filter(params: BookingFilterParams, orgId: string): Promise<Booking[]> {
+    // Get all non-deleted bookings for the org and filter in memory
+    let query = this.collection
+      .where('org_id', '==', orgId)
+      .where('is_deleted', '==', false)
+      .orderBy('created_at', 'desc');
+
+    const snapshot = await query.get();
+    let bookings = snapshot.docs.map(doc => this.fromFirestore(doc));
+
+    // Filter by booking status
+    if (params.status) {
+      bookings = bookings.filter(b => b.status === params.status);
+    }
+
+    // Filter by payment status
+    if (params.paymentStatus) {
+      bookings = bookings.filter(b => {
+        const dueAmount = b.dueAmount;
+        const totalAmount = b.totalAmount;
+        
+        switch (params.paymentStatus) {
+          case 'paid':
+            return dueAmount === 0;
+          case 'unpaid':
+            return dueAmount === totalAmount;
+          case 'partial':
+            return dueAmount > 0 && dueAmount < totalAmount;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Filter by booking date range
+    if (params.bookingDateFrom || params.bookingDateTo) {
+      bookings = bookings.filter(b => {
+        const bookingTime = b.bookingDate.getTime();
+        if (params.bookingDateFrom && bookingTime < params.bookingDateFrom.getTime()) {
+          return false;
+        }
+        if (params.bookingDateTo && bookingTime > params.bookingDateTo.getTime()) {
+          return false;
+        }
+        return true;
+      });
+    }
+
+    // Filter by travel start date range
+    if (params.travelStartFrom || params.travelStartTo) {
+      bookings = bookings.filter(b => {
+        if (!b.travelStartAt) return false;
+        const travelStartTime = b.travelStartAt.getTime();
+        if (params.travelStartFrom && travelStartTime < params.travelStartFrom.getTime()) {
+          return false;
+        }
+        if (params.travelStartTo && travelStartTime > params.travelStartTo.getTime()) {
+          return false;
+        }
+        return true;
+      });
+    }
+
+    // Filter by travel end date range
+    if (params.travelEndFrom || params.travelEndTo) {
+      bookings = bookings.filter(b => {
+        if (!b.travelEndAt) return false;
+        const travelEndTime = b.travelEndAt.getTime();
+        if (params.travelEndFrom && travelEndTime < params.travelEndFrom.getTime()) {
+          return false;
+        }
+        if (params.travelEndTo && travelEndTime > params.travelEndTo.getTime()) {
+          return false;
+        }
+        return true;
+      });
+    }
+
+    // Filter by due amount range
+    if (params.dueAmountMin !== undefined || params.dueAmountMax !== undefined) {
+      bookings = bookings.filter(b => {
+        const dueAmount = b.dueAmount;
+        if (params.dueAmountMin !== undefined && dueAmount < params.dueAmountMin) {
+          return false;
+        }
+        if (params.dueAmountMax !== undefined && dueAmount > params.dueAmountMax) {
+          return false;
+        }
+        return true;
+      });
     }
 
     // Apply pagination

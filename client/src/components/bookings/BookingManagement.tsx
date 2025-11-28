@@ -29,6 +29,7 @@ import Table, {
 } from "../ui/Table";
 import BookingForm from "./BookingForm";
 import BookingFormV2 from "./BookingFormV2";
+import BookingFilter, { BookingFilterParams } from "./BookingFilter";
 import {
   BookingStatus,
   CustomerLite,
@@ -68,6 +69,12 @@ const BookingManagement: React.FC = () => {
   const [searchResults, setSearchResults] = useState<BookingRow[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchAbortRef = useRef<AbortController | null>(null);
+
+  // ── Filter state ──────────────────────────────────────────────────────
+  const [filterResults, setFilterResults] = useState<BookingRow[]>([]);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<BookingFilterParams | null>(null);
+  const filterAbortRef = useRef<AbortController | null>(null);
 
   const formatToDateInput = (value?: string | Date | null): string => {
     if (!value) return "";
@@ -224,7 +231,168 @@ const BookingManagement: React.FC = () => {
       if (searchAbortRef.current) {
         searchAbortRef.current.abort();
       }
+      if (filterAbortRef.current) {
+        filterAbortRef.current.abort();
+      }
     };
+  }, []);
+
+  // ── Filter function using /bookings/filter endpoint ──────────────────
+  const performFilter = useCallback(async (params: BookingFilterParams) => {
+    // Cancel any ongoing filter request
+    if (filterAbortRef.current) {
+      filterAbortRef.current.abort();
+    }
+
+    // Check if we have any actual filters
+    const hasFilters = Object.values(params).some(
+      (v) => v !== undefined && v !== ""
+    );
+
+    if (!hasFilters) {
+      setFilterResults([]);
+      setActiveFilters(null);
+      return;
+    }
+
+    setIsFiltering(true);
+    setActiveFilters(params);
+    const abortController = new AbortController();
+    filterAbortRef.current = abortController;
+
+    try {
+      // Build query params in the format the API expects (comma-separated ranges)
+      const queryParams: Record<string, string> = { unmask: "true" };
+
+      if (params.status) {
+        queryParams.status = params.status;
+      }
+
+      if (params.paymentStatus) {
+        queryParams.paymentStatus = params.paymentStatus;
+      }
+
+      // Build date range params
+      if (params.bookingDateFrom || params.bookingDateTo) {
+        queryParams.bookingDate = `${params.bookingDateFrom || ""},${params.bookingDateTo || ""}`;
+      }
+
+      if (params.travelStartFrom || params.travelStartTo) {
+        // Convert datetime-local format to API expected format
+        const from = params.travelStartFrom ? params.travelStartFrom.replace("T", " ") : "";
+        const to = params.travelStartTo ? params.travelStartTo.replace("T", " ") : "";
+        queryParams.travelStartAt = `${from},${to}`;
+      }
+
+      if (params.travelEndFrom || params.travelEndTo) {
+        const from = params.travelEndFrom ? params.travelEndFrom.replace("T", " ") : "";
+        const to = params.travelEndTo ? params.travelEndTo.replace("T", " ") : "";
+        queryParams.travelEndAt = `${from},${to}`;
+      }
+
+      if (params.dueAmountMin !== undefined || params.dueAmountMax !== undefined) {
+        queryParams.dueAmount = `${params.dueAmountMin ?? ""},${params.dueAmountMax ?? ""}`;
+      }
+
+      const res = await apiRequest<any>({
+        method: "GET",
+        url: "/bookings/filter",
+        params: queryParams,
+      });
+
+      if (abortController.signal.aborted) return;
+
+      const items: any[] = Array.isArray(res?.data) ? res.data : [];
+      const normalizeStatus = (status: string): BookingStatus => {
+        const normalized = (status || "").toLowerCase();
+        if (normalized === "confirmed" || status === BookingStatus.CONFIRMED)
+          return BookingStatus.CONFIRMED;
+        if (normalized === "cancelled" || status === BookingStatus.CANCELLED)
+          return BookingStatus.CANCELLED;
+        if (normalized === "ticketed" || status === BookingStatus.TICKETED)
+          return BookingStatus.TICKETED;
+        if (normalized === "in progress" || status === BookingStatus.IN_PROGRESS)
+          return BookingStatus.IN_PROGRESS;
+        if (normalized === "completed" || status === BookingStatus.COMPLETED)
+          return BookingStatus.COMPLETED;
+        if (normalized === "refunded" || status === BookingStatus.REFUNDED)
+          return BookingStatus.REFUNDED;
+        return BookingStatus.DRAFT;
+      };
+
+      const mapped: BookingRow[] = items.map((record) => {
+        const bookingDateRaw: string | null =
+          record?.bookingDate ?? record?.booking_date ?? null;
+        const travelStartRaw: string | null =
+          record?.travelStartDate ??
+          record?.journeyDate ??
+          record?.travel_start_date ??
+          bookingDateRaw ??
+          null;
+        const travelEndRaw: string | null =
+          record?.travelEndDate ??
+          record?.returnDate ??
+          record?.travel_end_date ??
+          bookingDateRaw ??
+          null;
+        const bookingDate = formatToDateInput(bookingDateRaw);
+        const travelStart = formatToDateInput(travelStartRaw);
+        const travelEnd = formatToDateInput(travelEndRaw);
+        const paxCount =
+          record?.paxCount ??
+          (Array.isArray(record?.pax) ? record.pax.length : 0);
+        const totalAmount =
+          Number(record?.totalAmount ?? record?.total_amount) || 0;
+        const paidAmount =
+          Number(
+            record?.paidAmount ??
+              record?.advanceAmount ??
+              record?.advance_received
+          ) || 0;
+        const balanceAmount =
+          Number(record?.dueAmount ?? totalAmount - paidAmount) || 0;
+
+        const booking: BookingRow = {
+          booking_id: record?.id ? String(record.id) : "",
+          customer_id: record?.customerId ? String(record.customerId) : "",
+          customer_name: record?.customerName || record?.customer?.name || "",
+          package_name: record?.packageName || "Untitled Package",
+          booking_date: bookingDate,
+          travel_start_date: travelStart,
+          travel_end_date: travelEnd,
+          pax_count: paxCount,
+          total_amount: totalAmount,
+          advance_received: paidAmount,
+          balance_amount: Math.max(0, balanceAmount),
+          status: normalizeStatus(record?.status),
+        };
+
+        return {
+          ...booking,
+          pnr: record?.pnrNo || undefined,
+          travelStartAt: record?.travelStartAt || null,
+          travelEndAt: record?.travelEndAt || null,
+          createdAt: record?.createdAt || null,
+        };
+      });
+
+      setFilterResults(mapped);
+    } catch (error) {
+      if (!abortController.signal.aborted) {
+        console.error("Filter failed:", error);
+        setFilterResults([]);
+      }
+    } finally {
+      if (!abortController.signal.aborted) {
+        setIsFiltering(false);
+        filterAbortRef.current = null;
+      }
+    }
+  }, []);
+
+  const clearFilters = useCallback(() => {
+    setFilterResults([]);
+    setActiveFilters(null);
   }, []);
 
   const normalizeBookingForForm = useCallback((record: any) => {
@@ -566,13 +734,27 @@ const BookingManagement: React.FC = () => {
     });
   }, [bookings, customersMap]);
 
-  // Use search results when searching, otherwise use paginated bookings
+  // Use search results when searching, filter results when filtering, otherwise use paginated bookings
   const filteredBookings = useMemo(() => {
     let bookingsToSort: BookingRow[];
     
+    // Priority: search > filter > all bookings
     if (searchTerm) {
       // Hydrate search results with customer names
       bookingsToSort = searchResults.map((booking) => {
+        const mappedName =
+          customersMap.get(booking.customer_id) ||
+          booking.customer_name ||
+          (booking as any).primaryPaxName ||
+          "";
+        if (mappedName && mappedName !== booking.customer_name) {
+          return { ...booking, customer_name: mappedName };
+        }
+        return booking;
+      });
+    } else if (activeFilters) {
+      // Hydrate filter results with customer names
+      bookingsToSort = filterResults.map((booking) => {
         const mappedName =
           customersMap.get(booking.customer_id) ||
           booking.customer_name ||
@@ -593,7 +775,7 @@ const BookingManagement: React.FC = () => {
       const dateB = (b as any).createdAt ? new Date((b as any).createdAt).getTime() : 0;
       return dateB - dateA;
     });
-  }, [searchTerm, searchResults, hydratedBookings, customersMap]);
+  }, [searchTerm, searchResults, activeFilters, filterResults, hydratedBookings, customersMap]);
 
   console.log(filteredBookings);
 
@@ -865,7 +1047,7 @@ const BookingManagement: React.FC = () => {
         </Card>
       </div>
 
-      {/* Search */}
+      {/* Search and Filters */}
       <div className="flex items-center space-x-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -873,10 +1055,28 @@ const BookingManagement: React.FC = () => {
             type="text"
             placeholder="Search bookings..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              // Clear filters when searching
+              if (e.target.value && activeFilters) {
+                clearFilters();
+              }
+            }}
             className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
+        <BookingFilter
+          onFilter={(params) => {
+            // Clear search when filtering
+            if (searchTerm) {
+              setSearchTerm("");
+              setSearchResults([]);
+            }
+            performFilter(params);
+          }}
+          onClear={clearFilters}
+          isLoading={isFiltering}
+        />
       </div>
 
       {bookingsError && (
@@ -885,8 +1085,8 @@ const BookingManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Pagination */}
-      {!bookingsLoading && (
+      {/* Pagination - hidden when search or filter is active */}
+      {!bookingsLoading && !searchTerm && !activeFilters && (
         filteredBookings.length > 0 && (
           <Pagination
             currentPage={currentPage}
@@ -901,13 +1101,13 @@ const BookingManagement: React.FC = () => {
 
       {/* Table */}
       {/* Bookings Table */}
-      {bookingsLoading || isSearching ? (
+      {bookingsLoading || isSearching || isFiltering ? (
         <Card>
           <CardContent className="flex items-center justify-center py-16">
             <div className="flex items-center space-x-3">
               <Spinner size="md" />
               <span className="text-gray-600">
-                {isSearching ? "Searching..." : "Loading bookings..."}
+                {isSearching ? "Searching..." : isFiltering ? "Filtering..." : "Loading bookings..."}
               </span>
             </div>
           </CardContent>

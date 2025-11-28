@@ -7,13 +7,25 @@ export interface BookingSearchParams {
   q?: string;
   customerId?: string;
   customerName?: string;
-  bookingDate?: Date;
-  travelStartAt?: Date;
-  travelEndAt?: Date;
   packageName?: string;
   pnrNo?: string;
   modeOfJourney?: string;
   primaryPaxName?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface BookingFilterParams {
+  status?: string;
+  paymentStatus?: 'paid' | 'partial' | 'unpaid';
+  bookingDateFrom?: Date;
+  bookingDateTo?: Date;
+  travelStartFrom?: Date;
+  travelStartTo?: Date;
+  travelEndFrom?: Date;
+  travelEndTo?: Date;
+  dueAmountMin?: number;
+  dueAmountMax?: number;
   limit?: number;
   offset?: number;
 }
@@ -55,6 +67,10 @@ export class GetBookings {
     }
     
     return await this.bookingRepo.search(params, orgId, customerIds);
+  }
+
+  async filter(params: BookingFilterParams, orgId: string): Promise<Booking[]> {
+    return await this.bookingRepo.filter(params, orgId);
   }
 
   async count(orgId: string): Promise<number> {

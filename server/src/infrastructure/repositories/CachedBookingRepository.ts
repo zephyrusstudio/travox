@@ -8,7 +8,7 @@ import { BookingStatus } from '../../models/FirestoreTypes';
 import { BookingRepositoryFirestore } from './BookingRepositoryFirestore';
 import { RedisService } from '../services/RedisService';
 import { rehydrateObject, COMMON_DATE_FIELDS } from '../../utils/cacheRehydration';
-import { BookingSearchParams } from '../../application/useCases/booking/GetBookings';
+import { BookingSearchParams, BookingFilterParams } from '../../application/useCases/booking/GetBookings';
 
 const COLLECTION_NAME = 'bookings';
 const ENTITY_TTL = 300; // 5 minutes
@@ -267,6 +267,11 @@ export class CachedBookingRepository implements IBookingRepository {
     // Search is not cached due to the dynamic nature of search params
     // and the complexity of cache invalidation for search results
     return await this.baseRepo.search(params, orgId, matchingCustomerIds);
+  }
+
+  async filter(params: BookingFilterParams, orgId: string): Promise<Booking[]> {
+    // Filter is not cached due to the dynamic nature of filter params
+    return await this.baseRepo.filter(params, orgId);
   }
 
   /**

@@ -58,9 +58,6 @@ export class BookingController {
         q: req.query.q as string,
         customerId: req.query.customerId as string,
         customerName: req.query.customerName as string,
-        bookingDate: req.query.bookingDate ? new Date(req.query.bookingDate as string) : undefined,
-        travelStartAt: req.query.travelStartAt ? new Date(req.query.travelStartAt as string) : undefined,
-        travelEndAt: req.query.travelEndAt ? new Date(req.query.travelEndAt as string) : undefined,
         packageName: req.query.packageName as string,
         pnrNo: req.query.pnrNo as string,
         modeOfJourney: req.query.modeOfJourney as string,
@@ -70,6 +67,52 @@ export class BookingController {
       };
 
       const bookings = await useCase.search(searchParams, req.user?.orgId!);
+      res.json({
+        status: 'success',
+        data: bookings.map(b => b.toApiResponse(unmask))
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  // Helper to parse range query params like "2025-12-03 05:15,2025-12-03 07:50" or "3000,5000"
+  private parseRangeParam(param: string | undefined): [string | undefined, string | undefined] {
+    if (!param) return [undefined, undefined];
+    const parts = param.split(',');
+    return [parts[0]?.trim() || undefined, parts[1]?.trim() || undefined];
+  }
+
+  async filter(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(GetBookings);
+      const unmask = shouldUnmask(req);
+      
+      // Parse range parameters
+      const [bookingDateFrom, bookingDateTo] = this.parseRangeParam(req.query.bookingDate as string);
+      const [travelStartFrom, travelStartTo] = this.parseRangeParam(req.query.travelStartAt as string);
+      const [travelEndFrom, travelEndTo] = this.parseRangeParam(req.query.travelEndAt as string);
+      const [dueAmountMin, dueAmountMax] = this.parseRangeParam(req.query.dueAmount as string);
+      
+      const filterParams = {
+        status: req.query.status as string | undefined,
+        paymentStatus: req.query.paymentStatus as 'paid' | 'partial' | 'unpaid' | undefined,
+        bookingDateFrom: bookingDateFrom ? new Date(bookingDateFrom) : undefined,
+        bookingDateTo: bookingDateTo ? new Date(bookingDateTo) : undefined,
+        travelStartFrom: travelStartFrom ? new Date(travelStartFrom) : undefined,
+        travelStartTo: travelStartTo ? new Date(travelStartTo) : undefined,
+        travelEndFrom: travelEndFrom ? new Date(travelEndFrom) : undefined,
+        travelEndTo: travelEndTo ? new Date(travelEndTo) : undefined,
+        dueAmountMin: dueAmountMin ? parseFloat(dueAmountMin) : undefined,
+        dueAmountMax: dueAmountMax ? parseFloat(dueAmountMax) : undefined,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+        offset: req.query.offset ? parseInt(req.query.offset as string) : undefined
+      };
+
+      const bookings = await useCase.filter(filterParams, req.user?.orgId!);
       res.json({
         status: 'success',
         data: bookings.map(b => b.toApiResponse(unmask))

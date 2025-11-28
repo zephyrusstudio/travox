@@ -8,6 +8,7 @@ import { Timestamp, DocumentSnapshot, DocumentData } from 'firebase-admin/firest
 import { BookingPax } from '../../domain/BookingPax';
 import { BookingItinerary } from '../../domain/BookingItinerary';
 import { BookingSegment } from '../../domain/BookingSegment';
+import { BookingSearchParams } from '../../application/useCases/booking/GetBookings';
 
 const BOOKINGS_COLLECTION = 'bookings';
 
@@ -252,6 +253,91 @@ export class BookingRepositoryFirestore implements IBookingRepository {
     const bookings = snapshot.docs.map(doc => this.fromFirestore(doc));
     
     return bookings.filter(booking => booking.dueAmount > 0);
+  }
+
+  async search(params: BookingSearchParams, orgId: string, matchingCustomerIds?: string[]): Promise<Booking[]> {
+    // Get all non-deleted bookings for the org and filter in memory
+    // Firestore has limitations on complex queries, so we fetch and filter
+    let query = this.collection
+      .where('org_id', '==', orgId)
+      .where('is_deleted', '==', false)
+      .orderBy('created_at', 'desc');
+
+    // Apply Firestore-compatible filters first for efficiency
+    if (params.customerId) {
+      query = query.where('customer_id', '==', params.customerId);
+    }
+
+    if (params.pnrNo) {
+      query = query.where('pnr_no', '==', params.pnrNo);
+    }
+
+    if (params.modeOfJourney) {
+      query = query.where('mode_of_journey', '==', params.modeOfJourney);
+    }
+
+    const snapshot = await query.get();
+    let bookings = snapshot.docs.map(doc => this.fromFirestore(doc));
+
+    // Apply in-memory filters for fields that Firestore can't handle efficiently
+    if (params.bookingDate) {
+      const targetDate = params.bookingDate.toDateString();
+      bookings = bookings.filter(b => b.bookingDate.toDateString() === targetDate);
+    }
+
+    if (params.travelStartAt) {
+      const targetDate = params.travelStartAt.toDateString();
+      bookings = bookings.filter(b => b.travelStartAt?.toDateString() === targetDate);
+    }
+
+    if (params.travelEndAt) {
+      const targetDate = params.travelEndAt.toDateString();
+      bookings = bookings.filter(b => b.travelEndAt?.toDateString() === targetDate);
+    }
+
+    if (params.packageName) {
+      const searchTerm = params.packageName.toLowerCase();
+      bookings = bookings.filter(b => b.packageName?.toLowerCase().includes(searchTerm));
+    }
+
+    if (params.primaryPaxName) {
+      const searchTerm = params.primaryPaxName.toLowerCase();
+      bookings = bookings.filter(b => b.primaryPaxName?.toLowerCase().includes(searchTerm));
+    }
+
+    // General search across multiple fields
+    if (params.q) {
+      const searchTerm = params.q.toLowerCase();
+      bookings = bookings.filter(b => {
+        // Check if booking matches any of the searchable fields
+        const matchesBookingFields = (
+          b.pnrNo?.toLowerCase().includes(searchTerm) ||
+          b.packageName?.toLowerCase().includes(searchTerm) ||
+          b.primaryPaxName?.toLowerCase().includes(searchTerm) ||
+          b.modeOfJourney?.toLowerCase().includes(searchTerm) ||
+          b.pax.some(p => p.paxName?.toLowerCase().includes(searchTerm))
+        );
+        
+        // Check if booking's customer is in the matching customer IDs (from customer name search)
+        const matchesCustomerName = matchingCustomerIds?.includes(b.customerId) ?? false;
+        
+        return matchesBookingFields || matchesCustomerName;
+      });
+    } else if (matchingCustomerIds && matchingCustomerIds.length > 0) {
+      // If customerName was provided (not q), filter by matching customer IDs
+      bookings = bookings.filter(b => matchingCustomerIds.includes(b.customerId));
+    }
+
+    // Apply pagination
+    if (params.offset) {
+      bookings = bookings.slice(params.offset);
+    }
+
+    if (params.limit) {
+      bookings = bookings.slice(0, params.limit);
+    }
+
+    return bookings;
   }
 
   // --- Mappers --- //

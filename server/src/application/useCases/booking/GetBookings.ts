@@ -1,14 +1,19 @@
 import { injectable, inject } from 'tsyringe';
 import { IBookingRepository } from '../../repositories/IBookingRepository';
+import { ICustomerRepository } from '../../repositories/ICustomerRepository';
 import { Booking } from '../../../domain/Booking';
-import { BookingStatus } from '../../../models/FirestoreTypes';
 
-interface GetBookingsFilters {
+export interface BookingSearchParams {
+  q?: string;
   customerId?: string;
-  status?: BookingStatus;
-  startDate?: Date;
-  endDate?: Date;
-  pnr?: string;
+  customerName?: string;
+  bookingDate?: Date;
+  travelStartAt?: Date;
+  travelEndAt?: Date;
+  packageName?: string;
+  pnrNo?: string;
+  modeOfJourney?: string;
+  primaryPaxName?: string;
   limit?: number;
   offset?: number;
 }
@@ -16,33 +21,40 @@ interface GetBookingsFilters {
 @injectable()
 export class GetBookings {
   constructor(
-    @inject('IBookingRepository') private bookingRepo: IBookingRepository
+    @inject('IBookingRepository') private bookingRepo: IBookingRepository,
+    @inject('ICustomerRepository') private customerRepo: ICustomerRepository
   ) {}
 
-  async execute(filters: GetBookingsFilters, orgId: string): Promise<Booking[]> {
-    // If PNR is provided, search by PNR specifically
-    if (filters.pnr) {
-      const booking = await this.bookingRepo.findByPNR(filters.pnr, orgId);
-      return booking ? [booking] : [];
-    }
+  async execute(orgId: string, limit?: number, offset?: number): Promise<Booking[]> {
+    return await this.bookingRepo.findAll(orgId, limit, offset);
+  }
 
-    // If customer ID is provided, filter by customer
-    if (filters.customerId) {
-      return await this.bookingRepo.findByCustomerId(filters.customerId, orgId);
+  async search(params: BookingSearchParams, orgId: string): Promise<Booking[]> {
+    // If customerName is provided or q might match customer names,
+    // first search customers to get matching IDs
+    let customerIds: string[] | undefined;
+    
+    if (params.customerName) {
+      // Search customers by name
+      const customers = await this.customerRepo.search(params.customerName, orgId, 100);
+      customerIds = customers.map(c => c.id);
+      
+      // If no customers match, return empty results
+      if (customerIds.length === 0) {
+        return [];
+      }
     }
-
-    // If status is provided, filter by status
-    if (filters.status) {
-      return await this.bookingRepo.findByStatus(filters.status, orgId);
+    
+    // For general search (q parameter), also search customer names
+    // and merge with other search results
+    if (params.q && !params.customerName) {
+      const customers = await this.customerRepo.search(params.q, orgId, 100);
+      if (customers.length > 0) {
+        customerIds = customers.map(c => c.id);
+      }
     }
-
-    // If date range is provided, filter by date range
-    if (filters.startDate && filters.endDate) {
-      return await this.bookingRepo.findByDateRange(filters.startDate, filters.endDate, orgId);
-    }
-
-    // Otherwise, get all bookings
-    return await this.bookingRepo.findAll(orgId, filters.limit, filters.offset);
+    
+    return await this.bookingRepo.search(params, orgId, customerIds);
   }
 
   async count(orgId: string): Promise<number> {

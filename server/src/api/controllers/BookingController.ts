@@ -31,22 +31,48 @@ export class BookingController {
       const useCase = container.resolve(GetBookings);
       const unmask = shouldUnmask(req);
       
-      const filters = {
-        customerId: req.query.customerId as string,
-        status: req.query.status as BookingStatus,
-        startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
-        endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
-        pnr: req.query.pnr as string,
-        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
-        offset: req.query.offset ? parseInt(req.query.offset as string) : undefined
-      };
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : undefined;
 
-      const bookings = await useCase.execute(filters, req.user?.orgId!);
+      const bookings = await useCase.execute(req.user?.orgId!, limit, offset);
       const count = await useCase.count(req.user?.orgId!);
       res.json({
         status: 'success',
         data: bookings.map(b => b.toApiResponse(unmask)),
         count
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  async search(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(GetBookings);
+      const unmask = shouldUnmask(req);
+      
+      const searchParams = {
+        q: req.query.q as string,
+        customerId: req.query.customerId as string,
+        customerName: req.query.customerName as string,
+        bookingDate: req.query.bookingDate ? new Date(req.query.bookingDate as string) : undefined,
+        travelStartAt: req.query.travelStartAt ? new Date(req.query.travelStartAt as string) : undefined,
+        travelEndAt: req.query.travelEndAt ? new Date(req.query.travelEndAt as string) : undefined,
+        packageName: req.query.packageName as string,
+        pnrNo: req.query.pnrNo as string,
+        modeOfJourney: req.query.modeOfJourney as string,
+        primaryPaxName: req.query.primaryPaxName as string,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+        offset: req.query.offset ? parseInt(req.query.offset as string) : undefined
+      };
+
+      const bookings = await useCase.search(searchParams, req.user?.orgId!);
+      res.json({
+        status: 'success',
+        data: bookings.map(b => b.toApiResponse(unmask))
       });
     } catch (error: any) {
       res.status(500).json({

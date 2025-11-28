@@ -9,6 +9,7 @@ export function registerBookingRoutes(app: Express) {
     // Booking routes (protected)
     app.post('/bookings', requireAuth(), auditLogger('bookings'), bookingCtrl.create);
     app.get('/bookings', requireAuth(), bookingCtrl.getAll);
+    app.get('/bookings/search', requireAuth(), bookingCtrl.search);
     app.get('/bookings/upcoming', requireAuth(), bookingCtrl.getUpcoming);
     app.get('/bookings/overdue', requireAuth(), bookingCtrl.getOverdue);
     app.get('/bookings/revenue-stats', requireAuth(), bookingCtrl.getRevenueStats);

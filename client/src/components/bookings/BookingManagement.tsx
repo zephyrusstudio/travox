@@ -11,8 +11,7 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useCachedSearch } from "../../hooks/useCachedSearch";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Booking, Customer } from "../../types";
 import { ApiError, apiRequest, parseApiError } from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
@@ -64,23 +63,11 @@ const BookingManagement: React.FC = () => {
   );
   const [useV2Form, setUseV2Form] = useState(false);
 
-  // ── Search with caching ──────────────────────────────────────────────────────
-  const {
-    searchTerm,
-    setSearchTerm,
-    searchResults,
-    invalidateCache,
-  } = useCachedSearch<BookingRow>({
-    endpoint: "/bookings",
-    searchFields: (booking) => [
-      booking.package_name || "",
-      booking.customer_name || "",
-      booking.status || "",
-      (booking as any).pnr || "",
-    ],
-    initialFetch: true,
-    unmask: true,
-  });
+  // ── Search state ──────────────────────────────────────────────────────
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<BookingRow[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchAbortRef = useRef<AbortController | null>(null);
 
   const formatToDateInput = (value?: string | Date | null): string => {
     if (!value) return "";
@@ -103,6 +90,142 @@ const BookingManagement: React.FC = () => {
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
+
+  // ── Search function using new /bookings/search endpoint ──────────────────
+  const performSearch = useCallback(async (term: string) => {
+    // Cancel any ongoing search
+    if (searchAbortRef.current) {
+      searchAbortRef.current.abort();
+    }
+
+    const trimmedTerm = term.trim();
+    if (!trimmedTerm) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    const abortController = new AbortController();
+    searchAbortRef.current = abortController;
+
+    try {
+      const res = await apiRequest<any>({
+        method: "GET",
+        url: "/bookings/search",
+        params: { q: trimmedTerm, unmask: true },
+      });
+
+      if (abortController.signal.aborted) return;
+
+      const items: any[] = Array.isArray(res?.data) ? res.data : [];
+      const normalizeStatus = (status: string): BookingStatus => {
+        const normalized = (status || "").toLowerCase();
+        if (normalized === "confirmed" || status === BookingStatus.CONFIRMED)
+          return BookingStatus.CONFIRMED;
+        if (normalized === "cancelled" || status === BookingStatus.CANCELLED)
+          return BookingStatus.CANCELLED;
+        if (normalized === "ticketed" || status === BookingStatus.TICKETED)
+          return BookingStatus.TICKETED;
+        if (normalized === "in progress" || status === BookingStatus.IN_PROGRESS)
+          return BookingStatus.IN_PROGRESS;
+        if (normalized === "completed" || status === BookingStatus.COMPLETED)
+          return BookingStatus.COMPLETED;
+        if (normalized === "refunded" || status === BookingStatus.REFUNDED)
+          return BookingStatus.REFUNDED;
+        return BookingStatus.DRAFT;
+      };
+
+      const mapped: BookingRow[] = items.map((record) => {
+        const bookingDateRaw: string | null =
+          record?.bookingDate ?? record?.booking_date ?? null;
+        const travelStartRaw: string | null =
+          record?.travelStartDate ??
+          record?.journeyDate ??
+          record?.travel_start_date ??
+          bookingDateRaw ??
+          null;
+        const travelEndRaw: string | null =
+          record?.travelEndDate ??
+          record?.returnDate ??
+          record?.travel_end_date ??
+          bookingDateRaw ??
+          null;
+        const bookingDate = formatToDateInput(bookingDateRaw);
+        const travelStart = formatToDateInput(travelStartRaw);
+        const travelEnd = formatToDateInput(travelEndRaw);
+        const paxCount =
+          record?.paxCount ??
+          (Array.isArray(record?.pax) ? record.pax.length : 0);
+        const totalAmount =
+          Number(record?.totalAmount ?? record?.total_amount) || 0;
+        const paidAmount =
+          Number(
+            record?.paidAmount ??
+              record?.advanceAmount ??
+              record?.advance_received
+          ) || 0;
+        const balanceAmount =
+          Number(record?.dueAmount ?? totalAmount - paidAmount) || 0;
+
+        const booking: BookingRow = {
+          booking_id: record?.id ? String(record.id) : "",
+          customer_id: record?.customerId ? String(record.customerId) : "",
+          customer_name: record?.customerName || record?.customer?.name || "",
+          package_name: record?.packageName || "Untitled Package",
+          booking_date: bookingDate,
+          travel_start_date: travelStart,
+          travel_end_date: travelEnd,
+          pax_count: paxCount,
+          total_amount: totalAmount,
+          advance_received: paidAmount,
+          balance_amount: Math.max(0, balanceAmount),
+          status: normalizeStatus(record?.status),
+        };
+
+        return {
+          ...booking,
+          pnr: record?.pnrNo || undefined,
+          travelStartAt: record?.travelStartAt || null,
+          travelEndAt: record?.travelEndAt || null,
+          createdAt: record?.createdAt || null,
+        };
+      });
+
+      setSearchResults(mapped);
+    } catch (error) {
+      if (!abortController.signal.aborted) {
+        console.error("Search failed:", error);
+        setSearchResults([]);
+      }
+    } finally {
+      if (!abortController.signal.aborted) {
+        setIsSearching(false);
+        searchAbortRef.current = null;
+      }
+    }
+  }, []);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchTerm) {
+        performSearch(searchTerm);
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, performSearch]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (searchAbortRef.current) {
+        searchAbortRef.current.abort();
+      }
+    };
+  }, []);
 
   const normalizeBookingForForm = useCallback((record: any) => {
     if (!record) return null;
@@ -522,7 +645,10 @@ const BookingManagement: React.FC = () => {
       successToast("Booking deleted");
       setIsDeleteModalOpen(false);
       setDeleteTargetId(null);
-      invalidateCache(); // Invalidate search cache when data changes
+      // Clear search results if searching, then refresh bookings
+      if (searchTerm) {
+        performSearch(searchTerm);
+      }
       await fetchBookings();
     } catch (error) {
       const apiError = error as ApiError;
@@ -645,7 +771,10 @@ const BookingManagement: React.FC = () => {
         }
 
         successToast(isUpdate ? "Booking updated" : "Booking added");
-        invalidateCache(); // Invalidate search cache when data changes
+        // Refresh search results if searching, then refresh bookings
+        if (searchTerm) {
+          performSearch(searchTerm);
+        }
         await fetchBookings();
         return response;
       } catch (error) {
@@ -654,7 +783,7 @@ const BookingManagement: React.FC = () => {
         throw apiError;
       }
     },
-    [fetchBookings, formMode, selectedBooking, invalidateCache]
+    [fetchBookings, formMode, selectedBooking, searchTerm, performSearch]
   );
 
   return (
@@ -772,12 +901,14 @@ const BookingManagement: React.FC = () => {
 
       {/* Table */}
       {/* Bookings Table */}
-      {bookingsLoading ? (
+      {bookingsLoading || isSearching ? (
         <Card>
           <CardContent className="flex items-center justify-center py-16">
             <div className="flex items-center space-x-3">
               <Spinner size="md" />
-              <span className="text-gray-600">Loading bookings...</span>
+              <span className="text-gray-600">
+                {isSearching ? "Searching..." : "Loading bookings..."}
+              </span>
             </div>
           </CardContent>
         </Card>

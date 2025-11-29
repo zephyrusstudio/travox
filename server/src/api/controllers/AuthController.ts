@@ -104,7 +104,7 @@ export class AuthController {
             } catch (e) {
                 return res.status(401).json({
                     status: 'error',
-                    data: { message: 'Invalid or expired refresh token' }
+                    data: { message: 'Invalid or expired session ID' }
                 });
             }
 

@@ -70,7 +70,7 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
   const contentId = React.useId();
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div className="overflow-hidden border border-gray-200 bg-white shadow-sm">
       <div className="flex items-start justify-between gap-3 px-4 py-3">
         <button
           type="button"
@@ -78,7 +78,7 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
             if (isControlled) return;
             setOpen((prev) => !prev);
           }}
-          className="flex flex-1 items-center justify-between text-left focus:outline-none"
+          className="flex flex-1 items-center justify-between text-left"
           aria-expanded={isOpen}
           aria-controls={contentId}
           disabled={isControlled}
@@ -194,7 +194,7 @@ const BookingForm: React.FC<Props> = (props) => {
     <div className="space-y-6">
       {!props.selectedBooking && !ui.processingComplete && (
         <div
-          className={`relative border-2 border-dashed rounded-xl transition-all duration-200 ${
+          className={`relative border-2 border-dashed transition-all duration-200 ${
             ui.isProcessing
               ? "border-blue-400 bg-blue-50 py-6"
               : ui.uploadedFileName
@@ -287,7 +287,7 @@ const BookingForm: React.FC<Props> = (props) => {
             ) : null
           }
         >
-          <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3">
+          <div className="border border-red-100 bg-red-50 px-4 py-3">
             <p className="text-md font-semibold text-red-700">
               Extracted fields below are AI generated. Please review and update all details before saving your booking.
             </p>
@@ -300,7 +300,7 @@ const BookingForm: React.FC<Props> = (props) => {
                 value={aiData.route}
                 onChange={(e) => setAiData({ route: e.target.value })}
                 placeholder="e.g., DEL-BOM"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </Labeled>
             <Labeled label="Airline">
@@ -309,7 +309,7 @@ const BookingForm: React.FC<Props> = (props) => {
                 value={aiData.airline}
                 onChange={(e) => setAiData({ airline: e.target.value })}
                 placeholder="e.g., Air India"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </Labeled>
             <Labeled label="Flight Number">
@@ -318,7 +318,7 @@ const BookingForm: React.FC<Props> = (props) => {
                 value={aiData.flightNumber}
                 onChange={(e) => setAiData({ flightNumber: e.target.value })}
                 placeholder="e.g., AI 131"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </Labeled>
             <Labeled label="Journey Date">
@@ -326,7 +326,7 @@ const BookingForm: React.FC<Props> = (props) => {
                 type="date"
                 value={aiData.journeyDate}
                 onChange={(e) => setAiData({ journeyDate: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </Labeled>
             <Labeled label="Journey Time">
@@ -335,7 +335,7 @@ const BookingForm: React.FC<Props> = (props) => {
                 required
                 value={aiData.journeyTime}
                 onChange={(e) => setAiData({ journeyTime: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </Labeled>
             <Labeled label="Return Date">
@@ -343,7 +343,7 @@ const BookingForm: React.FC<Props> = (props) => {
                 type="date"
                 value={aiData.returnDate}
                 onChange={(e) => setAiData({ returnDate: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </Labeled>
             <Labeled label="Travel Category">
@@ -354,7 +354,7 @@ const BookingForm: React.FC<Props> = (props) => {
                     travelCategory: e.target.value as TravelCategory,
                   })
                 }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               >
                 <option value={TravelCategory.Domestic}>Domestic</option>
                 <option value={TravelCategory.International}>
@@ -372,7 +372,7 @@ const BookingForm: React.FC<Props> = (props) => {
                   syncBookingAmount(parseFloat(e.target.value) || 0)
                 }
                 placeholder="Enter amount"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </Labeled>
           </div>
@@ -394,7 +394,7 @@ const BookingForm: React.FC<Props> = (props) => {
               {passengers.map((pax, index) => (
                 <div
                   key={index}
-                  className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3"
+                  className="space-y-3 border border-gray-200 bg-gray-50 p-3"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">
@@ -437,7 +437,7 @@ const BookingForm: React.FC<Props> = (props) => {
                           updatePassenger(index, "name", e.target.value)
                         }
                         placeholder="Passenger name"
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 px-3 py-2"
                       />
                     </label>
                     <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
@@ -451,7 +451,7 @@ const BookingForm: React.FC<Props> = (props) => {
                             e.target.value as PaxTypeOption
                           )
                         }
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 px-3 py-2"
                       >
                         {Object.values(PaxTypeOption).map((option) => (
                           <option key={option} value={option}>
@@ -467,7 +467,7 @@ const BookingForm: React.FC<Props> = (props) => {
                         onChange={(e) =>
                           updatePassenger(index, "sex", e.target.value as Sex)
                         }
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 px-3 py-2"
                       >
                         <option value="">Select</option>
                         {Object.values(Sex).map((sexOption) => (
@@ -486,7 +486,7 @@ const BookingForm: React.FC<Props> = (props) => {
                           updatePassenger(index, "passportNo", e.target.value)
                         }
                         placeholder="Passport Number"
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 px-3 py-2"
                       />
                     </label>
                   </div>
@@ -500,7 +500,7 @@ const BookingForm: React.FC<Props> = (props) => {
                         onChange={(e) =>
                           updatePassenger(index, "dob", e.target.value)
                         }
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 px-3 py-2"
                       />
                     </label>
                     <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
@@ -512,7 +512,7 @@ const BookingForm: React.FC<Props> = (props) => {
                           updatePassenger(index, "age", e.target.value)
                         }
                         placeholder="Age"
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 px-3 py-2"
                       />
                     </label>
                     <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
@@ -522,7 +522,7 @@ const BookingForm: React.FC<Props> = (props) => {
                         onChange={(e) =>
                           updatePassenger(index, "gender", e.target.value)
                         }
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 px-3 py-2"
                       >
                         <option value="">Gender</option>
                         <option value="Male">Male</option>
@@ -536,7 +536,7 @@ const BookingForm: React.FC<Props> = (props) => {
                         type="text"
                         value={pax.isPrimary ? "Primary" : "Secondary"}
                         readOnly
-                        className="border border-gray-200 bg-gray-100 rounded-lg px-3 py-2 text-gray-500"
+                        className="border border-gray-200 bg-gray-100 px-3 py-2 text-gray-500"
                       />
                     </label>
                   </div>
@@ -565,7 +565,7 @@ const BookingForm: React.FC<Props> = (props) => {
                     required
                     value={formData.customer_id}
                     onChange={(e) => handleCustomerSelect(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 border border-gray-300 px-3 py-2"
                   >
                     <option value="">Select Customer</option>
                     {props.customers.map((c) => (
@@ -583,7 +583,7 @@ const BookingForm: React.FC<Props> = (props) => {
                   </Button>
                 </div>
               ) : (
-                <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
+                <div className="border border-gray-300 p-4 bg-gray-50">
                   <div className="flex items-center justify-between mb-3">
                     <h5 className="font-medium text-gray-900">
                       Create Customer
@@ -612,7 +612,7 @@ const BookingForm: React.FC<Props> = (props) => {
                         onChange={(e) =>
                           setNewCustomerField("full_name", e.target.value)
                         }
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 px-3 py-2"
                       />
                     </Labeled>
                     <Labeled
@@ -629,7 +629,7 @@ const BookingForm: React.FC<Props> = (props) => {
                         onChange={(e) =>
                           setNewCustomerField("email", e.target.value)
                         }
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 px-3 py-2"
                       />
                     </Labeled>
                     <Labeled
@@ -648,7 +648,7 @@ const BookingForm: React.FC<Props> = (props) => {
                         onChange={(e) =>
                           setNewCustomerField("phone", e.target.value)
                         }
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 px-3 py-2"
                       />
                     </Labeled>
                     <Labeled label="Passport Number">
@@ -658,7 +658,7 @@ const BookingForm: React.FC<Props> = (props) => {
                         onChange={(e) =>
                           setNewCustomerField("passportNo", e.target.value)
                         }
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 px-3 py-2"
                       />
                     </Labeled>
                   </div>
@@ -695,7 +695,7 @@ const BookingForm: React.FC<Props> = (props) => {
                   required
                   value={formData.package_name}
                   onChange={(e) => setFormField("package_name", e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 px-3 py-2"
                 />
               </Labeled>
               <Labeled label="PNR Number">
@@ -704,7 +704,7 @@ const BookingForm: React.FC<Props> = (props) => {
                   value={formData.pnr_no}
                   onChange={(e) => setFormField("pnr_no", e.target.value)}
                   placeholder="Enter PNR / Reference"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 px-3 py-2"
                 />
               </Labeled>
               <Labeled
@@ -719,7 +719,7 @@ const BookingForm: React.FC<Props> = (props) => {
                   required
                   value={formData.booking_date}
                   onChange={(e) => setFormField("booking_date", e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 px-3 py-2"
                 />
               </Labeled>
               <Labeled
@@ -736,7 +736,7 @@ const BookingForm: React.FC<Props> = (props) => {
                   onChange={(e) =>
                     setFormField("travel_start_date", e.target.value)
                   }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 px-3 py-2"
                 />
               </Labeled>
               <Labeled
@@ -753,14 +753,14 @@ const BookingForm: React.FC<Props> = (props) => {
                   onChange={(e) =>
                     setFormField("travel_end_date", e.target.value)
                   }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 px-3 py-2"
                 />
               </Labeled>
               <Labeled label="Status">
                 <select
                   value={formData.status}
                   onChange={(e) => setFormField("status", e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 px-3 py-2"
                 >
                   <option value="">Select Status</option>
                   <option value={BookingStatus.DRAFT}>
@@ -802,7 +802,7 @@ const BookingForm: React.FC<Props> = (props) => {
                       e.target.value as ModeOfJourneyOption
                     )
                   }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 px-3 py-2"
                 >
                   {Object.values(ModeOfJourneyOption).map((option) => (
                     <option key={option} value={option}>
@@ -817,7 +817,7 @@ const BookingForm: React.FC<Props> = (props) => {
                   value={formData.currency}
                   onChange={(e) => setFormField("currency", e.target.value)}
                   placeholder="INR"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 px-3 py-2"
                 />
               </Labeled>
               <Labeled label="Number of Passengers">
@@ -825,7 +825,7 @@ const BookingForm: React.FC<Props> = (props) => {
                   type="number"
                   value={passengers.length}
                   readOnly
-                  className="w-full border border-gray-200 bg-gray-100 rounded-lg px-3 py-2 text-gray-600"
+                  className="w-full border border-gray-200 bg-gray-100 px-3 py-2 text-gray-600"
                 />
               </Labeled>
               <Labeled
@@ -845,7 +845,7 @@ const BookingForm: React.FC<Props> = (props) => {
                     const value = parseFloat(e.target.value);
                     syncBookingAmount(value ? Math.ceil(value) : 0);
                   }}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 px-3 py-2"
                 />
               </Labeled>
               <Labeled label="Paid Amount">
@@ -862,7 +862,7 @@ const BookingForm: React.FC<Props> = (props) => {
                       value ? Math.ceil(value) : 0
                     );
                   }}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 px-3 py-2"
                 />
               </Labeled>
             </div>
@@ -898,7 +898,7 @@ const BookingForm: React.FC<Props> = (props) => {
               itineraries.map((itinerary, itineraryIdx) => (
                 <div
                   key={`itinerary-${itineraryIdx}`}
-                  className="space-y-4 rounded-lg border border-gray-200 bg-white p-4"
+                  className="space-y-4 border border-gray-200 bg-white p-4"
                 >
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div className="grid w-full grid-cols-1 md:grid-cols-2 gap-3">
@@ -914,7 +914,7 @@ const BookingForm: React.FC<Props> = (props) => {
                             )
                           }
                           placeholder="e.g. Keys Select Bengaluru Stay"
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full border border-gray-300 px-3 py-2"
                         />
                       </Labeled>
                       <Labeled label="Sequence #">
@@ -929,7 +929,7 @@ const BookingForm: React.FC<Props> = (props) => {
                               Number(e.target.value)
                             )
                           }
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full border border-gray-300 px-3 py-2"
                         />
                       </Labeled>
                     </div>
@@ -950,7 +950,7 @@ const BookingForm: React.FC<Props> = (props) => {
                     {itinerary.segments.map((segment, segmentIdx) => (
                       <div
                         key={`segment-${itineraryIdx}-${segmentIdx}`}
-                        className="space-y-3 rounded-md border border-gray-100 bg-gray-50 p-3"
+                        className="space-y-3 border border-gray-100 bg-gray-50 p-3"
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium text-gray-700">
@@ -972,7 +972,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   Number(e.target.value)
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                           <Labeled label="Mode of Journey">
@@ -986,7 +986,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             >
                               {Object.values(ModeOfJourneyOption).map(
                                 (option) => (
@@ -1012,7 +1012,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                           <Labeled label="Service Number">
@@ -1027,7 +1027,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                           <Labeled label="Class Code">
@@ -1042,7 +1042,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                         </div>
@@ -1060,7 +1060,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                           <Labeled label="Departure At">
@@ -1076,7 +1076,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                 )
                               }
                               placeholder="YYYY-MM-DD HH:mm"
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                           <Labeled label="Arrival Code">
@@ -1091,7 +1091,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                         </div>
@@ -1110,7 +1110,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                 )
                               }
                               placeholder="YYYY-MM-DD HH:mm"
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                           <Labeled label="Baggage">
@@ -1125,7 +1125,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                           <Labeled label="Operator Name">
@@ -1140,7 +1140,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                         </div>
@@ -1158,7 +1158,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                           <Labeled label="Drop Point">
@@ -1173,7 +1173,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                           <Labeled label="Room Type">
@@ -1188,7 +1188,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                         </div>
@@ -1206,7 +1206,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                           <Labeled label="Meal Plan">
@@ -1221,7 +1221,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                         </div>
@@ -1238,7 +1238,7 @@ const BookingForm: React.FC<Props> = (props) => {
                               )
                             }
                             rows={3}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full border border-gray-300 px-3 py-2"
                           />
                         </Labeled>
 
@@ -1255,7 +1255,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                           <Labeled label="Check Out">
@@ -1270,7 +1270,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                         </div>
@@ -1289,7 +1289,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                           <Labeled label="Total Guests">
@@ -1304,7 +1304,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                           <Labeled label="Total Nights">
@@ -1320,7 +1320,7 @@ const BookingForm: React.FC<Props> = (props) => {
                                   e.target.value
                                 )
                               }
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full border border-gray-300 px-3 py-2"
                             />
                           </Labeled>
                         </div>

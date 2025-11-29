@@ -54,7 +54,7 @@ const CashFlowChart: React.FC = () => {
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-blue-600 mb-1">Total Revenue</p>
@@ -64,7 +64,7 @@ const CashFlowChart: React.FC = () => {
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4">
+        <div className="bg-gradient-to-br from-red-50 to-red-100 p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-red-600 mb-1">Total Expenses</p>
@@ -74,7 +74,7 @@ const CashFlowChart: React.FC = () => {
           </div>
         </div>
         
-        <div className={`bg-gradient-to-br ${netProfit >= 0 ? 'from-green-50 to-green-100' : 'from-red-50 to-red-100'} rounded-xl p-4`}>
+        <div className={`bg-gradient-to-br ${netProfit >= 0 ? 'from-green-50 to-green-100' : 'from-red-50 to-red-100'} p-4`}>
           <div className="flex items-center justify-between">
             <div>
               <p className={`text-sm font-semibold ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'} mb-1`}>Net Profit</p>
@@ -89,7 +89,7 @@ const CashFlowChart: React.FC = () => {
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-purple-600 mb-1">Profit Margin</p>
@@ -104,7 +104,7 @@ const CashFlowChart: React.FC = () => {
 
       {/* Chart */}
       <div className="relative">
-        <div className="flex items-end justify-between h-80 space-x-4 px-4 bg-gradient-to-t from-gray-50 to-transparent rounded-xl p-6">
+        <div className="flex items-end justify-between h-80 space-x-4 px-4 bg-gradient-to-t from-gray-50 to-transparent p-6">
           {data.map((item, index) => {
             const revenueHeight = maxValue > 0 ? (item.revenue / maxValue) * 240 : 0;
             const expenseHeight = maxValue > 0 ? (item.expenses / maxValue) * 240 : 0;
@@ -118,7 +118,7 @@ const CashFlowChart: React.FC = () => {
                       className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg transition-all duration-500 hover:from-blue-600 hover:to-blue-500 shadow-lg"
                       style={{ height: `${revenueHeight}px` }}
                     />
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
                       Revenue: ₹{(item.revenue / 1000).toFixed(0)}K
                     </div>
                   </div>
@@ -129,7 +129,7 @@ const CashFlowChart: React.FC = () => {
                       className="w-full bg-gradient-to-t from-red-500 to-red-400 rounded-t-lg transition-all duration-500 hover:from-red-600 hover:to-red-500 shadow-lg"
                       style={{ height: `${expenseHeight}px` }}
                     />
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
                       Expenses: ₹{(item.expenses / 1000).toFixed(0)}K
                     </div>
                   </div>

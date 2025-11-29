@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Download, AlertCircle, Calendar, DollarSign, Clock, Phone, Mail } from 'lucide-react';
+import { Search, Download, AlertCircle, Calendar, IndianRupee, Clock, Phone, Mail } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../ui/Card';
 import Button from '../ui/Button';
@@ -176,7 +176,7 @@ const OutstandingPayments: React.FC = () => {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <DollarSign className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+            <IndianRupee className="w-8 h-8 text-purple-600 mx-auto mb-2" />
             <p className="text-2xl font-bold text-purple-600">₹{getTotalOutstanding().toLocaleString()}</p>
             <p className="text-sm text-gray-600">Total Outstanding</p>
             <p className="text-xs text-purple-600 font-semibold">{outstandingBookings.length} bookings</p>
@@ -195,13 +195,13 @@ const OutstandingPayments: React.FC = () => {
                 placeholder="Search bookings or customers..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-10 pr-4 py-2 w-full border border-gray-300"
               />
             </div>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             >
               <option value="amount">Sort by Amount</option>
               <option value="date">Sort by Travel Date</option>
@@ -210,7 +210,7 @@ const OutstandingPayments: React.FC = () => {
             <select
               value={filterBy}
               onChange={(e) => setFilterBy(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             >
               <option value="all">All Outstanding</option>
               <option value="urgent">Urgent (≤7 days)</option>
@@ -282,7 +282,7 @@ const OutstandingPayments: React.FC = () => {
                         {customer?.phone && (
                           <a
                             href={`tel:${customer.phone}`}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 text-blue-600 hover:bg-blue-50 transition-colors"
                             title="Call customer"
                           >
                             <Phone className="w-4 h-4" />
@@ -291,7 +291,7 @@ const OutstandingPayments: React.FC = () => {
                         {customer?.email && (
                           <a
                             href={`mailto:${customer.email}?subject=Payment Reminder - ${booking.package_name}&body=Dear ${booking.customer_name},%0A%0AThis is a friendly reminder regarding the outstanding payment for your booking: ${booking.package_name}.%0A%0AOutstanding Amount: ₹${booking.balance_amount.toLocaleString()}%0ATravel Date: ${booking.travel_start_date}%0A%0APlease contact us to complete the payment.%0A%0AThank you!`}
-                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            className="p-2 text-green-600 hover:bg-green-50 transition-colors"
                             title="Send email reminder"
                           >
                             <Mail className="w-4 h-4" />

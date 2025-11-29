@@ -73,7 +73,7 @@ const UserSettings: React.FC = () => {
             type="text"
             value={profileData.username}
             onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 px-3 py-2"
           />
         </div>
         <div>
@@ -84,7 +84,7 @@ const UserSettings: React.FC = () => {
             type="email"
             value={profileData.email}
             onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 px-3 py-2"
           />
         </div>
         <div>
@@ -94,7 +94,7 @@ const UserSettings: React.FC = () => {
           <select
             value={profileData.role}
             onChange={(e) => setProfileData({ ...profileData, role: e.target.value as UserRole })}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 px-3 py-2"
             disabled={currentUser?.role !== 'Owner'}
           >
             {USER_ROLES.map((role) => (
@@ -127,7 +127,7 @@ const UserSettings: React.FC = () => {
             type="password"
             value={passwordData.currentPassword}
             onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 px-3 py-2"
           />
         </div>
         <div>
@@ -138,7 +138,7 @@ const UserSettings: React.FC = () => {
             type="password"
             value={passwordData.newPassword}
             onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 px-3 py-2"
           />
         </div>
         <div>
@@ -149,7 +149,7 @@ const UserSettings: React.FC = () => {
             type="password"
             value={passwordData.confirmPassword}
             onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 px-3 py-2"
           />
         </div>
       </div>
@@ -243,7 +243,7 @@ const UserSettings: React.FC = () => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`w-full flex items-center space-x-3 px-3 py-2 text-sm font-medium transition-colors ${
                         activeTab === tab.id
                           ? 'bg-blue-100 text-blue-700'
                           : 'text-gray-600 hover:bg-gray-100'

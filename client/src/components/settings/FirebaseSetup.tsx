@@ -118,7 +118,7 @@ service firebase.storage {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className={`p-4 rounded-lg border ${
+            <div className={`p-4 border ${
               isFirebaseConnected 
                 ? 'bg-green-50 border-green-200' 
                 : 'bg-yellow-50 border-yellow-200'
@@ -203,12 +203,12 @@ service firebase.storage {
                     Copy
                   </Button>
                 </div>
-                <pre className="bg-gray-100 p-4 rounded-lg text-sm overflow-x-auto">
+                <pre className="bg-gray-100 p-4 text-sm overflow-x-auto">
                   <code>{sampleFirebaseConfig}</code>
                 </pre>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-blue-50 border border-blue-200 p-4">
                 <div className="flex items-center space-x-2">
                   <AlertCircle className="w-5 h-5 text-blue-600" />
                   <h4 className="font-semibold text-blue-800">Configuration Steps</h4>
@@ -332,7 +332,7 @@ service firebase.storage {
                   Copy
                 </Button>
               </div>
-              <pre className="bg-gray-100 p-4 rounded-lg text-sm overflow-x-auto">
+              <pre className="bg-gray-100 p-4 text-sm overflow-x-auto">
                 <code>{firestoreRules}</code>
               </pre>
             </div>
@@ -349,7 +349,7 @@ service firebase.storage {
                   Copy
                 </Button>
               </div>
-              <pre className="bg-gray-100 p-4 rounded-lg text-sm overflow-x-auto">
+              <pre className="bg-gray-100 p-4 text-sm overflow-x-auto">
                 <code>{storageRules}</code>
               </pre>
             </div>
@@ -423,7 +423,7 @@ service firebase.storage {
               </div>
             </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="bg-green-50 border border-green-200 p-4">
               <div className="flex items-center space-x-2">
                 <CheckCircle className="w-5 h-5 text-green-600" />
                 <h4 className="font-semibold text-green-800">Pro Tips</h4>

@@ -248,7 +248,7 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
-          className={`w-full border border-gray-300 rounded-lg px-3 py-2 text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+          className={`w-full border border-gray-300 px-3 py-2 text-left flex items-center justify-between ${
             disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer hover:border-gray-400'
           }`}
         >
@@ -271,7 +271,7 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
 
         {/* Dropdown */}
         {isOpen && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden">
+          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 shadow-lg max-h-80 overflow-hidden">
             {/* Search Input */}
             <div className="p-2 border-b border-gray-100">
               <div className="relative items-center">
@@ -282,7 +282,7 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
                   value={searchQuery}
                   onChange={handleSearchChange}
                   placeholder="Search by name, phone, email, or GSTIN..."
-                  className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-9 pr-3 py-2 border border-gray-200 text-sm"
                 />
                 <Loader isLoading={isSearching} />
               </div>
@@ -367,7 +367,7 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
                 type="button"
                 onClick={handleCreateCustomer}
                 disabled={isCreating}
-                className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 rounded-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreating ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

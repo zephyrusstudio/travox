@@ -168,7 +168,7 @@ const GSTTaxView: React.FC = () => {
           <select
             value={selectedQuarter}
             onChange={(e) => setSelectedQuarter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 px-3 py-2"
           >
             {quarters.map(quarter => (
               <option key={quarter} value={quarter}>{quarter}</option>
@@ -223,12 +223,12 @@ const GSTTaxView: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-blue-50 rounded-lg p-4">
+            <div className="bg-blue-50 p-4">
               <h4 className="font-semibold text-blue-900 mb-2">Current GST Rate</h4>
               <p className="text-3xl font-bold text-blue-600">{gstRate}%</p>
               <p className="text-sm text-blue-700">Applied on all travel services</p>
             </div>
-            <div className="bg-green-50 rounded-lg p-4">
+            <div className="bg-green-50 p-4">
               <h4 className="font-semibold text-green-900 mb-2">B2B vs B2C</h4>
               <p className="text-sm text-green-700 mb-1">
                 <strong>B2B:</strong> {summary.b2bTransactions} transactions ({((summary.b2bTransactions / summary.totalTransactions) * 100).toFixed(1)}%)
@@ -237,7 +237,7 @@ const GSTTaxView: React.FC = () => {
                 <strong>B2C:</strong> {summary.b2cTransactions} transactions ({((summary.b2cTransactions / summary.totalTransactions) * 100).toFixed(1)}%)
               </p>
             </div>
-            <div className="bg-purple-50 rounded-lg p-4">
+            <div className="bg-purple-50 p-4">
               <h4 className="font-semibold text-purple-900 mb-2">Collection Status</h4>
               <p className="text-sm text-purple-700 mb-1">
                 <strong>Collected:</strong> ₹{summary.paidGSTAmount.toLocaleString()}

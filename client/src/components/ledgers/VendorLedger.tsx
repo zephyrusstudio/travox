@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Download, Eye, Calendar, DollarSign, CreditCard, Building2 } from 'lucide-react';
+import { Search, Download, Eye, Calendar, IndianRupee, CreditCard, Building2 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../ui/Card';
 import Button from '../ui/Button';
@@ -157,13 +157,13 @@ const VendorLedger: React.FC = () => {
                 placeholder="Search vendors..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-10 pr-4 py-2 w-full border border-gray-300"
               />
             </div>
             <select
               value={serviceTypeFilter}
               onChange={(e) => setServiceTypeFilter(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             >
               <option value="">All Service Types</option>
               {serviceTypes.map(type => (
@@ -174,13 +174,13 @@ const VendorLedger: React.FC = () => {
               type="date"
               value={dateRange.startDate}
               onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             />
             <input
               type="date"
               value={dateRange.endDate}
               onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             />
           </div>
         </CardContent>
@@ -210,7 +210,7 @@ const VendorLedger: React.FC = () => {
                   <TableRow key={vendor.vendor_id}>
                     <TableCell>
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-blue-100 flex items-center justify-center">
                           <Building2 className="w-5 h-5 text-blue-600" />
                         </div>
                         <div>
@@ -281,16 +281,16 @@ const VendorLedger: React.FC = () => {
           <div className="space-y-6">
             {/* Vendor Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-red-50 rounded-lg p-4">
+              <div className="bg-red-50 p-4">
                 <div className="flex items-center space-x-2">
-                  <DollarSign className="w-5 h-5 text-red-600" />
+                  <IndianRupee className="w-5 h-5 text-red-600" />
                   <span className="text-sm font-medium text-red-600">Total Paid</span>
                 </div>
                 <p className="text-2xl font-bold text-red-700 mt-1">
                   ₹{selectedVendorData.totalAmount.toLocaleString()}
                 </p>
               </div>
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-blue-50 p-4">
                 <div className="flex items-center space-x-2">
                   <CreditCard className="w-5 h-5 text-blue-600" />
                   <span className="text-sm font-medium text-blue-600">Transactions</span>
@@ -299,7 +299,7 @@ const VendorLedger: React.FC = () => {
                   {selectedVendorData.totalExpenses}
                 </p>
               </div>
-              <div className="bg-green-50 rounded-lg p-4">
+              <div className="bg-green-50 p-4">
                 <div className="flex items-center space-x-2">
                   <Building2 className="w-5 h-5 text-green-600" />
                   <span className="text-sm font-medium text-green-600">Service Type</span>
@@ -315,7 +315,7 @@ const VendorLedger: React.FC = () => {
               <h4 className="text-lg font-semibold text-gray-900 mb-4">Category Breakdown</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {Object.entries(selectedVendorData.categoryBreakdown).map(([category, amount]) => (
-                  <div key={category} className="bg-gray-50 rounded-lg p-3">
+                  <div key={category} className="bg-gray-50 p-3">
                     <p className="text-sm font-medium text-gray-600">{category}</p>
                     <p className="text-lg font-bold text-gray-900">₹{(amount as number).toLocaleString()}</p>
                   </div>
@@ -328,7 +328,7 @@ const VendorLedger: React.FC = () => {
               <h4 className="text-lg font-semibold text-gray-900 mb-4">Payment Mode Breakdown</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {Object.entries(selectedVendorData.paymentModeBreakdown).map(([mode, amount]) => (
-                  <div key={mode} className="bg-gray-50 rounded-lg p-3">
+                  <div key={mode} className="bg-gray-50 p-3">
                     <p className="text-sm font-medium text-gray-600">{mode}</p>
                     <p className="text-lg font-bold text-gray-900">₹{(amount as number).toLocaleString()}</p>
                   </div>

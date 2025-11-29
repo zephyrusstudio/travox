@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, TrendingUp, TrendingDown, DollarSign, BarChart3, Calendar } from 'lucide-react';
+import { Download, TrendingUp, TrendingDown, IndianRupee, BarChart3, Calendar } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../ui/Card';
 import Button from '../ui/Button';
@@ -145,7 +145,7 @@ const MonthlyIncomeExpense: React.FC = () => {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 px-3 py-2"
           >
             {[2024, 2025, 2026].map(year => (
               <option key={year} value={year}>{year}</option>
@@ -175,7 +175,7 @@ const MonthlyIncomeExpense: React.FC = () => {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <DollarSign className={`w-8 h-8 mx-auto mb-2 ${yearlyTotals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+            <IndianRupee className={`w-8 h-8 mx-auto mb-2 ${yearlyTotals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`} />
             <p className={`text-2xl font-bold ${yearlyTotals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               ₹{(Math.abs(yearlyTotals.profit) / 100000).toFixed(1)}L
             </p>
@@ -205,7 +205,7 @@ const MonthlyIncomeExpense: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="relative">
-            <div className="flex items-end justify-between h-80 space-x-2 px-4 bg-gradient-to-t from-gray-50 to-transparent rounded-xl p-6">
+            <div className="flex items-end justify-between h-80 space-x-2 px-4 bg-gradient-to-t from-gray-50 to-transparent p-6">
               {monthlyData.map((month, index) => {
                 const incomeHeight = maxValue > 0 ? (month.income / maxValue) * 240 : 0;
                 const expenseHeight = maxValue > 0 ? (month.expenses / maxValue) * 240 : 0;

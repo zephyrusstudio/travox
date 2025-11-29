@@ -10,7 +10,7 @@ import {
   TrendingUp, 
   Users, 
   Calendar, 
-  DollarSign, 
+  IndianRupee, 
   LayoutDashboard, 
   ArrowUpRight,
   ArrowDownRight,
@@ -76,7 +76,7 @@ const Dashboard: React.FC = () => {
       value: `₹${totalBookings > 0 ? Math.round(stats.totalRevenue / totalBookings).toLocaleString() : '0'}`,
       change: '+8.7%',
       changeType: 'positive',
-      icon: DollarSign,
+      icon: IndianRupee,
       description: 'Per booking average',
       bgColor: 'bg-amber-50',
       iconBg: 'bg-amber-500',
@@ -131,28 +131,28 @@ const Dashboard: React.FC = () => {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
                   <button
                     onClick={() => handleCardClick('#bookings')}
-                    className="text-center lg:text-left bg-white bg-opacity-10 rounded-2xl p-4 backdrop-blur-sm hover:bg-opacity-20 transition-all duration-300 transform hover:scale-105"
+                    className="text-center lg:text-left bg-white bg-opacity-10 p-4 backdrop-blur-sm hover:bg-opacity-20 transition-all duration-300 transform hover:scale-105"
                   >
                     <p className="text-3xl lg:text-4xl font-bold mb-1">{totalBookings}</p>
                     <p className="text-blue-200 text-sm font-semibold">Total Bookings</p>
                   </button>
                   <button
                     onClick={() => handleCardClick('#payments')}
-                    className="text-center lg:text-left bg-white bg-opacity-10 rounded-2xl p-4 backdrop-blur-sm hover:bg-opacity-20 transition-all duration-300 transform hover:scale-105"
+                    className="text-center lg:text-left bg-white bg-opacity-10 p-4 backdrop-blur-sm hover:bg-opacity-20 transition-all duration-300 transform hover:scale-105"
                   >
                     <p className="text-3xl lg:text-4xl font-bold mb-1">₹{(stats.totalRevenue / 100000).toFixed(1)}L</p>
                     <p className="text-blue-200 text-sm font-semibold">Revenue</p>
                   </button>
                   <button
                     onClick={() => handleCardClick('#customers')}
-                    className="text-center lg:text-left bg-white bg-opacity-10 rounded-2xl p-4 backdrop-blur-sm hover:bg-opacity-20 transition-all duration-300 transform hover:scale-105"
+                    className="text-center lg:text-left bg-white bg-opacity-10 p-4 backdrop-blur-sm hover:bg-opacity-20 transition-all duration-300 transform hover:scale-105"
                   >
                     <p className="text-3xl lg:text-4xl font-bold mb-1">{customers.length}</p>
                     <p className="text-blue-200 text-sm font-semibold">Customers</p>
                   </button>
                   <button
                     onClick={() => handleCardClick('#reports')}
-                    className="text-center lg:text-left bg-white bg-opacity-10 rounded-2xl p-4 backdrop-blur-sm hover:bg-opacity-20 transition-all duration-300 transform hover:scale-105"
+                    className="text-center lg:text-left bg-white bg-opacity-10 p-4 backdrop-blur-sm hover:bg-opacity-20 transition-all duration-300 transform hover:scale-105"
                   >
                     <p className="text-3xl lg:text-4xl font-bold mb-1">{conversionRate.toFixed(0)}%</p>
                     <p className="text-blue-200 text-sm font-semibold">Success Rate</p>
@@ -193,8 +193,8 @@ const Dashboard: React.FC = () => {
               <Card hover className="border-0 shadow-lg group h-full">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-6">
-                    <div className={`w-14 h-14 ${metric.bgColor} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                      <div className={`w-8 h-8 ${metric.iconBg} rounded-lg flex items-center justify-center`}>
+                    <div className={`w-14 h-14 ${metric.bgColor} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                      <div className={`w-8 h-8 ${metric.iconBg} flex items-center justify-center`}>
                         <Icon className="w-5 h-5 text-white" />
                       </div>
                     </div>
@@ -252,7 +252,7 @@ const Dashboard: React.FC = () => {
             <CardHeader className="bg-gradient-to-r from-purple-50 via-pink-50 to-rose-50 border-b-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center">
+                  <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
                     <Calendar className="w-7 h-7 text-white" />
                   </div>
                   <div>
@@ -278,7 +278,7 @@ const Dashboard: React.FC = () => {
             <CardHeader className="bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50 border-b-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center">
+                  <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
                     <Zap className="w-7 h-7 text-white" />
                   </div>
                   <div>
@@ -302,7 +302,7 @@ const Dashboard: React.FC = () => {
           <CardHeader className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
                   <BarChart3 className="w-7 h-7 text-white" />
                 </div>
                 <div>
@@ -337,8 +337,8 @@ const Dashboard: React.FC = () => {
           <Card hover className="border-0 shadow-lg group h-full">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                <div className="w-14 h-14 bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-8 h-8 bg-blue-500 flex items-center justify-center">
                     <Globe className="w-5 h-5 text-white" />
                   </div>
                 </div>
@@ -368,8 +368,8 @@ const Dashboard: React.FC = () => {
           <Card hover className="border-0 shadow-lg group h-full">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                <div className="w-14 h-14 bg-green-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-8 h-8 bg-green-500 flex items-center justify-center">
                     <TrendingUp className="w-5 h-5 text-white" />
                   </div>
                 </div>
@@ -399,8 +399,8 @@ const Dashboard: React.FC = () => {
           <Card hover className="border-0 shadow-lg group h-full">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                <div className="w-14 h-14 bg-purple-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-8 h-8 bg-purple-500 flex items-center justify-center">
                     <Target className="w-5 h-5 text-white" />
                   </div>
                 </div>

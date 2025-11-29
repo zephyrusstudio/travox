@@ -23,7 +23,7 @@ export function requireRefreshToken() {
                     return res.status(401).json({ message: 'Invalid refresh token' });
                 }
             } catch (e) {
-                return res.status(401).json({ message: 'Invalid or expired refresh token' });
+                return res.status(401).json({ message: 'Invalid or expired session ID' });
             }
             const isRevoked = await refreshRepo.isRevoked(refreshToken);
             if (isRevoked) {

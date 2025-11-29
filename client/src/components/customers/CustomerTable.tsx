@@ -4,7 +4,7 @@ import { CustomerTableProps } from "../../types";
 import { formatDate } from "../../utils/misc";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
-import Card, { CardContent, CardHeader } from "../ui/Card";
+import Card, { CardContent } from "../ui/Card";
 import Table, {
   TableBody,
   TableCell,
@@ -17,12 +17,6 @@ const CustomerTable: React.FC<CustomerTableProps> & {
 } = ({ customers, onEdit, onDelete, onViewTickets }) => {
   return (
     <Card>
-      <CardHeader>
-        <h3 className="text-lg font-semibold text-gray-900">All Customers</h3>
-        <p className="text-sm text-gray-600">
-          Manage customer information and view booking history
-        </p>
-      </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
@@ -42,11 +36,11 @@ const CustomerTable: React.FC<CustomerTableProps> & {
                 <TableRow key={customer.id}>
                   <TableCell>
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">
                         {customer.name}
                       </p>
                       {customer.passportNo && (
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           Passport: {customer.passportNo}
                         </p>
                       )}
@@ -55,12 +49,12 @@ const CustomerTable: React.FC<CustomerTableProps> & {
                   <TableCell>
                     <div>
                       {customer.email && (
-                        <p className="text-sm text-gray-900">
+                        <p className="text-sm text-gray-900 dark:text-gray-100">
                           {customer.email}
                         </p>
                       )}
                       {customer.phone && (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           {customer.phone}
                         </p>
                       )}
@@ -72,7 +66,7 @@ const CustomerTable: React.FC<CustomerTableProps> & {
                         {customer.gstin}
                       </Badge>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-gray-400 dark:text-gray-500">-</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -82,12 +76,12 @@ const CustomerTable: React.FC<CustomerTableProps> & {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       ₹{customer.totalSpent.toLocaleString('en-IN')}
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {formatDate(customer.createdAt)}
                     </span>
                   </TableCell>
@@ -137,13 +131,13 @@ const CustomerTable: React.FC<CustomerTableProps> & {
 export type SearchBoxProps = { value: string; onChange: (v: string) => void };
 const SearchBox: React.FC<SearchBoxProps> = ({ value, onChange }) => (
   <div className="relative">
-    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
     <input
       type="text"
       placeholder="Search customers..."
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
     />
   </div>
 );

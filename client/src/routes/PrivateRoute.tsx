@@ -16,7 +16,7 @@ const PrivateRoute = <P extends object>(
     const token = localStorage.getItem("token") ?? sessionStorage.getItem("token");
 
     if (!token) {
-      return <Navigate to="/auth" replace />;
+      return <Navigate to="/" replace />;
     }
 
     return <Component {...props} />;

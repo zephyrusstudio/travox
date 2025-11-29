@@ -16,7 +16,7 @@ const PublicRoute = <P extends object>(
     const token = localStorage.getItem("token") ?? sessionStorage.getItem("token");
 
     if (token) {
-      return <Navigate to={"/"} replace />;
+      return <Navigate to="/customers" replace />;
     }
 
     return <Component {...props} />;

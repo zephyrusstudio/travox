@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, FileText, Calendar, DollarSign, TrendingUp, Users } from 'lucide-react';
+import { Download, FileText, Calendar, IndianRupee, TrendingUp, Users } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../ui/Card';
 import Button from '../ui/Button';
@@ -125,7 +125,7 @@ const ReportsManagement: React.FC = () => {
       id: 'payments',
       title: 'Payments Report',
       description: 'All payment transactions',
-      icon: DollarSign,
+      icon: IndianRupee,
       color: 'bg-green-100 text-green-600'
     },
     {
@@ -183,7 +183,7 @@ const ReportsManagement: React.FC = () => {
                 type="date"
                 value={dateRange.startDate}
                 onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
             <div>
@@ -194,7 +194,7 @@ const ReportsManagement: React.FC = () => {
                 type="date"
                 value={dateRange.endDate}
                 onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
           </div>
@@ -212,7 +212,7 @@ const ReportsManagement: React.FC = () => {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <DollarSign className="w-8 h-8 text-green-600 mx-auto mb-2" />
+            <IndianRupee className="w-8 h-8 text-green-600 mx-auto mb-2" />
             <p className="text-2xl font-bold text-green-600">₹{stats.totalRevenue.toLocaleString()}</p>
             <p className="text-sm text-gray-600">Revenue</p>
           </CardContent>
@@ -250,7 +250,7 @@ const ReportsManagement: React.FC = () => {
             <Card key={report.id} hover>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${report.color}`}>
+                  <div className={`w-12 h-12 flex items-center justify-center ${report.color}`}>
                     <Icon className="w-6 h-6" />
                   </div>
                   <Button

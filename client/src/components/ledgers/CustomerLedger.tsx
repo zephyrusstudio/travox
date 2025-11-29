@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Download, Eye, Calendar, DollarSign, CreditCard, FileText } from 'lucide-react';
+import { Search, Download, Eye, Calendar, IndianRupee, CreditCard, FileText } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../ui/Card';
 import Button from '../ui/Button';
@@ -137,7 +137,7 @@ const CustomerLedger: React.FC = () => {
                 placeholder="Search customers..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-10 pr-4 py-2 w-full border border-gray-300"
               />
             </div>
             <div>
@@ -145,7 +145,7 @@ const CustomerLedger: React.FC = () => {
                 type="date"
                 value={dateRange.startDate}
                 onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
             <div>
@@ -153,7 +153,7 @@ const CustomerLedger: React.FC = () => {
                 type="date"
                 value={dateRange.endDate}
                 onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
           </div>
@@ -258,16 +258,16 @@ const CustomerLedger: React.FC = () => {
           <div className="space-y-6">
             {/* Customer Summary */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-blue-50 p-4">
                 <div className="flex items-center space-x-2">
-                  <DollarSign className="w-5 h-5 text-blue-600" />
+                  <IndianRupee className="w-5 h-5 text-blue-600" />
                   <span className="text-sm font-medium text-blue-600">Total Amount</span>
                 </div>
                 <p className="text-2xl font-bold text-blue-700 mt-1">
                   ₹{selectedCustomerData.totalAmount.toLocaleString()}
                 </p>
               </div>
-              <div className="bg-green-50 rounded-lg p-4">
+              <div className="bg-green-50 p-4">
                 <div className="flex items-center space-x-2">
                   <CreditCard className="w-5 h-5 text-green-600" />
                   <span className="text-sm font-medium text-green-600">Paid Amount</span>
@@ -276,7 +276,7 @@ const CustomerLedger: React.FC = () => {
                   ₹{selectedCustomerData.totalPaid.toLocaleString()}
                 </p>
               </div>
-              <div className="bg-red-50 rounded-lg p-4">
+              <div className="bg-red-50 p-4">
                 <div className="flex items-center space-x-2">
                   <Calendar className="w-5 h-5 text-red-600" />
                   <span className="text-sm font-medium text-red-600">Outstanding</span>
@@ -285,7 +285,7 @@ const CustomerLedger: React.FC = () => {
                   ₹{selectedCustomerData.outstandingAmount.toLocaleString()}
                 </p>
               </div>
-              <div className="bg-purple-50 rounded-lg p-4">
+              <div className="bg-purple-50 p-4">
                 <div className="flex items-center space-x-2">
                   <FileText className="w-5 h-5 text-purple-600" />
                   <span className="text-sm font-medium text-purple-600">Bookings</span>

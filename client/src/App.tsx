@@ -1,24 +1,14 @@
 // src/App.tsx
-import React from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import AuditLogsManagement from "./components/auditLogs/AuditLogsManagement";
+import React, { Suspense, useEffect, useState } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import AuthPage from "./components/auth/AuthPage";
-import BookingManagement from "./components/bookings/BookingManagement";
-import CustomerManagement from "./components/customers/CustomerManagement";
-import ExpenseManagement from "./components/expenses/ExpenseManagement";
-import PaymentManagement from "./components/payments/PaymentManagement";
-import Layout from "./components/ui/Layout";
+import SessionExpiredModal from "./components/ui/common/SessionExpiredModal";
+import Spinner from "./components/ui/Spinner";
 import UnsupportedDevice from "./components/ui/UnsupportedDevice";
-import UserManagement from "./components/users/UserManagement";
-import VendorManagement from "./components/vendors/VendorManagement";
 import { useApp } from "./contexts/AppContext";
-import PrivateRoute from "./routes/PrivateRoute";
-import PublicRoute from "./routes/PublicRoute";
-import {
-  AppModule,
-  getAccessibleModules,
-  isAppModule,
-} from "./utils/roleAccess";
+import { routes } from "./routes/routeConfig";
+import { SESSION_EXPIRED_EVENT } from "./utils/apiConnector";
+import { canAccessModule, getAccessibleModules } from "./utils/roleAccess";
 
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = React.useState(() => {
@@ -40,93 +30,136 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-const AppContent: React.FC = () => {
-  const { currentUser } = useApp();
-  const isMobile = useIsMobile();
-  const accessibleModules = React.useMemo(
-    () => getAccessibleModules(currentUser?.role),
-    [currentUser?.role]
-  );
-  const defaultModule = accessibleModules[0] ?? "customers";
+// Loading fallback component
+const PageLoader: React.FC = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+    <Spinner size="lg" />
+  </div>
+);
 
-  const [currentPage, setCurrentPage] = React.useState<AppModule>(() => {
-    if (typeof window !== "undefined") {
-      const hash = window.location.hash.replace("#", "");
-      if (isAppModule(hash) && accessibleModules.includes(hash)) {
-        return hash;
-      }
-    }
-    return defaultModule;
-  });
+// Auth guard wrapper component
+const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
+  const token = localStorage.getItem("token") ?? sessionStorage.getItem("token");
+
+  if (!token) {
+    return <Navigate to="/" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Role-based access guard
+const RequireAccess: React.FC<{ 
+  module: string; 
+  children: React.ReactNode 
+}> = ({ module, children }) => {
+  const { currentUser } = useApp();
+  const accessibleModules = getAccessibleModules(currentUser?.role);
+  
+  if (!canAccessModule(currentUser?.role, module as never)) {
+    // Redirect to first accessible module
+    const defaultPath = accessibleModules[0] ? `/${accessibleModules[0]}` : "/customers";
+    return <Navigate to={defaultPath} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Public route guard (redirects authenticated users away from auth page)
+const PublicOnly: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const token = localStorage.getItem("token") ?? sessionStorage.getItem("token");
+  const { currentUser } = useApp();
+  const accessibleModules = getAccessibleModules(currentUser?.role);
+
+  if (token) {
+    const defaultPath = accessibleModules[0] ? `/${accessibleModules[0]}` : "/customers";
+    return <Navigate to={defaultPath} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Default redirect component
+const DefaultRedirect: React.FC = () => {
+  const { currentUser } = useApp();
+  const accessibleModules = getAccessibleModules(currentUser?.role);
+  const defaultPath = accessibleModules[0] ? `/${accessibleModules[0]}` : "/customers";
+  
+  return <Navigate to={defaultPath} replace />;
+};
+
+// Session expired modal wrapper
+const SessionExpiredHandler: React.FC = () => {
+  const [showSessionExpired, setShowSessionExpired] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setShowSessionExpired(true);
+    };
+
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => {
+      window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    };
+  }, []);
+
+  const handleLogin = () => {
+    setShowSessionExpired(false);
+    navigate("/", { replace: true });
+  };
+
+  return (
+    <SessionExpiredModal
+      isOpen={showSessionExpired}
+      onLogin={handleLogin}
+    />
+  );
+};
+
+export default function App() {
+  const isMobile = useIsMobile();
 
   // Show unsupported device message on mobile
   if (isMobile) {
     return <UnsupportedDevice />;
   }
 
-  const renderCurrentPage = () => {
-    switch (currentPage) {
-      case "customers":
-        return <CustomerManagement />;
-      case "vendors":
-        return <VendorManagement />;
-      case "bookings":
-        return <BookingManagement />;
-      case "payments":
-        return <PaymentManagement />;
-      case "expenses":
-        return <ExpenseManagement />;
-      case "logs":
-        return <AuditLogsManagement />;
-      case "users":
-        return <UserManagement />;
-      default:
-        return <CustomerManagement />;
-    }
-  };
-
-  React.useEffect(() => {
-    const handleHashChange = () => {
-      if (typeof window === "undefined") return;
-
-      const hash = window.location.hash.replace("#", "");
-
-      if (isAppModule(hash) && accessibleModules.includes(hash)) {
-        setCurrentPage(hash);
-      } else if (accessibleModules.length > 0) {
-        const fallback = accessibleModules[0];
-        setCurrentPage(fallback);
-        window.location.hash = `#${fallback}`;
-      }
-    };
-    window.addEventListener("hashchange", handleHashChange);
-    handleHashChange();
-    return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [accessibleModules]);
-
-  React.useEffect(() => {
-    if (!accessibleModules.includes(currentPage) && accessibleModules.length) {
-      const fallback = accessibleModules[0];
-      setCurrentPage(fallback);
-      if (typeof window !== "undefined") {
-        window.location.hash = `#${fallback}`;
-      }
-    }
-  }, [accessibleModules, currentPage]);
-
-  return <Layout currentPage={currentPage}>{renderCurrentPage()}</Layout>;
-};
-
-const ProtectedAppContent = PrivateRoute(AppContent);
-const AuthOnly = PublicRoute(AuthPage);
-
-export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/auth" element={<AuthOnly />} />
-        <Route path="/*" element={<ProtectedAppContent />} />
-      </Routes>
+      <SessionExpiredHandler />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Public auth route at root */}
+          <Route
+            path="/"
+            element={
+              <PublicOnly>
+                <AuthPage />
+              </PublicOnly>
+            }
+          />
+
+          {/* Protected routes */}
+          {routes.map(({ path, module, component: Component }) => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                <RequireAuth>
+                  <RequireAccess module={module}>
+                    <Component />
+                  </RequireAccess>
+                </RequireAuth>
+              }
+            />
+          ))}
+
+          {/* Catch-all redirect to first accessible module */}
+          <Route path="*" element={<DefaultRedirect />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

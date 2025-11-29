@@ -148,10 +148,10 @@ const ReminderCalendar: React.FC = () => {
         return (
           <div 
             key={event.id} 
-            className={`${colors.bg} border rounded-xl p-4 hover:shadow-md transition-all duration-200 cursor-pointer`}
+            className={`${colors.bg} border p-4 hover:shadow-md transition-all duration-200 cursor-pointer`}
           >
             <div className="flex items-start space-x-4">
-              <div className={`${colors.icon} p-3 rounded-xl flex-shrink-0`}>
+              <div className={`${colors.icon} p-3 flex-shrink-0`}>
                 <Icon className="w-5 h-5" />
               </div>
               

@@ -138,7 +138,7 @@ const RefundManagement: React.FC = () => {
             placeholder="Search refunds..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="pl-10 pr-4 py-2 w-full border border-gray-300"
           />
         </div>
       </div>
@@ -215,7 +215,7 @@ const RefundManagement: React.FC = () => {
                 required
                 value={formData.booking_id}
                 onChange={(e) => handleBookingSelect(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               >
                 <option value="">Select Booking</option>
                 {bookings
@@ -241,7 +241,7 @@ const RefundManagement: React.FC = () => {
                 required
                 value={formData.refund_date}
                 onChange={(e) => setFormData({ ...formData, refund_date: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
             <div>
@@ -258,7 +258,7 @@ const RefundManagement: React.FC = () => {
                   const value = parseFloat(e.target.value);
                   setFormData({ ...formData, refund_amount: value ? Math.ceil(value) : 0 });
                 }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
             <div>
@@ -269,7 +269,7 @@ const RefundManagement: React.FC = () => {
                 required
                 value={formData.refund_mode}
                 onChange={(e) => setFormData({ ...formData, refund_mode: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               >
                 {refundModes.map(mode => (
                   <option key={mode} value={mode}>{mode}</option>
@@ -287,7 +287,7 @@ const RefundManagement: React.FC = () => {
               value={formData.refund_reason}
               onChange={(e) => setFormData({ ...formData, refund_reason: e.target.value })}
               placeholder="Explain why the refund is being processed..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             />
           </div>
           <div className="flex items-center justify-end space-x-3 pt-4">

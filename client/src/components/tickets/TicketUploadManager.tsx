@@ -427,13 +427,13 @@ const TicketUploadManager: React.FC = () => {
                 placeholder="Search tickets, PNR, or customer..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             >
               <option value="all">All Status</option>
               <option value="processing">Processing</option>
@@ -471,7 +471,7 @@ const TicketUploadManager: React.FC = () => {
 
               {ticket.responseData && (
                 <div className="space-y-3 mb-4">
-                  <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="bg-gray-50 p-3">
                     <h4 className="font-semibold text-gray-900 mb-2">
                       AI Extracted Data
                     </h4>
@@ -508,7 +508,7 @@ const TicketUploadManager: React.FC = () => {
                   </div>
 
                   {ticket.manualData && (
-                    <div className="bg-blue-50 rounded-lg p-3">
+                    <div className="bg-blue-50 p-3">
                       <h4 className="font-semibold text-blue-900 mb-2">
                         Manual Entry
                       </h4>
@@ -573,7 +573,7 @@ const TicketUploadManager: React.FC = () => {
       >
         <div className="space-y-6">
           {selectedTicket?.responseData && (
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-50 p-4">
               <h4 className="font-semibold text-gray-900 mb-3">
                 AI Extracted Information
               </h4>
@@ -649,7 +649,7 @@ const TicketUploadManager: React.FC = () => {
                     updateField("customerId", e.target.value);
                     updateField("customerName", customer?.full_name || "");
                   }}
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 border border-gray-300 px-3 py-2"
                 >
                   <option value="">Select Customer</option>
                   {mockData.customers.map((customer) => (
@@ -679,7 +679,7 @@ const TicketUploadManager: React.FC = () => {
                 type="text"
                 value={editData.packageName}
                 onChange={(e) => updateField("packageName", e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
 
@@ -696,7 +696,7 @@ const TicketUploadManager: React.FC = () => {
                   const value = parseFloat(e.target.value);
                   updateField("finalAmount", value ? Math.ceil(value) : 0);
                 }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
 
@@ -713,7 +713,7 @@ const TicketUploadManager: React.FC = () => {
                   const value = parseFloat(e.target.value);
                   updateField("discount", value ? Math.ceil(value) : 0);
                 }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
 
@@ -733,7 +733,7 @@ const TicketUploadManager: React.FC = () => {
                     value ? Math.ceil(value) : 0
                   );
                 }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
 
@@ -747,7 +747,7 @@ const TicketUploadManager: React.FC = () => {
                 onChange={(e) =>
                   updateField("bookingStatus", e.target.value as BookingStatus)
                 }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               >
                 <option value="Generated">Generated</option>
                 <option value="Under Review">Under Review</option>
@@ -757,7 +757,7 @@ const TicketUploadManager: React.FC = () => {
           </div>
 
           {/* Calculation Summary */}
-          <div className="bg-blue-50 rounded-lg p-4">
+          <div className="bg-blue-50 p-4">
             <h4 className="font-semibold text-blue-900 mb-2">
               Calculation Summary
             </h4>
@@ -813,7 +813,7 @@ const TicketUploadManager: React.FC = () => {
                     full_name: e.target.value,
                   })
                 }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
             <div>
@@ -829,7 +829,7 @@ const TicketUploadManager: React.FC = () => {
                     email: e.target.value,
                   })
                 }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
             <div>
@@ -845,7 +845,7 @@ const TicketUploadManager: React.FC = () => {
                     phone: e.target.value,
                   })
                 }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
             <div>
@@ -861,7 +861,7 @@ const TicketUploadManager: React.FC = () => {
                     passportNo: e.target.value,
                   })
                 }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
           </div>
@@ -878,7 +878,7 @@ const TicketUploadManager: React.FC = () => {
                   address: e.target.value,
                 })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             />
           </div>
           <div className="flex items-center justify-end space-x-3">

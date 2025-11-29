@@ -6,8 +6,7 @@ import {
   Users,
   Users as UsersIcon,
 } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
-import { useCachedSearch } from "../../hooks/useCachedSearch";
+import React, { useCallback, useEffect, useState } from "react";
 import { useApp } from "../../contexts/AppContext";
 import { User, userService } from "../../services/userService";
 import { USER_ROLES, UserRole } from "../../utils/roleAccess";
@@ -16,9 +15,7 @@ import Button from "../ui/Button";
 import Card, { CardContent } from "../ui/Card";
 import Pagination from "../ui/Pagination";
 import Spinner from "../ui/Spinner";
-
-type RoleFilter = "all" | UserRole;
-type StatusFilter = "all" | "active" | "inactive";
+import Table, { TableBody, TableCell, TableHeader, TableRow } from "../ui/Table";
 
 interface PendingAction {
   userId: string;
@@ -42,16 +39,16 @@ const StatCard: React.FC<{
 }> = ({ label, value, accent = "primary", icon }) => {
   const accentClasses =
     accent === "success"
-      ? "bg-emerald-50 text-emerald-600"
+      ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
       : accent === "warning"
-      ? "bg-amber-50 text-amber-600"
-      : "bg-blue-50 text-blue-600";
+      ? "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+      : "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400";
 
   return (
-    <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
       <div>
-        <p className="text-sm font-medium text-gray-500">{label}</p>
-        <p className="mt-2 text-2xl font-semibold text-gray-900">{value}</p>
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">{value}</p>
       </div>
       <div className={`rounded-full p-3 ${accentClasses}`}>{icon}</div>
     </div>
@@ -68,26 +65,8 @@ const UserManagement: React.FC = () => {
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(
     null
   );
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  // ── Search with caching ──────────────────────────────────────────────────────
-  const {
-    searchTerm: search,
-    setSearchTerm: setSearch,
-    searchResults,
-    invalidateCache,
-  } = useCachedSearch<User>({
-    endpoint: "/users",
-    searchFields: (user) => [
-      user.name || "",
-      user.email || "",
-    ],
-    initialFetch: true,
-    unmask: false,
-  });
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
       const offset = (currentPage - 1) * itemsPerPage;
@@ -103,50 +82,15 @@ const UserManagement: React.FC = () => {
       setLoading(false);
       setPendingAction(null);
     }
-  };
+  }, [currentPage, itemsPerPage]);
 
   useEffect(() => {
     void loadUsers();
-  }, [currentPage, itemsPerPage]);
-
-  const filteredUsers = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    
-    // Use search results when searching, otherwise use paginated users
-    const sourceUsers = search ? searchResults : users;
-
-    return sourceUsers.filter((user) => {
-      const matchesSearch =
-        !query ||
-        [user.name, user.email]
-          .filter(Boolean)
-          .some((value) => value!.toLowerCase().includes(query));
-
-      const matchesRole =
-        roleFilter === "all" ? true : user.role === roleFilter;
-
-      const matchesStatus =
-        statusFilter === "all"
-          ? true
-          : statusFilter === "active"
-          ? user.isActive
-          : !user.isActive;
-
-      return matchesSearch && matchesRole && matchesStatus;
-    });
-  }, [search, searchResults, users, roleFilter, statusFilter]);
+  }, [loadUsers]);
 
   const totalUsers = users.length;
   const activeUsers = users.filter((user) => user.isActive).length;
   const inactiveUsers = totalUsers - activeUsers;
-  const roleSummary = useMemo(
-    () =>
-      USER_ROLES.map((role) => ({
-        role,
-        count: users.filter((user) => user.role === role).length,
-      })).filter((entry) => entry.count > 0),
-    [users]
-  );
 
   const handleRoleChange = async (user: User, nextRole: UserRole) => {
     if (!nextRole || user.role === nextRole) {
@@ -159,7 +103,6 @@ const UserManagement: React.FC = () => {
       setUsers((prev) =>
         prev.map((entry) => (entry.id === user.id ? updatedUser : entry))
       );
-      invalidateCache(); // Invalidate search cache when data changes
       successToast(
         `${updatedUser.name || updatedUser.email} is now ${nextRole}`
       );
@@ -183,7 +126,6 @@ const UserManagement: React.FC = () => {
         prev.map((entry) => (entry.id === user.id ? updatedUser : entry))
       );
 
-      invalidateCache(); // Invalidate search cache when data changes
       successToast(
         `${updatedUser.name || updatedUser.email} ${
           updatedUser.isActive ? "activated" : "deactivated"
@@ -224,7 +166,18 @@ const UserManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
+        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+          <div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Signed in as</p>
+            <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100 truncate max-w-fit" title={currentUser?.username || currentUser?.name}>
+              {currentUser?.username || currentUser?.name || "Unknown"}
+            </p>
+          </div>
+          <div className="rounded-full p-3 bg-indigo-50 dark:bg-indigo-900/30 font-semibold text-indigo-600 dark:text-indigo-400">
+            {currentUser?.role || "User"}
+          </div>
+        </div>
         <StatCard
           label="Total members"
           value={totalUsers}
@@ -245,7 +198,7 @@ const UserManagement: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      {!loading && filteredUsers.length > 0 && (
+      {!loading && users.length > 0 && (
         <Pagination
           currentPage={currentPage}
           totalItems={totalItems}
@@ -266,88 +219,31 @@ const UserManagement: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-      ) : filteredUsers.length === 0 ? (
+      ) : users.length === 0 ? (
         <div className="text-center py-12">
           <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             No Users Found
           </h3>
           <p className="text-gray-500">
-            No users match your filters. Try adjusting the search or role
-            filters.
+            No users found.
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div className="flex flex-col gap-3 border-b border-gray-100 p-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-1 flex-wrap gap-3">
-              <div className="relative">
-                <input
-                  type="search"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search by name or email"
-                  className="w-64 rounded-lg border border-gray-200 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                />
-              </div>
-              <select
-                value={roleFilter}
-                onChange={(event) =>
-                  setRoleFilter(event.target.value as RoleFilter)
-                }
-                className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-              >
-                <option value="all">All roles</option>
-                {USER_ROLES.map((role) => (
-                  <option key={role} value={role}>
-                    {role}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(event.target.value as StatusFilter)
-                }
-                className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-              >
-                <option value="all">All statuses</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-            <div className="text-sm text-gray-500">
-              Signed in as{" "}
-              <span className="font-medium text-gray-700">
-                {currentUser?.name || currentUser?.email}
-              </span>{" "}
-              ({currentUser?.role})
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Member
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Role
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Created At
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Updated At
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
-                {filteredUsers.map((user) => {
+        <Card>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableCell header>Member</TableCell>
+                  <TableCell header>Role</TableCell>
+                  <TableCell header>Created At</TableCell>
+                  <TableCell header>Updated At</TableCell>
+                  <TableCell header>Status</TableCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => {
                   const isUpdatingRole =
                     pendingAction?.userId === user.id &&
                     pendingAction.kind === "role";
@@ -359,18 +255,18 @@ const UserManagement: React.FC = () => {
                   const canModifyStatus = !isCurrentUser;
 
                   return (
-                    <tr key={user.id} className="hover:bg-gray-50/60">
-                      <td className="px-6 py-4">
+                    <TableRow key={user.id}>
+                      <TableCell>
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {user.name || user.email || "Unnamed user"}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
                             {user.email || "No email provided"}
                           </span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell>
                         <select
                           value={user.role}
                           onChange={(event) =>
@@ -380,10 +276,10 @@ const UserManagement: React.FC = () => {
                             )
                           }
                           disabled={isUpdatingRole || isCurrentUser}
-                          className={`w-40 rounded-lg border px-3 py-2 text-sm font-medium shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+                          className={`w-40 border px-3 py-2 text-sm font-medium shadow-sm disabled:cursor-not-allowed disabled:opacity-60 ${
                             isCurrentUser
-                              ? "border-gray-200 bg-gray-50 text-gray-400"
-                              : "border-gray-200 text-gray-700"
+                              ? "border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
+                              : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"
                           }`}
                         >
                           {USER_ROLES.map((role) => (
@@ -392,14 +288,18 @@ const UserManagement: React.FC = () => {
                             </option>
                           ))}
                         </select>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {formatDateTime(user.createdAt)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {formatDateTime(user.updatedAt)}
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          {formatDateTime(user.createdAt)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          {formatDateTime(user.updatedAt)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-3">
                           <button
                             onClick={() => {
@@ -408,10 +308,10 @@ const UserManagement: React.FC = () => {
                               }
                             }}
                             disabled={isUpdatingStatus || !canModifyStatus}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                               user.isActive
                                 ? "bg-emerald-600"
-                                : "bg-gray-200"
+                                : "bg-gray-200 dark:bg-gray-600"
                             }`}
                           >
                             <span
@@ -424,20 +324,20 @@ const UserManagement: React.FC = () => {
                             <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
                           ) : (
                             <span className={`text-sm font-medium ${
-                              user.isActive ? "text-emerald-600" : "text-gray-500"
+                              user.isActive ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-gray-400"
                             }`}>
                               {user.isActive ? "Active" : "Inactive"}
                             </span>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

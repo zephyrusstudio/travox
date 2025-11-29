@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Calendar, AlertCircle, CreditCard, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, IndianRupee, Calendar, AlertCircle, CreditCard, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import Card, { CardContent } from '../ui/Card';
 import { DashboardStats } from '../../types';
 
@@ -15,7 +15,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => {
       subValue: `₹${stats.totalRevenue.toLocaleString()}`,
       change: '+12.5%',
       changeType: 'positive' as const,
-      icon: DollarSign,
+      icon: IndianRupee,
       bgColor: 'bg-blue-50',
       iconColor: 'bg-blue-500',
       textColor: 'text-blue-600',
@@ -82,8 +82,8 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => {
             <Card hover className="overflow-hidden group border-0 shadow-lg h-full">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <div className={`w-14 h-14 ${stat.bgColor} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                    <div className={`w-8 h-8 ${stat.iconColor} rounded-lg flex items-center justify-center`}>
+                  <div className={`w-14 h-14 ${stat.bgColor} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`w-8 h-8 ${stat.iconColor} flex items-center justify-center`}>
                       <Icon className="w-5 h-5 text-white" />
                     </div>
                   </div>

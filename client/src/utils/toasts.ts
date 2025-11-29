@@ -1,33 +1,31 @@
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 export const successToast = (message: string) => {
-  toast.success(message, {
-    theme: "light",
-    autoClose: 2000,
-  });
+  toast.success(message);
 };
 
 export const errorToast = (message: string) => {
   toast.error(message, {
-    theme: "light",
-    autoClose: 10000,
-    pauseOnHover: true,
-    closeOnClick: true,
+    duration: 6000,
   });
 };
 
 export const warnToast = (message: string) => {
-  toast.warning(message, {
-    theme: "light",
-    autoClose: 10000,
-    pauseOnHover: true,
-    closeOnClick: true,
+  toast(message, {
+    icon: "⚠️",
+    duration: 5000,
+    style: {
+      borderLeft: "4px solid #f59e0b",
+    },
   });
 };
 
 export const infoToast = (message: string) => {
-  toast.info(message, {
-    theme: "light",
-    autoClose: 5000,
+  toast(message, {
+    icon: "ℹ️",
+    duration: 4000,
+    style: {
+      borderLeft: "4px solid #3b82f6",
+    },
   });
 };

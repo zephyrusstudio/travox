@@ -2,7 +2,7 @@
 // components/bookings/BookingManagement.tsx
 import {
   Calendar,
-  DollarSign,
+  IndianRupee,
   Edit,
   Eye,
   Plus,
@@ -17,7 +17,8 @@ import { ApiError, apiRequest, parseApiError } from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
-import Card, { CardContent, CardHeader } from "../ui/Card";
+import Card, { CardContent } from "../ui/Card";
+import ConfirmDestructionModal from "../ui/common/ConfirmDestructionModal";
 import Modal from "../ui/Modal";
 import Pagination from "../ui/Pagination";
 import Spinner from "../ui/Spinner";
@@ -1010,42 +1011,42 @@ const BookingManagement: React.FC = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Calendar className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-blue-600">
-              {stats.totalBookings}
-            </p>
-            <p className="text-sm text-gray-600">Total Bookings</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-green-600">
-              {stats.confirmedBookings}
-            </p>
-            <p className="text-sm text-gray-600">Confirmed</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <DollarSign className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-purple-600">
-              ₹{stats.totalRevenue.toLocaleString()}
-            </p>
-            <p className="text-sm text-gray-600">Revenue</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <DollarSign className="w-8 h-8 text-orange-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-orange-600">
-              ₹{stats.pendingAmount.toLocaleString()}
-            </p>
-            <p className="text-sm text-gray-600">Pending</p>
-          </CardContent>
-        </Card>
+        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+          <div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Bookings</p>
+            <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">{stats.totalBookings}</p>
+          </div>
+          <div className="rounded-full p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+            <Calendar className="h-5 w-5" />
+          </div>
+        </div>
+        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+          <div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Confirmed</p>
+            <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">{stats.confirmedBookings}</p>
+          </div>
+          <div className="rounded-full p-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+            <Users className="h-5 w-5" />
+          </div>
+        </div>
+        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+          <div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Revenue</p>
+            <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">₹{stats.totalRevenue.toLocaleString()}</p>
+          </div>
+          <div className="rounded-full p-3 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+            <IndianRupee className="h-5 w-5" />
+          </div>
+        </div>
+        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+          <div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Pending</p>
+            <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">₹{stats.pendingAmount.toLocaleString()}</p>
+          </div>
+          <div className="rounded-full p-3 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+            <IndianRupee className="h-5 w-5" />
+          </div>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -1063,7 +1064,7 @@ const BookingManagement: React.FC = () => {
                 clearFilters();
               }
             }}
-            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="pl-10 pr-4 py-2 w-full border border-gray-300"
           />
           <Loader isLoading={isSearching} />
         </div>
@@ -1082,7 +1083,7 @@ const BookingManagement: React.FC = () => {
       </div>
 
       {bookingsError && (
-        <div className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+        <div className="border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
           {bookingsError}
         </div>
       )}
@@ -1126,9 +1127,6 @@ const BookingManagement: React.FC = () => {
         </div>
       ) : (
         <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold text-gray-900">All Bookings</h3>
-          </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
@@ -1179,10 +1177,8 @@ const BookingManagement: React.FC = () => {
                         {formatDateTime((b as any).travelEndAt)}
                       </p>
                     </TableCell>
-                    <TableCell>
-                      <Badge variant="default" size="sm">
-                        {b.pax_count} {b.pax_count === 1 ? "person" : "people"}
-                      </Badge>
+                    <TableCell className="text-center">
+                      {b.pax_count} {b.pax_count === 1 ? "person" : "people"}
                     </TableCell>
                     <TableCell>
                       <div>
@@ -1247,7 +1243,7 @@ const BookingManagement: React.FC = () => {
       </Card>
       )}
       {/* Delete Confirm Modal */}
-      <Modal
+      <ConfirmDestructionModal
         isOpen={isDeleteModalOpen}
         onClose={() => {
           if (!deleteLoading) {
@@ -1257,41 +1253,12 @@ const BookingManagement: React.FC = () => {
           }
         }}
         title="Delete booking?"
-        size="sm"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-gray-700">
-            Are you sure you want to delete this booking?
-          </p>
-          {deleteError && (
-            <div className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
-              {deleteError}
-            </div>
-          )}
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              className="px-3 py-2 rounded-lg border border-gray-300 text-gray-800 text-sm"
-              onClick={() => {
-                setIsDeleteModalOpen(false);
-                setDeleteTargetId(null);
-                setDeleteError(null);
-              }}
-              disabled={deleteLoading}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="px-3 py-2 rounded-lg bg-rose-600 text-white text-sm disabled:opacity-60"
-              onClick={confirmDelete}
-              disabled={deleteLoading}
-            >
-              {deleteLoading ? "Deleting..." : "Yes, delete"}
-            </button>
-          </div>
-        </div>
-      </Modal>
+        message="Are you sure you want to delete this booking?"
+        error={deleteError}
+        onConfirm={confirmDelete}
+        loading={deleteLoading}
+        confirmText="Yes, delete"
+      />
 
       {/* Add / Edit / View Modal */}
       <Modal
@@ -1316,7 +1283,7 @@ const BookingManagement: React.FC = () => {
           </div>
         )}
         {customersError && (
-          <div className="mb-4 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          <div className="mb-4 border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
             {customersError}
           </div>
         )}
@@ -1327,7 +1294,7 @@ const BookingManagement: React.FC = () => {
           </div>
         )}
         {selectedBookingError && (
-          <div className="mb-4 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          <div className="mb-4 border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
             {selectedBookingError}
           </div>
         )}

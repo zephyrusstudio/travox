@@ -406,7 +406,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
               placeholder="Enter vendor name"
             />
           </div>
@@ -422,7 +422,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, serviceType: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             >
               <option value="">Select Service Type</option>
               {serviceTypes.map((type) => (
@@ -444,7 +444,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, pocName: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
               placeholder="Enter contact person name"
             />
           </div>
@@ -461,7 +461,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
               placeholder="Enter email address"
             />
             {!isEmailValid && (
@@ -492,7 +492,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
                 }}
                 placeholder="+91"
                 maxLength={5}
-                className="w-20 border border-gray-300 rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-center"
+                className="w-20 border border-gray-300 rounded-l-lg px-3 py-2 bg-gray-50 text-center"
               />
               <input
                 type="tel"
@@ -501,7 +501,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
                 required
                 value={formData.phone ? formData.phone.replace(/^\+\d{1,4}-/, "") : ""}
                 onChange={(e) => setPhone(e.target.value)}
-                className="flex-1 border border-l-0 border-gray-300 rounded-r-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 border border-l-0 border-gray-300 rounded-r-lg px-3 py-2"
                 placeholder="Enter phone number"
               />
             </div>
@@ -522,7 +522,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
               value={formData.gstin || ""}
               maxLength={GSTIN_LEN}
               onChange={(e) => setGstin(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
               placeholder="Enter 15-character GSTIN"
             />
             {!isGstinValid && (
@@ -533,11 +533,11 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
           </div>
         </div>
 
-        <div className="rounded-lg border border-gray-200">
+        <div className="border border-gray-200">
           <button
             type="button"
             onClick={toggleBankSection}
-            className="flex w-full items-center justify-between px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="flex w-full items-center justify-between px-4 py-3 text-left"
           >
             <div>
               <p className="text-sm font-medium text-gray-900">
@@ -566,7 +566,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
                   type="text"
                   value={accountForm.bankName}
                   onChange={(e) => setAccountField("bankName", e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 px-3 py-2"
                   placeholder="Enter bank name"
                 />
               </div>
@@ -582,7 +582,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
                     onChange={(e) =>
                       setAccountField("ifscCode", e.target.value)
                     }
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 px-3 py-2 uppercase"
                     placeholder="Enter IFSC code"
                     maxLength={11}
                   />
@@ -598,7 +598,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
                     onChange={(e) =>
                       setAccountField("branchName", e.target.value)
                     }
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 px-3 py-2"
                     placeholder="Enter branch name"
                   />
                 </div>
@@ -615,7 +615,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
                     onChange={(e) =>
                       setAccountField("accountNo", e.target.value)
                     }
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 px-3 py-2"
                     placeholder="Enter account number"
                   />
                 </div>
@@ -628,7 +628,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
                     type="text"
                     value={accountForm.upiId}
                     onChange={(e) => setAccountField("upiId", e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 px-3 py-2"
                     placeholder="Enter UPI ID (optional)"
                   />
                 </div>

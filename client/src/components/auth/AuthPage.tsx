@@ -2,7 +2,6 @@
 import { Plane } from "lucide-react";
 import { apiRequest } from "../../utils/apiConnector";
 import Spinner from "../ui/Spinner";
-import UnsupportedDevice from "../ui/UnsupportedDevice";
 
 // src/pages/AuthPage.tsx
 import React, { useEffect, useRef, useState } from "react";
@@ -35,26 +34,6 @@ const AuthPage: React.FC = () => {
   const btnRef = useRef<HTMLDivElement>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window !== "undefined") {
-      return window.innerWidth < 768;
-    }
-    return false;
-  });
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Show unsupported device message on mobile
-  if (isMobile) {
-    return <UnsupportedDevice />;
-  }
 
   // Load GIS and init
   useEffect(() => {
@@ -123,7 +102,7 @@ const AuthPage: React.FC = () => {
       localStorage.setItem("user", JSON.stringify(user));
       sessionStorage.setItem("user", JSON.stringify(user));
 
-      navigate("/", { replace: true });
+      navigate("/customers", { replace: true });
     } catch (e: any) {
       setErr(e?.message || "Login failed");
     } finally {
@@ -142,7 +121,7 @@ const AuthPage: React.FC = () => {
       <div
         role="main"
         aria-busy={loading}
-        className="w-full h-screen sm:h-auto sm:max-w-md px-8 py-24 sm:shadow-2xl overflow-hidden relative bg-gradient-to-t from-blue-600 to-blue-400 bg-cover bg-center sm:rounded-2xl sm:border-white sm:border-2 flex items-center justify-center"
+        className="w-full h-screen sm:h-auto sm:max-w-md px-8 py-24 sm:shadow-2xl overflow-hidden relative bg-gradient-to-t from-blue-600 to-blue-400 bg-cover bg-center sm:sm:border-white sm:border-2 flex items-center justify-center"
         //style={{
         //  backgroundImage: "url('https://images.unsplash.com/photo-1548266652-99cf27701ced')",
         //}}
@@ -167,7 +146,7 @@ const AuthPage: React.FC = () => {
         </h2>
 
         {err && (
-          <div className="mb-4 px-3.5 py-3 rounded-xl bg-red-50/95 text-red-800 border border-red-200/50 text-sm font-medium">
+          <div className="mb-4 px-3.5 py-3 bg-red-50/95 text-red-800 border border-red-200/50 text-sm font-medium">
             {err}
           </div>
         )}

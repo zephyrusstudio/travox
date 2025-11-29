@@ -36,6 +36,8 @@ export interface Vendor {
   totalExpense: number;
   gstin?: string;
   accountId?: string;
+  description?: string;
+  createdAt: string;
 }
 
 export interface Service {

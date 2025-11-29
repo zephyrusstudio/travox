@@ -247,7 +247,7 @@ const CalendarView: React.FC = () => {
         </CardHeader>
         <CardContent>
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-0 border border-gray-200 rounded-lg overflow-hidden">
+          <div className="grid grid-cols-7 gap-0 border border-gray-200 overflow-hidden">
             {/* Day headers */}
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
               <div key={day} className="bg-gray-100 p-3 text-center font-semibold text-gray-700 border-b border-gray-200">
@@ -309,7 +309,7 @@ const CalendarView: React.FC = () => {
           {selectedDateEvents.map((event) => {
             const Icon = getEventIcon(event.type);
             return (
-              <div key={event.id} className={`p-4 rounded-lg border ${getEventColor(event.type)}`}>
+              <div key={event.id} className={`p-4 border ${getEventColor(event.type)}`}>
                 <div className="flex items-start space-x-3">
                   <Icon className="w-5 h-5 mt-1 flex-shrink-0" />
                   <div className="flex-1">

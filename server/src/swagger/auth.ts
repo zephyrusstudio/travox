@@ -138,7 +138,7 @@
  *                           type: string
  *                           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *       401:
- *         description: Invalid or expired refresh token
+ *         description: Invalid or expired session ID
  *         content:
  *           application/json:
  *             schema:

@@ -35,7 +35,7 @@ const TicketHistoryModal: React.FC<TicketHistoryModalProps> = ({
       size="xl"
     >
       <div className="space-y-6">
-        <div className="bg-blue-50 rounded-lg p-4">
+        <div className="bg-blue-50 p-4">
           <h4 className="font-semibold text-blue-900 mb-2">
             Customer Information
           </h4>
@@ -69,7 +69,7 @@ const TicketHistoryModal: React.FC<TicketHistoryModalProps> = ({
               {tickets.map((ticket) => (
                 <div
                   key={ticket.id}
-                  className="border border-gray-200 rounded-lg p-4"
+                  className="border border-gray-200 p-4"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">

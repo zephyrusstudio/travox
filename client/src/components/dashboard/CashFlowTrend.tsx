@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   TrendingUp, 
   TrendingDown, 
-  DollarSign, 
+  IndianRupee, 
   ArrowUpRight, 
   ArrowDownRight,
   Activity,
@@ -234,7 +234,7 @@ const CashFlowTrend: React.FC = () => {
           <select
             value={analysisMode}
             onChange={(e) => setAnalysisMode(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="detailed">Detailed Analysis</option>
             <option value="operational">Operational Focus</option>
@@ -243,7 +243,7 @@ const CashFlowTrend: React.FC = () => {
           <select
             value={viewType}
             onChange={(e) => setViewType(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="monthly">Monthly View</option>
             <option value="quarterly">Quarterly View</option>
@@ -251,7 +251,7 @@ const CashFlowTrend: React.FC = () => {
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="6months">Last 6 Months</option>
             <option value="12months">Last 12 Months</option>
@@ -266,7 +266,7 @@ const CashFlowTrend: React.FC = () => {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className={`w-16 h-16 ${healthStatus.bg} rounded-2xl flex items-center justify-center border-2 border-white shadow-lg`}>
+              <div className={`w-16 h-16 ${healthStatus.bg} flex items-center justify-center border-2 border-white shadow-lg`}>
                 <healthStatus.icon className={`w-8 h-8 ${healthStatus.color}`} />
               </div>
               <div>
@@ -302,8 +302,8 @@ const CashFlowTrend: React.FC = () => {
             <Card key={index} className="border-0 shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 ${colors.bg} rounded-xl flex items-center justify-center`}>
-                    <div className={`w-8 h-8 ${colors.icon} rounded-lg flex items-center justify-center`}>
+                  <div className={`w-12 h-12 ${colors.bg} flex items-center justify-center`}>
+                    <div className={`w-8 h-8 ${colors.icon} flex items-center justify-center`}>
                       <Icon className="w-5 h-5 text-white" />
                     </div>
                   </div>
@@ -331,7 +331,7 @@ const CashFlowTrend: React.FC = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center">
                 <BarChart3 className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -358,7 +358,7 @@ const CashFlowTrend: React.FC = () => {
         <CardContent>
           <div className="relative">
             {/* Main Cash Flow Chart */}
-            <div className="flex items-end justify-between h-80 space-x-2 px-4 bg-gradient-to-t from-gray-50 to-transparent rounded-xl p-6 mb-6">
+            <div className="flex items-end justify-between h-80 space-x-2 px-4 bg-gradient-to-t from-gray-50 to-transparent p-6 mb-6">
               {cashFlowData.map((item, index) => {
                 const inflowHeight = maxValue > 0 ? (item.totalInflows / maxValue) * 240 : 0;
                 const outflowHeight = maxValue > 0 ? (item.totalOutflows / maxValue) * 240 : 0;
@@ -424,7 +424,7 @@ const CashFlowTrend: React.FC = () => {
             </div>
 
             {/* Running Balance Line Chart */}
-            <div className="relative h-24 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 mb-6">
+            <div className="relative h-24 bg-gradient-to-r from-indigo-50 to-purple-50 p-4 mb-6">
               <h4 className="text-sm font-semibold text-gray-700 mb-2">Cumulative Cash Balance</h4>
               <div className="flex items-end justify-between h-12">
                 {cashFlowData.map((item, index) => {
@@ -452,7 +452,7 @@ const CashFlowTrend: React.FC = () => {
 
             {/* Cash Flow Categories */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-green-50 rounded-lg p-4">
+              <div className="bg-green-50 p-4">
                 <div className="flex items-center space-x-2 mb-3">
                   <TrendingUp className="w-5 h-5 text-green-600" />
                   <h4 className="font-semibold text-green-700">Cash Inflows</h4>
@@ -479,7 +479,7 @@ const CashFlowTrend: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-red-50 rounded-lg p-4">
+              <div className="bg-red-50 p-4">
                 <div className="flex items-center space-x-2 mb-3">
                   <TrendingDown className="w-5 h-5 text-red-600" />
                   <h4 className="font-semibold text-red-700">Cash Outflows</h4>
@@ -506,7 +506,7 @@ const CashFlowTrend: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-blue-50 p-4">
                 <div className="flex items-center space-x-2 mb-3">
                   <Activity className="w-5 h-5 text-blue-600" />
                   <h4 className="font-semibold text-blue-700">Cash Flow Analysis</h4>
@@ -538,7 +538,7 @@ const CashFlowTrend: React.FC = () => {
 
             {/* Cash Flow Insights */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-purple-50 rounded-lg p-4">
+              <div className="bg-purple-50 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <Target className="w-5 h-5 text-purple-600" />
                   <h4 className="font-semibold text-purple-700">Liquidity</h4>
@@ -551,7 +551,7 @@ const CashFlowTrend: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-orange-50 rounded-lg p-4">
+              <div className="bg-orange-50 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <Zap className="w-5 h-5 text-orange-600" />
                   <h4 className="font-semibold text-orange-700">Velocity</h4>
@@ -564,7 +564,7 @@ const CashFlowTrend: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-indigo-50 rounded-lg p-4">
+              <div className="bg-indigo-50 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <BarChart3 className="w-5 h-5 text-indigo-600" />
                   <h4 className="font-semibold text-indigo-700">Volatility</h4>
@@ -577,7 +577,7 @@ const CashFlowTrend: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-teal-50 rounded-lg p-4">
+              <div className="bg-teal-50 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <Calendar className="w-5 h-5 text-teal-600" />
                   <h4 className="font-semibold text-teal-700">Burn Rate</h4>

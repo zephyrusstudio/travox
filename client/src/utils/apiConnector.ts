@@ -6,13 +6,20 @@ import { errorToast } from "./toasts";
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
 const TOKEN_KEY = "token";
 
+// Session expired event for modal
+export const SESSION_EXPIRED_EVENT = "session-expired";
+
+export const dispatchSessionExpired = () => {
+  window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
+};
+
 // Logout utility function
 export const handleLogout = () => {
   localStorage?.clear();
   sessionStorage?.clear();
   
-  // Redirect to auth page
-  window.location.href = "/auth";
+  // Dispatch session expired event to show modal
+  dispatchSessionExpired();
 };
 
 export const api = axios.create({
@@ -37,11 +44,8 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     // Check for authentication errors (401 Unauthorized or 403 Forbidden)
     if (error.response?.status === 401 || error.response?.status === 403) {
-      errorToast("Session expired. Please login again.");
-      // Small delay to show the toast before redirect
-      setTimeout(() => {
-        handleLogout();
-      }, 500);
+      // Dispatch session expired event to show modal
+      handleLogout();
     }
     return Promise.reject(error);
   }
@@ -91,9 +95,9 @@ export async function apiRequest<T = any>(cfg: AxiosRequestConfig): Promise<T> {
     const res = await api.request<T>(cfg);
     return res.data;
   } catch (error: any) {
-    console.log(error.response?.data?.data?.message);
-    errorToast(error.response?.data?.data?.message);
-
-    return error?.response;
+    const parsedError = parseApiError(error);
+    console.log(parsedError.message);
+    errorToast(parsedError.message);
+    throw parsedError;
   }
 }

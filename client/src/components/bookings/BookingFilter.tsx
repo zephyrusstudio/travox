@@ -110,7 +110,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center space-x-2 px-4 py-2 border rounded-lg transition-colors ${
+        className={`flex items-center space-x-2 px-4 py-2 border transition-colors ${
           activeFilterCount > 0
             ? "bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100"
             : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
@@ -127,7 +127,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
 
       {/* Filter Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-[480px] bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <div className="absolute right-0 mt-2 w-[480px] bg-white border border-gray-200 shadow-lg z-50">
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4">
               {/* Booking Status */}
@@ -140,7 +140,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange("status", e.target.value || undefined)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 text-sm"
                 >
                   <option value="">All</option>
                   <option value="Draft">Draft</option>
@@ -170,7 +170,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                         | undefined
                     )
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 text-sm"
                 >
                   <option value="">All</option>
                   <option value="paid">Paid</option>
@@ -195,7 +195,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                       e.target.value ? parseFloat(e.target.value) : undefined
                     )
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 text-sm"
                 />
               </div>
               <div>
@@ -213,7 +213,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                       e.target.value ? parseFloat(e.target.value) : undefined
                     )
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 text-sm"
                 />
               </div>
 
@@ -228,7 +228,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange("bookingDateFrom", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 text-sm"
                 />
               </div>
 
@@ -242,7 +242,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange("bookingDateTo", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 text-sm"
                 />
               </div>
 
@@ -257,7 +257,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange("travelStartFrom", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 text-sm"
                 />
               </div>
 
@@ -271,7 +271,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange("travelStartTo", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 text-sm"
                 />
               </div>
 
@@ -286,7 +286,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange("travelEndFrom", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 text-sm"
                 />
               </div>
 
@@ -300,7 +300,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange("travelEndTo", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 text-sm"
                 />
               </div>
             </div>

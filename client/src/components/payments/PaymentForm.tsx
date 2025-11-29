@@ -55,7 +55,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                 setFormData({ ...formData, booking_id: id });
                 onBookingSelect?.(id);
               }}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             >
               <option value="">Select Booking</option>
               {bookings
@@ -90,7 +90,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, payment_date: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             />
           </div>
 
@@ -112,7 +112,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                   amount: value ? Math.ceil(value) : 0,
                 });
               }}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             />
           </div>
 
@@ -130,7 +130,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                   payment_mode: e.target.value as PaymentMode,
                 })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             >
               {Object.values(PaymentMode).map((mode) => (
                 <option key={mode} value={mode}>
@@ -152,7 +152,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, receipt_number: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             />
           </div>
         </div>
@@ -169,7 +169,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
               setFormData({ ...formData, notes: e.target.value })
             }
             placeholder="Add any additional notes..."
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 px-3 py-2"
           />
         </div>
 

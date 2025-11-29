@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, Calendar, Target, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, IndianRupee, BarChart3, Calendar, Target, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../ui/Card';
 import Badge from '../ui/Badge';
@@ -105,7 +105,7 @@ const RevenueExpensesTrend: React.FC = () => {
           <select
             value={viewType}
             onChange={(e) => setViewType(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="monthly">Monthly View</option>
             <option value="quarterly">Quarterly View</option>
@@ -113,7 +113,7 @@ const RevenueExpensesTrend: React.FC = () => {
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="6months">Last 6 Months</option>
             <option value="12months">Last 12 Months</option>
@@ -127,7 +127,7 @@ const RevenueExpensesTrend: React.FC = () => {
         <Card className="border-0 shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-blue-100 flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-blue-600" />
               </div>
               <Badge variant={revenueGrowthRate >= 0 ? 'success' : 'danger'} size="sm">
@@ -149,7 +149,7 @@ const RevenueExpensesTrend: React.FC = () => {
         <Card className="border-0 shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-red-100 flex items-center justify-center">
                 <TrendingDown className="w-6 h-6 text-red-600" />
               </div>
               <Badge variant={expenseGrowthRate <= revenueGrowthRate ? 'success' : 'warning'} size="sm">
@@ -171,10 +171,10 @@ const RevenueExpensesTrend: React.FC = () => {
         <Card className="border-0 shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+              <div className={`w-12 h-12 flex items-center justify-center ${
                 currentPeriod.profit >= 0 ? 'bg-green-100' : 'bg-red-100'
               }`}>
-                <DollarSign className={`w-6 h-6 ${
+                <IndianRupee className={`w-6 h-6 ${
                   currentPeriod.profit >= 0 ? 'text-green-600' : 'text-red-600'
                 }`} />
               </div>
@@ -199,7 +199,7 @@ const RevenueExpensesTrend: React.FC = () => {
         <Card className="border-0 shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-purple-100 flex items-center justify-center">
                 <Target className="w-6 h-6 text-purple-600" />
               </div>
               <Badge variant={avgProfitMargin >= 15 ? 'success' : 'warning'} size="sm">
@@ -224,7 +224,7 @@ const RevenueExpensesTrend: React.FC = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <BarChart3 className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -251,7 +251,7 @@ const RevenueExpensesTrend: React.FC = () => {
         <CardContent>
           <div className="relative">
             {/* Chart */}
-            <div className="flex items-end justify-between h-80 space-x-2 px-4 bg-gradient-to-t from-gray-50 to-transparent rounded-xl p-6 mb-6">
+            <div className="flex items-end justify-between h-80 space-x-2 px-4 bg-gradient-to-t from-gray-50 to-transparent p-6 mb-6">
               {trendData.map((item, index) => {
                 const revenueHeight = maxValue > 0 ? (item.revenue / maxValue) * 240 : 0;
                 const expenseHeight = maxValue > 0 ? (item.expenses / maxValue) * 240 : 0;
@@ -320,7 +320,7 @@ const RevenueExpensesTrend: React.FC = () => {
 
             {/* Trend Analysis */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-blue-50 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <TrendingUp className="w-5 h-5 text-blue-600" />
                   <h4 className="font-semibold text-blue-700">Revenue Trend</h4>
@@ -333,7 +333,7 @@ const RevenueExpensesTrend: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-red-50 rounded-lg p-4">
+              <div className="bg-red-50 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <TrendingDown className="w-5 h-5 text-red-600" />
                   <h4 className="font-semibold text-red-700">Expense Trend</h4>
@@ -346,7 +346,7 @@ const RevenueExpensesTrend: React.FC = () => {
                 </p>
               </div>
 
-              <div className={`rounded-lg p-4 ${
+              <div className={`p-4 ${
                 avgProfitMargin >= 15 ? 'bg-green-50' : 'bg-yellow-50'
               }`}>
                 <div className="flex items-center space-x-2 mb-2">

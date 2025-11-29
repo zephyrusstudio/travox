@@ -16,6 +16,60 @@
     @apply antialiased;
   }
 
+  /* Dark mode transition */
+  html {
+    @apply transition-colors duration-200;
+  }
+
+  /* Dark mode base text color */
+  .dark {
+    color-scheme: dark;
+  }
+
+  /* Common text colors for dark mode */
+  .dark .text-gray-900 {
+    @apply text-gray-100;
+  }
+  .dark .text-gray-800 {
+    @apply text-gray-200;
+  }
+  .dark .text-gray-700 {
+    @apply text-gray-300;
+  }
+  .dark .text-gray-600 {
+    @apply text-gray-400;
+  }
+
+  /* Common background colors for dark mode */
+  .dark .bg-white {
+    @apply bg-gray-800;
+  }
+  .dark .bg-gray-50 {
+    @apply bg-gray-900;
+  }
+  .dark .bg-gray-100 {
+    @apply bg-gray-800;
+  }
+
+  /* Common border colors for dark mode */
+  .dark .border-gray-200 {
+    @apply border-gray-700;
+  }
+  .dark .border-gray-300 {
+    @apply border-gray-600;
+  }
+
+  /* Input and form elements for dark mode */
+  .dark input,
+  .dark select,
+  .dark textarea {
+    @apply bg-gray-800 border-gray-600 text-gray-100;
+  }
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    @apply text-gray-500;
+  }
+
   /* Prevent horizontal scrolling on mobile */
   html, body {
     overflow-x: hidden;
@@ -109,7 +163,11 @@
   }
   
   .metric-card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1;
+    @apply bg-white shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1;
+  }
+
+  .dark .metric-card {
+    @apply bg-gray-800 border-gray-700;
   }
 
   /* Mobile-friendly responsive text sizes */
@@ -156,8 +214,16 @@
   @apply bg-gray-100 rounded-full;
 }
 
+.dark ::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
 ::-webkit-scrollbar-thumb {
   @apply bg-gray-300 rounded-full hover:bg-gray-400;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 hover:bg-gray-500;
 }
 
 /* Loading animations */
@@ -167,6 +233,11 @@
   animation: shimmer 1.5s infinite;
 }
 
+.dark .loading-shimmer {
+  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background-size: 200% 100%;
+}
+
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -174,11 +245,6 @@
   100% {
     background-position: 200% 0;
   }
-}
-
-/* Form focus styles */
-input:focus, select:focus, textarea:focus {
-  @apply ring-2 ring-blue-500 ring-opacity-50 border-blue-500;
 }
 
 /* Button hover effects */
@@ -218,6 +284,10 @@ input:focus, select:focus, textarea:focus {
 /* Progress bars */
 .progress-bar {
   @apply bg-gray-200 rounded-full overflow-hidden;
+}
+
+.dark .progress-bar {
+  @apply bg-gray-700;
 }
 
 .progress-fill {

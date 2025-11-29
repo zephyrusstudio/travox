@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Download, Calendar, Users, DollarSign, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Download, Calendar, Users, IndianRupee, TrendingUp } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../ui/Card';
 import Button from '../ui/Button';
@@ -93,7 +93,7 @@ const DetailedBookingsView: React.FC = () => {
                 type="date"
                 value={dateRange.startDate}
                 onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
             <div>
@@ -104,7 +104,7 @@ const DetailedBookingsView: React.FC = () => {
                 type="date"
                 value={dateRange.endDate}
                 onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
             <div>
@@ -114,7 +114,7 @@ const DetailedBookingsView: React.FC = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               >
                 <option value="all">All Statuses</option>
                 <option value="confirmed">Confirmed</option>
@@ -144,7 +144,7 @@ const DetailedBookingsView: React.FC = () => {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <DollarSign className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+            <IndianRupee className="w-8 h-8 text-purple-600 mx-auto mb-2" />
             <p className="text-2xl font-bold text-purple-600">₹{(totalValue / 100000).toFixed(1)}L</p>
             <p className="text-sm text-gray-600">Total Value</p>
           </CardContent>
@@ -165,7 +165,7 @@ const DetailedBookingsView: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-green-50 rounded-lg p-6 text-center">
+            <div className="bg-green-50 p-6 text-center">
               <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Calendar className="w-6 h-6 text-white" />
               </div>
@@ -175,7 +175,7 @@ const DetailedBookingsView: React.FC = () => {
                 {totalBookings > 0 ? ((confirmedBookings / totalBookings) * 100).toFixed(1) : 0}% of total
               </p>
             </div>
-            <div className="bg-yellow-50 rounded-lg p-6 text-center">
+            <div className="bg-yellow-50 p-6 text-center">
               <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Calendar className="w-6 h-6 text-white" />
               </div>
@@ -185,7 +185,7 @@ const DetailedBookingsView: React.FC = () => {
                 {totalBookings > 0 ? ((pendingBookings / totalBookings) * 100).toFixed(1) : 0}% of total
               </p>
             </div>
-            <div className="bg-red-50 rounded-lg p-6 text-center">
+            <div className="bg-red-50 p-6 text-center">
               <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Calendar className="w-6 h-6 text-white" />
               </div>

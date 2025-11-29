@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Target, AlertTriangle, BarChart3, PieChart, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, IndianRupee, Target, AlertTriangle, BarChart3, PieChart, Activity } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../ui/Card';
 import Badge from '../ui/Badge';
@@ -95,7 +95,7 @@ const FinancialAnalytics: React.FC = () => {
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'revenue-expenses', label: 'Revenue vs Expenses', icon: TrendingUp },
     { id: 'cash-flow', label: 'Cash Flow Analysis', icon: Activity },
-    { id: 'cash-flow-trend', label: 'Cash Flow Trend', icon: DollarSign },
+    { id: 'cash-flow-trend', label: 'Cash Flow Trend', icon: IndianRupee },
     { id: 'performance-trend', label: 'Performance Trend', icon: Target }
   ];
 
@@ -117,8 +117,8 @@ const FinancialAnalytics: React.FC = () => {
               <Card className="border-0 shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                      <DollarSign className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-blue-100 flex items-center justify-center">
+                      <IndianRupee className="w-6 h-6 text-blue-600" />
                     </div>
                     <Badge variant={revenueGrowth >= 0 ? 'success' : 'danger'} size="sm">
                       {revenueGrowth >= 0 ? '+' : ''}{revenueGrowth.toFixed(1)}%
@@ -137,7 +137,7 @@ const FinancialAnalytics: React.FC = () => {
               <Card className="border-0 shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-red-100 flex items-center justify-center">
                       <TrendingDown className="w-6 h-6 text-red-600" />
                     </div>
                     <Badge variant={expenseGrowth <= 0 ? 'success' : 'warning'} size="sm">
@@ -157,7 +157,7 @@ const FinancialAnalytics: React.FC = () => {
               <Card className="border-0 shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                    <div className={`w-12 h-12 flex items-center justify-center ${
                       totalProfit >= 0 ? 'bg-green-100' : 'bg-red-100'
                     }`}>
                       <TrendingUp className={`w-6 h-6 ${
@@ -185,7 +185,7 @@ const FinancialAnalytics: React.FC = () => {
               <Card className="border-0 shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${riskAssessment.bg}`}>
+                    <div className={`w-12 h-12 flex items-center justify-center ${riskAssessment.bg}`}>
                       <AlertTriangle className={`w-6 h-6 ${riskAssessment.color}`} />
                     </div>
                     <Badge variant={riskAssessment.level === 'Low' ? 'success' : riskAssessment.level === 'Medium' ? 'warning' : 'danger'} size="sm">
@@ -209,7 +209,7 @@ const FinancialAnalytics: React.FC = () => {
             <Card className="border-0 shadow-lg">
               <CardHeader>
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-purple-100 flex items-center justify-center">
                     <Activity className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
@@ -220,7 +220,7 @@ const FinancialAnalytics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-blue-50 rounded-lg p-6">
+                  <div className="bg-blue-50 p-6">
                     <div className="flex items-center space-x-2 mb-2">
                       <TrendingUp className="w-5 h-5 text-blue-600" />
                       <h4 className="font-semibold text-blue-700">Projected Revenue</h4>
@@ -233,7 +233,7 @@ const FinancialAnalytics: React.FC = () => {
                     </Badge>
                   </div>
                   
-                  <div className="bg-red-50 rounded-lg p-6">
+                  <div className="bg-red-50 p-6">
                     <div className="flex items-center space-x-2 mb-2">
                       <TrendingDown className="w-5 h-5 text-red-600" />
                       <h4 className="font-semibold text-red-700">Projected Expenses</h4>
@@ -246,7 +246,7 @@ const FinancialAnalytics: React.FC = () => {
                     </Badge>
                   </div>
                   
-                  <div className={`rounded-lg p-6 ${
+                  <div className={`p-6 ${
                     projectedProfit >= 0 ? 'bg-green-50' : 'bg-red-50'
                   }`}>
                     <div className="flex items-center space-x-2 mb-2">
@@ -274,7 +274,7 @@ const FinancialAnalytics: React.FC = () => {
             <Card className="border-0 shadow-lg">
               <CardHeader>
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-green-100 flex items-center justify-center">
                     <Target className="w-5 h-5 text-green-600" />
                   </div>
                   <div>

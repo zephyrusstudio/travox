@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { apiRequest } from "../../../utils/apiConnector";
 import { errorToast, successToast } from "../../../utils/toasts";
-import Button from "../Button";
-import Modal from "../Modal";
+import Button from "../../ui/Button";
+import Modal from "../../ui/Modal";
 
 export type AccountFormState = {
   id?: string;
@@ -166,7 +166,7 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, bankName: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
               placeholder="Enter bank name"
             />
           </div>
@@ -186,7 +186,7 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
                   ifscCode: e.target.value.toUpperCase()
                 })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
               placeholder="Enter IFSC code"
               maxLength={11}
             />
@@ -204,7 +204,7 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, branchName: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
               placeholder="Enter branch name"
             />
           </div>
@@ -224,7 +224,7 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
                   accountNo: e.target.value.replace(/\D/g, "")
                 })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
               placeholder="Enter account number"
             />
           </div>
@@ -240,7 +240,7 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, upiId: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
               placeholder="Enter UPI ID (optional)"
             />
           </div>

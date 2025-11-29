@@ -82,8 +82,8 @@ const RecentActivity: React.FC<RecentActivityProps> = ({ logs }) => {
         
         return (
           <div key={log.log_id} className="group">
-            <div className="flex items-start space-x-4 p-3 rounded-xl hover:bg-gray-50 transition-all duration-200">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${getActionColor(log.action)} group-hover:scale-110 transition-transform duration-200`}>
+            <div className="flex items-start space-x-4 p-3 hover:bg-gray-50 transition-all duration-200">
+              <div className={`w-10 h-10 flex items-center justify-center flex-shrink-0 ${getActionColor(log.action)} group-hover:scale-110 transition-transform duration-200`}>
                 <ActionIcon className="w-5 h-5" />
               </div>
               

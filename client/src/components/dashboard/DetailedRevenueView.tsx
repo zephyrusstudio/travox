@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Download, TrendingUp, DollarSign, Calendar, CreditCard } from 'lucide-react';
+import { ArrowLeft, Download, TrendingUp, IndianRupee, Calendar, CreditCard } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../ui/Card';
 import Button from '../ui/Button';
@@ -106,7 +106,7 @@ const DetailedRevenueView: React.FC = () => {
                 type="date"
                 value={dateRange.startDate}
                 onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
             <div>
@@ -117,7 +117,7 @@ const DetailedRevenueView: React.FC = () => {
                 type="date"
                 value={dateRange.endDate}
                 onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
           </div>
@@ -128,7 +128,7 @@ const DetailedRevenueView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-4 text-center">
-            <DollarSign className="w-8 h-8 text-green-600 mx-auto mb-2" />
+            <IndianRupee className="w-8 h-8 text-green-600 mx-auto mb-2" />
             <p className="text-2xl font-bold text-green-600">₹{(totalRevenue / 100000).toFixed(1)}L</p>
             <p className="text-sm text-gray-600">Total Revenue</p>
           </CardContent>
@@ -164,7 +164,7 @@ const DetailedRevenueView: React.FC = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {Object.entries(paymentModeBreakdown).map(([mode, amount]) => (
-              <div key={mode} className="bg-gray-50 rounded-lg p-4">
+              <div key={mode} className="bg-gray-50 p-4">
                 <div className="flex items-center justify-between mb-2">
                   <Badge variant={getPaymentModeVariant(mode) as any} size="sm">
                     {mode.replace(/_/g, ' ').toUpperCase()}
@@ -188,7 +188,7 @@ const DetailedRevenueView: React.FC = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {Object.entries(monthlyRevenue).map(([month, amount]) => (
-              <div key={month} className="bg-blue-50 rounded-lg p-4 text-center">
+              <div key={month} className="bg-blue-50 p-4 text-center">
                 <p className="text-sm font-medium text-blue-600 mb-1">{month}</p>
                 <p className="text-xl font-bold text-blue-700">₹{(amount / 100000).toFixed(1)}L</p>
               </div>

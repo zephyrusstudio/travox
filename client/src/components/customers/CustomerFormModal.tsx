@@ -536,7 +536,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
             </p>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+          <div className="bg-gray-50 p-4 space-y-2">
             <div className="flex items-start">
               <span className="text-sm font-medium text-gray-700 w-20">Email:</span>
               <span className="text-sm text-gray-900 font-mono">esanchar@gmail.com</span>
@@ -585,7 +585,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             />
           </div>
 
@@ -600,7 +600,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
               placeholder="Enter email address"
             />
             {emailError && (
@@ -637,7 +637,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                 }}
                 placeholder="+91"
                 maxLength={5}
-                className="w-20 border border-gray-300 rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-center"
+                className="w-20 border border-gray-300 rounded-l-lg px-3 py-2 bg-gray-50 text-center"
               />
               <input
                 type="tel"
@@ -649,7 +649,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                     : ""
                 }
                 onChange={(e) => setPhone(e.target.value)}
-                className="flex-1 border border-l-0 border-gray-300 rounded-r-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 border border-l-0 border-gray-300 rounded-r-lg px-3 py-2"
                 placeholder="Enter phone number"
               />
             </div>
@@ -671,7 +671,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               value={formData.passportNo || ""}
               maxLength={PASSPORT_LEN}
               onChange={(e) => setPassport(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             />
             {!isPassportValid && (
               <p className="mt-1 text-xs text-rose-600">
@@ -690,7 +690,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               value={formData.gstin || ""}
               maxLength={GSTIN_LEN}
               onChange={(e) => setGstin(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             />
             {!isGstinValid && (
               <p className="mt-1 text-xs text-rose-600">
@@ -710,7 +710,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               maxLength={AADHAAR_LEN}
               value={formData.aadhaarNo || ""}
               onChange={(e) => setAadhaar(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             />
             {!isAadhaarValid && (
               <p className="mt-1 text-xs text-rose-600">
@@ -730,16 +730,16 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, visaNo: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             />
           </div>
         </div>
 
-        <div className="rounded-lg border border-gray-200">
+        <div className="border border-gray-200">
           <button
             type="button"
             onClick={toggleBankSection}
-            className="flex w-full items-center justify-between px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="flex w-full items-center justify-between px-4 py-3 text-left"
           >
             <div>
               <p className="text-sm font-medium text-gray-900">
@@ -768,7 +768,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                   type="text"
                   value={accountForm.bankName}
                   onChange={(e) => setAccountField("bankName", e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 px-3 py-2"
                   placeholder="Enter bank name"
                 />
               </div>
@@ -784,7 +784,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                     onChange={(e) =>
                       setAccountField("ifscCode", e.target.value)
                     }
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 px-3 py-2 uppercase"
                     placeholder="Enter IFSC code"
                     maxLength={11}
                   />
@@ -800,7 +800,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                     onChange={(e) =>
                       setAccountField("branchName", e.target.value)
                     }
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 px-3 py-2"
                     placeholder="Enter branch name"
                   />
                 </div>
@@ -817,7 +817,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                     onChange={(e) =>
                       setAccountField("accountNo", e.target.value)
                     }
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 px-3 py-2"
                     placeholder="Enter account number"
                   />
                 </div>
@@ -830,7 +830,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                     type="text"
                     value={accountForm.upiId}
                     onChange={(e) => setAccountField("upiId", e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 px-3 py-2"
                     placeholder="Enter UPI ID (optional)"
                   />
                 </div>

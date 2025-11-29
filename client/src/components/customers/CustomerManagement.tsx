@@ -6,8 +6,8 @@ import { Customer } from "../../types";
 
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import Button from "../ui/Button";
-import Card, { CardContent, CardHeader } from "../ui/Card";
-import Modal from "../ui/Modal";
+import Card, { CardContent } from "../ui/Card";
+import ConfirmDestructionModal from "../ui/common/ConfirmDestructionModal";
 import Pagination from "../ui/Pagination";
 import Spinner from "../ui/Spinner";
 import AccountFormModal, {
@@ -234,7 +234,7 @@ const CustomerManagement: React.FC = () => {
 
       {/* Inline error */}
       {errorMsg && (
-        <div className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+        <div className="border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
           {errorMsg}
         </div>
       )}
@@ -325,7 +325,7 @@ const CustomerManagement: React.FC = () => {
       />
 
       {/* Delete Confirm Modal */}
-      <Modal
+      <ConfirmDestructionModal
         isOpen={isDeleteOpen}
         onClose={() => {
           if (!deleting) {
@@ -334,35 +334,12 @@ const CustomerManagement: React.FC = () => {
           }
         }}
         title="Delete customer?"
-        size="sm"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-gray-700">
-            This action will permanently remove the customer record.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              className="px-3 py-2 rounded-lg border border-gray-300 text-gray-800 text-sm"
-              onClick={() => {
-                setIsDeleteOpen(false);
-                setDeleteTargetId(null);
-              }}
-              disabled={deleting}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="px-3 py-2 rounded-lg bg-rose-600 text-white text-sm disabled:opacity-60"
-              onClick={doDelete}
-              disabled={deleting}
-            >
-              {deleting ? "Deleting..." : "Delete"}
-            </button>
-          </div>
-        </div>
-      </Modal>
+        message="This action will permanently remove the customer record."
+        error={errorMsg}
+        onConfirm={doDelete}
+        loading={deleting}
+        confirmText="Delete"
+      />
     </div>
   );
 };

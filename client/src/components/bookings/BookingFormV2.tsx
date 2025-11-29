@@ -90,7 +90,7 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
             if (isControlled) return;
             setOpen((prev) => !prev);
           }}
-          className="flex flex-1 items-center justify-between text-left focus:outline-none"
+          className="flex flex-1 items-center justify-between text-left"
           aria-expanded={isOpen}
           aria-controls={contentId}
           disabled={isControlled}
@@ -192,7 +192,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
       {/* File Upload Area (only for create mode) */}
       {!selectedBooking && !ui.processingComplete && (
         <div
-          className={`relative border-2 border-dashed rounded-xl transition-all duration-200 ${
+          className={`relative border-2 border-dashed transition-all duration-200 ${
             ui.isProcessing
               ? 'border-blue-400 bg-blue-50 py-6'
               : ui.uploadedFileName
@@ -299,7 +299,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                 type="date"
                 value={formData.bookingDate}
                 onChange={(e) => setFormField('bookingDate', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
                 required
               />
             </Labeled>
@@ -310,7 +310,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                 value={formData.pnrNo}
                 onChange={(e) => setFormField('pnrNo', e.target.value)}
                 placeholder="e.g., ABC123"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </Labeled>
 
@@ -320,7 +320,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                 value={formData.packageName}
                 onChange={(e) => setFormField('packageName', e.target.value)}
                 placeholder="e.g., Goa Beach Tour"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </Labeled>
 
@@ -328,7 +328,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
               <select
                 value={formData.modeOfJourney}
                 onChange={(e) => setFormField('modeOfJourney', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               >
                 <option value="">Select Mode</option>
                 {Object.values(ModeOfJourney).map((mode) => (
@@ -345,7 +345,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                 onChange={(e) =>
                   setFormField('status', e.target.value as BookingStatus)
                 }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
                 required
               >
                 {Object.values(BookingStatus).map((status) => (
@@ -360,7 +360,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
               <select
                 value={formData.vendorId}
                 onChange={(e) => setFormField('vendorId', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               >
                 <option value="">No Vendor</option>
                 {vendors.map((v) => (
@@ -378,7 +378,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                   type="text"
                   value={formatDateTime(selectedBooking.travelStartAt)}
                   readOnly
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-700"
+                  className="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-700"
                 />
               </Labeled>
             )}
@@ -389,7 +389,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                   type="text"
                   value={formatDateTime(selectedBooking.travelEndAt)}
                   readOnly
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-700"
+                  className="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-700"
                 />
               </Labeled>
             )}
@@ -408,7 +408,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
               <select
                 value={formData.currency}
                 onChange={(e) => setFormField('currency', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
                 required
               >
                 <option value="INR">INR</option>
@@ -428,7 +428,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                   const value = parseFloat(e.target.value);
                   setFormField('totalAmount', value ? Math.ceil(value) : '');
                 }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
                 required
               />
             </Labeled>
@@ -443,7 +443,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                   const value = parseFloat(e.target.value);
                   setFormField('advanceAmount', value ? Math.ceil(value) : '');
                 }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </Labeled>
 
@@ -452,7 +452,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                 type="text"
                 value={balance}
                 readOnly
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-700"
+                className="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-700"
               />
             </Labeled>
           </div>
@@ -485,7 +485,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
               {paxList.map((pax, idx) => (
                 <div
                   key={idx}
-                  className="rounded-lg border border-gray-200 bg-white p-3"
+                  className="border border-gray-200 bg-white p-3"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium text-gray-700">
@@ -508,7 +508,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                         type="text"
                         value={pax.paxName}
                         onChange={(e) => updatePax(idx, 'paxName', e.target.value)}
-                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
                         required
                       />
                     </Labeled>
@@ -519,7 +519,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                         onChange={(e) =>
                           updatePax(idx, 'paxType', e.target.value as PAXType)
                         }
-                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
                         required
                       >
                         <option value="">Select</option>
@@ -537,7 +537,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                         onChange={(e) =>
                           updatePax(idx, 'sex', e.target.value as Sex)
                         }
-                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
                       >
                         <option value="">Select</option>
                         {Object.values(Sex).map((sexOption) => (
@@ -553,7 +553,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                         type="text"
                         value={pax.passportNo}
                         onChange={(e) => updatePax(idx, 'passportNo', e.target.value)}
-                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
                       />
                     </Labeled>
 
@@ -562,7 +562,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                         type="date"
                         value={pax.dob}
                         onChange={(e) => updatePax(idx, 'dob', e.target.value)}
-                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
                       />
                     </Labeled>
                   </div>
@@ -601,7 +601,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
               {itineraries.map((itin, itinIdx) => (
                 <div
                   key={itinIdx}
-                  className="rounded-lg border border-gray-300 bg-white p-4"
+                  className="border border-gray-300 bg-white p-4"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-semibold text-gray-800">
@@ -627,7 +627,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                           updateItinerary(itinIdx, 'name', e.target.value)
                         }
                         placeholder="e.g., Outbound Journey"
-                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
                         required
                       />
                     </Labeled>
@@ -644,7 +644,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
                             parseInt(e.target.value) || 1
                           )
                         }
-                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
                         required
                       />
                     </Labeled>
@@ -766,7 +766,7 @@ const SegmentEditor: React.FC<SegmentEditorProps> = ({
           <select
             value={segment.modeOfJourney}
             onChange={(e) => onUpdate('modeOfJourney', e.target.value)}
-            className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
             required
           >
             <option value="">Select</option>
@@ -784,7 +784,7 @@ const SegmentEditor: React.FC<SegmentEditorProps> = ({
             min="1"
             value={segment.seqNo}
             onChange={(e) => onUpdate('seqNo', parseInt(e.target.value) || 1)}
-            className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
             required
           />
         </Labeled>

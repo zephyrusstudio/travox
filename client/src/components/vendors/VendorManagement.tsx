@@ -1,11 +1,11 @@
-import { Plus, Search, RefreshCw, Building2 } from "lucide-react";
+import { Plus, RefreshCw, Building2 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useCachedSearch } from "../../hooks/useCachedSearch";
 import { Vendor } from "../../types";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import Button from "../ui/Button";
 import Card, { CardContent } from "../ui/Card";
-import Modal from "../ui/Modal";
+import ConfirmDestructionModal from "../ui/common/ConfirmDestructionModal";
 import Pagination from "../ui/Pagination";
 import Spinner from "../ui/Spinner";
 import AccountFormModal, { AccountFormState } from "../ui/common/AccountFormModal";
@@ -72,26 +72,21 @@ const VendorManagement: React.FC = () => {
   });
 
   // Replace with API/selector
-  const expenses: Expense[] = [];
+  const expenses = useMemo(() => [] as Expense[], []);
 
   // Derived
   const filteredVendors = useMemo(() => {
-    // Use search results when searching, otherwise use paginated vendors
-    return searchTerm ? searchResults : vendors;
+    const result = searchTerm ? searchResults : vendors;
+    return Array.isArray(result) ? result : [];
   }, [searchTerm, searchResults, vendors]);
 
-  const totalExpensesAmount = useMemo(
-    () => expenses.reduce((t, e) => t + (e.amount || 0), 0),
-    [expenses]
-  );
-
   // Helpers
-  const fetchVendors = async () => {
+  const fetchVendors = useCallback(async () => {
     setLoading(true);
     setErrorMsg(null);
     try {
       const offset = (currentPage - 1) * itemsPerPage;
-      const res = await apiRequest<any>({ 
+      const res = await apiRequest<{ data: Vendor[]; count?: number }>({ 
         method: "GET", 
         url: `/vendors?unmask=true&limit=${itemsPerPage}&offset=${offset}` 
       });
@@ -105,7 +100,7 @@ const VendorManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, itemsPerPage]);
 
   const openForm = (vendor?: Vendor) => {
     setSelectedVendor(vendor ?? null);
@@ -144,7 +139,16 @@ const VendorManagement: React.FC = () => {
     if (vendor.accountId) {
       // Fetch existing account data
       try {
-        const response = await apiRequest<any>({
+        const response = await apiRequest<{
+          data: {
+            id: string;
+            bankName: string;
+            ifscCode: string;
+            branchName: string;
+            accountNo: string;
+            upiId: string;
+          };
+        }>({
           method: "GET",
           url: `/vendors/${vendor.id}/account`,
         });
@@ -185,12 +189,9 @@ const VendorManagement: React.FC = () => {
     [expenses]
   );
 
-  // placeholder until wired from context/store
-  const getExpensesByVendor = (_id: string) => [] as any[];
-
   useEffect(() => {
     fetchVendors();
-  }, [currentPage, itemsPerPage]);
+  }, [fetchVendors]);
 
   // Render
   return (
@@ -222,7 +223,7 @@ const VendorManagement: React.FC = () => {
 
       {/* Inline error */}
       {errorMsg && (
-        <div className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+        <div className="border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
           {errorMsg}
         </div>
       )}
@@ -272,7 +273,6 @@ const VendorManagement: React.FC = () => {
           onDelete={askDelete}
           onManageAccount={manageAccount}
           getVendorExpenseTotal={getVendorExpenseTotal}
-          totalExpense={0}
         />
       )}
 
@@ -307,7 +307,7 @@ const VendorManagement: React.FC = () => {
       />
 
       {/* Delete Confirm Modal */}
-      <Modal
+      <ConfirmDestructionModal
         isOpen={isDeleteOpen}
         onClose={() => {
           if (!deleting) {
@@ -316,35 +316,12 @@ const VendorManagement: React.FC = () => {
           }
         }}
         title="Delete vendor?"
-        size="sm"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-gray-700">
-            This action will permanently remove the vendor record.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              className="px-3 py-2 rounded-lg border border-gray-300 text-gray-800 text-sm"
-              onClick={() => {
-                setIsDeleteOpen(false);
-                setDeleteTargetId(null);
-              }}
-              disabled={deleting}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="px-3 py-2 rounded-lg bg-rose-600 text-white text-sm disabled:opacity-60"
-              onClick={doDelete}
-              disabled={deleting}
-            >
-              {deleting ? "Deleting..." : "Delete"}
-            </button>
-          </div>
-        </div>
-      </Modal>
+        message="This action will permanently remove the vendor record."
+        error={errorMsg}
+        onConfirm={doDelete}
+        loading={deleting}
+        confirmText="Delete"
+      />
     </div>
   );
 };

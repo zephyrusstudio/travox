@@ -1,4 +1,4 @@
-import { Calendar, DollarSign, MapPin, Package } from "lucide-react";
+import { Calendar, IndianRupee, MapPin, Package } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { Customer } from "../../types";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
@@ -121,7 +121,7 @@ const CustomerBookingsModal: React.FC<CustomerBookingsModalProps> = ({
               return (
                 <div
                   key={booking.id}
-                  className="border border-gray-200 rounded-lg p-4 transition-shadow"
+                  className="border border-gray-200 p-4 transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-3">
@@ -169,7 +169,7 @@ const CustomerBookingsModal: React.FC<CustomerBookingsModalProps> = ({
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center text-gray-600">
-                        <DollarSign className="w-4 h-4 mr-2" />
+                        <IndianRupee className="w-4 h-4 mr-2" />
                         <span>
                           <span className="font-medium">Total:</span>{" "}
                           {formatAmount(booking.totalAmount, booking.currency)}

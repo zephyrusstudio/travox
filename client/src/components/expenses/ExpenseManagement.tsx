@@ -3,7 +3,7 @@ import {
   Building2,
   ClipboardList,
   Plus,
-  Receipt,
+  IndianRupee,
   RefreshCw,
   Search,
   Wallet,
@@ -14,7 +14,7 @@ import { ApiError, apiRequest } from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
-import Card, { CardContent, CardHeader } from "../ui/Card";
+import Card, { CardContent } from "../ui/Card";
 import Pagination from "../ui/Pagination";
 import Spinner from "../ui/Spinner";
 import Table, {
@@ -441,33 +441,33 @@ const ExpenseManagement: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Wallet className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-blue-600">
-              {stats.totalExpenses}
-            </p>
-            <p className="text-sm text-gray-600">Total Expenses</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Receipt className="w-8 h-8 text-rose-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-rose-600">
-              ₹{stats.totalAmount.toLocaleString()}
-            </p>
-            <p className="text-sm text-gray-600">Total Amount</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <ClipboardList className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-purple-600">
-              ₹{stats.thisMonthAmount.toLocaleString()}
-            </p>
-            <p className="text-sm text-gray-600">This Month</p>
-          </CardContent>
-        </Card>
+        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+          <div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Expenses</p>
+            <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">{stats.totalExpenses}</p>
+          </div>
+          <div className="rounded-full p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+            <Wallet className="h-5 w-5" />
+          </div>
+        </div>
+        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+          <div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Amount</p>
+            <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">₹{stats.totalAmount.toLocaleString()}</p>
+          </div>
+          <div className="rounded-full p-3 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400">
+            <IndianRupee className="h-5 w-5" />
+          </div>
+        </div>
+        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+          <div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">This Month</p>
+            <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">₹{stats.thisMonthAmount.toLocaleString()}</p>
+          </div>
+          <div className="rounded-full p-3 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+            <ClipboardList className="h-5 w-5" />
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center space-x-4">
@@ -478,7 +478,7 @@ const ExpenseManagement: React.FC = () => {
             placeholder="Search expenses..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="pl-10 pr-4 py-2 w-full border border-gray-300"
           />
         </div>
       </div>
@@ -517,14 +517,11 @@ const ExpenseManagement: React.FC = () => {
         </div>
       ) : (
         <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold text-gray-900">Expense History</h3>
-          </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableCell header>Receipt</TableCell>
+                  <TableCell header>IndianRupee</TableCell>
                   <TableCell header>Vendor</TableCell>
                   <TableCell header>Date</TableCell>
                   <TableCell header>Amount</TableCell>
@@ -538,7 +535,7 @@ const ExpenseManagement: React.FC = () => {
                   <TableRow key={expense.expense_id}>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        <Receipt className="w-4 h-4 text-gray-400" />
+                        <IndianRupee className="w-4 h-4 text-gray-400" />
                         <span className="font-mono text-sm">
                           {expense.receipt_number || "-"}
                         </span>

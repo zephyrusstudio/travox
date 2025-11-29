@@ -67,7 +67,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
               value={formData.vendor_id}
               disabled={isSubmitting}
               onChange={(e) => handleVendorChange(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             >
               <option value="">Select Vendor</option>
               {vendors.map((vendor) => (
@@ -103,7 +103,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   amount: value ? Math.ceil(value) : 0,
                 }));
               }}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             />
           </div>
 
@@ -122,7 +122,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   currency: e.target.value.toUpperCase(),
                 }))
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2 uppercase"
             />
           </div>
 
@@ -140,7 +140,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   payment_mode: e.target.value as PaymentMode,
                 }))
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
             >
               {Object.values(PaymentMode).map((mode) => (
                 <option key={mode} value={mode}>
@@ -164,7 +164,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   receipt_number: e.target.value,
                 }))
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
               placeholder="Optional receipt reference"
             />
           </div>
@@ -183,7 +183,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   category: e.target.value,
                 }))
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 px-3 py-2"
               placeholder="e.g. Vendor payment, Logistics"
             />
           </div>
@@ -204,7 +204,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
               }))
             }
             placeholder="Add any additional notes..."
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 px-3 py-2"
           />
         </div>
 

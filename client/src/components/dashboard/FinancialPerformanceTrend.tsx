@@ -4,7 +4,7 @@ import {
   TrendingDown, 
   BarChart3, 
   Target, 
-  DollarSign, 
+  IndianRupee, 
   Calendar,
   ArrowUpRight,
   ArrowDownRight,
@@ -192,7 +192,7 @@ const FinancialPerformanceTrend: React.FC = () => {
       value: `${currentPeriod.profitMargin.toFixed(1)}`,
       unit: '%',
       change: previousPeriod ? ((currentPeriod.profitMargin - previousPeriod.profitMargin)).toFixed(1) : '0',
-      icon: DollarSign,
+      icon: IndianRupee,
       color: 'purple',
       description: 'Profitability ratio'
     },
@@ -228,7 +228,7 @@ const FinancialPerformanceTrend: React.FC = () => {
           <select
             value={metricType}
             onChange={(e) => setMetricType(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="comprehensive">Comprehensive View</option>
             <option value="financial">Financial Focus</option>
@@ -238,7 +238,7 @@ const FinancialPerformanceTrend: React.FC = () => {
           <select
             value={comparisonMode}
             onChange={(e) => setComparisonMode(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="period-over-period">Period over Period</option>
             <option value="year-over-year">Year over Year</option>
@@ -247,7 +247,7 @@ const FinancialPerformanceTrend: React.FC = () => {
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="6months">Last 6 Months</option>
             <option value="12months">Last 12 Months</option>
@@ -262,7 +262,7 @@ const FinancialPerformanceTrend: React.FC = () => {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className={`w-16 h-16 ${healthStatus.bg} rounded-2xl flex items-center justify-center border-2 border-white shadow-lg`}>
+              <div className={`w-16 h-16 ${healthStatus.bg} flex items-center justify-center border-2 border-white shadow-lg`}>
                 <healthStatus.icon className={`w-8 h-8 ${healthStatus.color}`} />
               </div>
               <div>
@@ -299,8 +299,8 @@ const FinancialPerformanceTrend: React.FC = () => {
             <Card key={index} className="border-0 shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 ${colors.bg} rounded-xl flex items-center justify-center`}>
-                    <div className={`w-8 h-8 ${colors.icon} rounded-lg flex items-center justify-center`}>
+                  <div className={`w-12 h-12 ${colors.bg} flex items-center justify-center`}>
+                    <div className={`w-8 h-8 ${colors.icon} flex items-center justify-center`}>
                       <Icon className="w-5 h-5 text-white" />
                     </div>
                   </div>
@@ -328,7 +328,7 @@ const FinancialPerformanceTrend: React.FC = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <BarChart3 className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -355,7 +355,7 @@ const FinancialPerformanceTrend: React.FC = () => {
         <CardContent>
           <div className="relative">
             {/* Multi-metric Chart */}
-            <div className="flex items-end justify-between h-80 space-x-2 px-4 bg-gradient-to-t from-gray-50 to-transparent rounded-xl p-6 mb-6">
+            <div className="flex items-end justify-between h-80 space-x-2 px-4 bg-gradient-to-t from-gray-50 to-transparent p-6 mb-6">
               {performanceData.map((item, index) => {
                 const scoreHeight = maxValue > 0 ? (item.performanceScore / maxValue) * 240 : 0;
                 const conversionHeight = maxValue > 0 ? (item.conversionRate / maxValue) * 240 : 0;
@@ -420,7 +420,7 @@ const FinancialPerformanceTrend: React.FC = () => {
 
             {/* Performance Insights */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-blue-50 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <Target className="w-5 h-5 text-blue-600" />
                   <h4 className="font-semibold text-blue-700">Overall Performance</h4>
@@ -433,7 +433,7 @@ const FinancialPerformanceTrend: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-green-50 rounded-lg p-4">
+              <div className="bg-green-50 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <Users className="w-5 h-5 text-green-600" />
                   <h4 className="font-semibold text-green-700">Conversion Efficiency</h4>
@@ -446,9 +446,9 @@ const FinancialPerformanceTrend: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-purple-50 rounded-lg p-4">
+              <div className="bg-purple-50 p-4">
                 <div className="flex items-center space-x-2 mb-2">
-                  <DollarSign className="w-5 h-5 text-purple-600" />
+                  <IndianRupee className="w-5 h-5 text-purple-600" />
                   <h4 className="font-semibold text-purple-700">Profitability</h4>
                 </div>
                 <p className="text-2xl font-bold text-purple-800 mb-1">
@@ -459,7 +459,7 @@ const FinancialPerformanceTrend: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-orange-50 rounded-lg p-4">
+              <div className="bg-orange-50 p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <TrendingUp className="w-5 h-5 text-orange-600" />
                   <h4 className="font-semibold text-orange-700">Growth Trajectory</h4>

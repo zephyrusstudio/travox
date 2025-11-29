@@ -1,10 +1,10 @@
-import { Building2, Edit, Search, Trash2, Wallet } from "lucide-react";
+import { Edit, Search, Trash2, Wallet } from "lucide-react";
 import React from "react";
 import { Vendor } from "../../types";
 import { formatDate } from "../../utils/misc";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
-import Card, { CardContent, CardHeader } from "../ui/Card";
+import Card, { CardContent } from "../ui/Card";
 import Table, {
   TableBody,
   TableCell,
@@ -18,10 +18,9 @@ export type VendorTableProps = {
   onDelete: (vendorId: string) => void;
   onManageAccount: (v: Vendor) => void;
   getVendorExpenseTotal: (vendorId: string) => number;
-  totalExpense: number;
 };
 
-const getServiceTypeVariant = (serviceType: string) => {
+const getServiceTypeVariant = (serviceType: string): 'default' | 'success' | 'warning' | 'danger' | 'info' => {
   switch (serviceType.toLowerCase()) {
     case "flight":
       return "info";
@@ -37,14 +36,9 @@ const getServiceTypeVariant = (serviceType: string) => {
 const VendorTable: React.FC<VendorTableProps> & {
   SearchBox: React.FC<SearchBoxProps>;
 } = ({ vendors, onEdit, onDelete, onManageAccount, getVendorExpenseTotal }) => {
+  const safeVendors = Array.isArray(vendors) ? vendors : [];
   return (
     <Card>
-      <CardHeader>
-        <h3 className="text-lg font-semibold text-gray-900">All Vendors</h3>
-        <p className="text-sm text-gray-600">
-          Manage your travel service providers and suppliers
-        </p>
-      </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
@@ -59,14 +53,11 @@ const VendorTable: React.FC<VendorTableProps> & {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {vendors.map((vendor) => {
+            {safeVendors.map((vendor) => {
               return (
                 <TableRow key={vendor.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <Building2 className="w-5 h-5 text-blue-600" />
-                      </div>
                       <div>
                         <p className="font-medium text-gray-900">
                           {vendor.name}
@@ -81,7 +72,7 @@ const VendorTable: React.FC<VendorTableProps> & {
                   </TableCell>
                   <TableCell>
                     <Badge 
-                      variant={getServiceTypeVariant(vendor.serviceType) as any}
+                      variant={getServiceTypeVariant(vendor.serviceType)}
                       size="sm"
                     >
                       {vendor.serviceType}
@@ -108,7 +99,7 @@ const VendorTable: React.FC<VendorTableProps> & {
                   </TableCell>
                   <TableCell>
                     <span className="text-sm font-medium text-green-600">
-                      ₹{vendor?.totalExpense?.toLocaleString('en-IN') || 0}
+                      ₹{getVendorExpenseTotal(vendor.id).toLocaleString('en-IN')}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -178,7 +169,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({ value, onChange }) => (
       placeholder="Search vendors..."
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      className="pl-10 pr-4 py-2 w-full border border-gray-300"
     />
   </div>
 );

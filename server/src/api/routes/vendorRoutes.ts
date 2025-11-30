@@ -10,6 +10,7 @@ export function registerVendorRoutes(app: Express) {
     app.post('/vendors', requireAuth(), auditLogger('vendors'), vendorCtrl.create);
     app.get('/vendors', requireAuth(), vendorCtrl.getAll);
     app.get('/vendors/search', requireAuth(), vendorCtrl.search);
+    app.get('/vendors/report', requireAuth(), vendorCtrl.getBookingsReport);
     app.get('/vendors/:id', requireAuth(), auditLogger('vendors'), vendorCtrl.getById);
     app.put('/vendors/:id', requireAuth(), auditLogger('vendors'), vendorCtrl.update);
     app.get('/vendors/:id/stats', requireAuth(), vendorCtrl.getStats);

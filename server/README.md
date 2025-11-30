@@ -2,7 +2,7 @@
 
 # Project Architecture Overview
 
-This document describes the overall architecture and folder structure of the Travel Management System (TMS) API microservice.  
+This document describes the overall architecture and folder structure of the B2B Travel Management Platform (TMS) API microservice.  
 It follows **Clean/Hexagonal Architecture**, best practices for Node.js and TypeScript, and is designed for scalability, modularity, testability, and ease of maintenance.
 
 ## Features

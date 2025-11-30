@@ -37,6 +37,7 @@ import {
   ModeOfJourneyOption,
   NewCustomerData,
 } from "./booking.types";
+import { VendorLite } from "./booking.v2.types";
 import Loader from "../ui/Loader";
 
 type BookingRow = Booking & { pnr?: string };
@@ -57,6 +58,7 @@ const BookingManagement: React.FC = () => {
   const [customers, setCustomers] = useState<CustomerLite[]>([]);
   const [customersLoading, setCustomersLoading] = useState(false);
   const [customersError, setCustomersError] = useState<string | null>(null);
+  const [vendors, setVendors] = useState<VendorLite[]>([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -689,6 +691,30 @@ const BookingManagement: React.FC = () => {
     fetchCustomers();
   }, [fetchCustomers]);
 
+  const fetchVendors = useCallback(async () => {
+    try {
+      const res = await apiRequest<{ data: Array<{ id: string; name: string; email?: string; phone?: string; serviceType?: string }> }>({
+        method: "GET",
+        url: "/vendors",
+      });
+      const mapped: VendorLite[] = (res?.data ?? []).map((v) => ({
+        id: v.id,
+        name: v.name,
+        email: v.email,
+        phone: v.phone,
+        serviceType: v.serviceType,
+      }));
+      setVendors(mapped);
+    } catch (err) {
+      // Silently fail - vendors are optional
+      console.error("Failed to fetch vendors:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchVendors();
+  }, [fetchVendors]);
+
   const addCustomer = useCallback(
     async (customer: NewCustomerData) => {
       setCustomersError(null);
@@ -1308,6 +1334,7 @@ const BookingManagement: React.FC = () => {
               }
               selectedBooking={selectedBooking}
               customers={customers}
+              vendors={vendors}
               onAddCustomer={addCustomer}
               onSubmitBooking={submitBooking}
               onCancel={resetAndClose}

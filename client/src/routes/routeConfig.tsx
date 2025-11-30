@@ -3,7 +3,9 @@ import { AppModule } from "../utils/roleAccess";
 
 // Lazy load all pages for better performance
 const CustomersPage = lazy(() => import("../pages/CustomersPage"));
+const CustomerReportPage = lazy(() => import("../pages/CustomerReportPage"));
 const VendorsPage = lazy(() => import("../pages/VendorsPage"));
+const VendorReportPage = lazy(() => import("../pages/VendorReportPage"));
 const BookingsPage = lazy(() => import("../pages/BookingsPage"));
 const PaymentsPage = lazy(() => import("../pages/PaymentsPage"));
 const ExpensesPage = lazy(() => import("../pages/ExpensesPage"));
@@ -25,10 +27,22 @@ export const routes: RouteConfig[] = [
     label: "Customers",
   },
   {
+    path: "/customers/report",
+    module: "customers",
+    component: CustomerReportPage,
+    label: "Customer Report",
+  },
+  {
     path: "/vendors",
     module: "vendors",
     component: VendorsPage,
     label: "Vendors",
+  },
+  {
+    path: "/vendors/report",
+    module: "vendors",
+    component: VendorReportPage,
+    label: "Vendor Report",
   },
   {
     path: "/bookings",

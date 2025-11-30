@@ -69,6 +69,119 @@
  *             schema:
  *               $ref: '#/components/schemas/Error'
  * 
+ * /vendors/report:
+ *   get:
+ *     tags: [Vendors]
+ *     summary: Get vendors expense payments report
+ *     description: |
+ *       Retrieve a report of all vendors with their expense payments within a specified date interval.
+ *       The interval is based on payment date. Only expense-type payments are included.
+ *       Results are cached in Redis for 5 minutes for efficiency.
+ *       Results are sorted by total paid amount in descending order.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: interval
+ *         in: query
+ *         required: true
+ *         description: |
+ *           Date interval for the report in format "startDate,endDate".
+ *           Dates should be in ISO format or URL-encoded datetime strings.
+ *         schema:
+ *           type: string
+ *           example: "2025-12-01 00:00,2025-12-31 23:59"
+ *     responses:
+ *       200:
+ *         description: Report generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       vendor:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             example: "vendor_123"
+ *                           name:
+ *                             type: string
+ *                             example: "Thai Airways"
+ *                           serviceType:
+ *                             type: string
+ *                             example: "Airline"
+ *                           phone:
+ *                             type: string
+ *                             example: "9876543210"
+ *                           email:
+ *                             type: string
+ *                             example: "bookings@thai.com"
+ *                       payments:
+ *                         type: array
+ *                         description: List of expense payments made to this vendor
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: string
+ *                               example: "pay_789"
+ *                             bookingId:
+ *                               type: string
+ *                               example: "book_456"
+ *                             amount:
+ *                               type: number
+ *                               example: 35000
+ *                             paymentMode:
+ *                               type: string
+ *                               example: "BANK_TRANSFER"
+ *                             description:
+ *                               type: string
+ *                               example: "Flight booking payment"
+ *                             createdAt:
+ *                               type: string
+ *                               format: date-time
+ *                       totalPaid:
+ *                         type: number
+ *                         description: Total expense amount paid to this vendor
+ *                         example: 35000
+ *                       paymentCount:
+ *                         type: integer
+ *                         description: Number of expense payments made to this vendor
+ *                         example: 1
+ *                 count:
+ *                   type: integer
+ *                   description: Total number of vendors in the report
+ *                   example: 3
+ *                 interval:
+ *                   type: object
+ *                   properties:
+ *                     start:
+ *                       type: string
+ *                       format: date-time
+ *                     end:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Bad request - invalid or missing interval parameter
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ * 
  * /vendors/{id}:
  *   get:
  *     tags: [Vendors]

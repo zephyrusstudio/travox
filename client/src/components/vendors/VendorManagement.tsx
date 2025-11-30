@@ -1,5 +1,6 @@
-import { Plus, RefreshCw, Building2 } from "lucide-react";
+import { Building2, FileText, Plus, RefreshCw } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useCachedSearch } from "../../hooks/useCachedSearch";
 import { Vendor } from "../../types";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
@@ -34,6 +35,7 @@ type Expense = { vendor_id: string; amount: number };
 // Component
 // ───────────────────────────────────────────────────────────────────────────────
 const VendorManagement: React.FC = () => {
+  const navigate = useNavigate();
   // State
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(false);
@@ -207,6 +209,13 @@ const VendorManagement: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center space-x-4">
+          <Button
+            onClick={() => navigate("/vendors/report")}
+            icon={FileText}
+            variant="outline"
+          >
+            Report
+          </Button>
           <Button
             onClick={fetchVendors}
             icon={RefreshCw}

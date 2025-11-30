@@ -20,7 +20,9 @@ export class VendorRepositoryFirestore implements IVendorRepository {
       updated_by: vendor.updatedBy,
       is_deleted: vendor.isDeleted,
       created_at: Timestamp.fromDate(vendor.createdAt),
-      updated_at: Timestamp.fromDate(vendor.updatedAt)
+      updated_at: Timestamp.fromDate(vendor.updatedAt),
+      // Always set archived_at (null if not archived) so Firestore queries work correctly
+      archived_at: vendor.archivedAt ? Timestamp.fromDate(vendor.archivedAt) : null
     };
 
     // Only add optional fields if they are not undefined
@@ -29,7 +31,6 @@ export class VendorRepositoryFirestore implements IVendorRepository {
     if (vendor.email !== undefined) doc.email = vendor.email;
     if (vendor.gstin !== undefined) doc.gstin = vendor.gstin;
     if (vendor.accountId !== undefined) doc.account_id = vendor.accountId;
-    if (vendor.archivedAt !== undefined) doc.archived_at = Timestamp.fromDate(vendor.archivedAt);
 
     const docRef = await this.collection.add(doc);
     vendor.id = docRef.id;
@@ -215,14 +216,17 @@ export class VendorRepositoryFirestore implements IVendorRepository {
   }
 
   async getActiveVendors(orgId: string): Promise<Vendor[]> {
+    // Query all non-deleted vendors and filter archived ones in code
+    // This handles documents where archived_at field may not exist
     const querySnapshot = await this.collection
       .where('org_id', '==', orgId)
       .where('is_deleted', '==', false)
-      .where('archived_at', '==', null)
       .orderBy('name')
       .get();
 
-    return querySnapshot.docs.map(doc => this.mapFirestoreToVendor(doc.data() as VendorDocument, doc.id));
+    return querySnapshot.docs
+      .map(doc => this.mapFirestoreToVendor(doc.data() as VendorDocument, doc.id))
+      .filter(vendor => !vendor.archivedAt);
   }
 
   async getVendorExpenseStats(vendorId: string, orgId: string): Promise<{

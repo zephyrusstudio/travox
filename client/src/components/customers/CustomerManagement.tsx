@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/components/customers/CustomerManagement.tsx
-import { Plus, RefreshCw, Users } from "lucide-react";
+import { FileText, Plus, RefreshCw, Users } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Customer } from "../../types";
 
 import { ApiError, apiRequest } from "../../utils/apiConnector";
@@ -18,6 +19,7 @@ import CustomerTable from "./CustomerTable";
 import CustomerBookingsModal from "./CustomerBookingsModal";
 
 const CustomerManagement: React.FC = () => {
+  const navigate = useNavigate();
   // ── State ────────────────────────────────────────────────────────────────────
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
@@ -218,6 +220,13 @@ const CustomerManagement: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center space-x-4">
+          <Button
+            onClick={() => navigate("/customers/report")}
+            icon={FileText}
+            variant="outline"
+          >
+            Report
+          </Button>
           <Button
             onClick={fetchCustomers}
             icon={RefreshCw}

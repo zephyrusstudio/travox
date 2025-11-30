@@ -138,7 +138,7 @@ const AuthPage: React.FC = () => {
 
         {/* Tagline */}
         <p className="text-base font-medium text-white/90 text-center mb-10">
-          Enterprise Travel Management
+          B2B Travel Management Platform
         </p>
 
         <h2 className="text-lg font-semibold text-white text-center mb-5">

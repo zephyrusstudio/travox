@@ -4,6 +4,7 @@ import { CreateCustomer } from '../../application/useCases/customer/CreateCustom
 import { UpdateCustomer } from '../../application/useCases/customer/UpdateCustomer';
 import { GetCustomers } from '../../application/useCases/customer/GetCustomers';
 import { DeleteCustomer } from '../../application/useCases/customer/DeleteCustomer';
+import { GetCustomerPendingPaymentsReport } from '../../application/useCases/customer/GetCustomerPendingPaymentsReport';
 import { GetBookings } from '../../application/useCases/booking/GetBookings';
 import { GetAccount } from '../../application/useCases/account/GetAccount';
 import { shouldUnmask } from '../../utils/unmask';
@@ -299,6 +300,73 @@ export class CustomerController {
       res.json({
         status: 'success',
         data: { message: 'Customer deleted successfully' }
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  /**
+   * Get customers with bookings report
+   * Query params:
+   * - interval=startDate,endDate (both in ISO format or URL encoded)
+   * - pending=true/false (optional, defaults to false - if true, only include bookings with pending payments)
+   */
+  async getBookingsReport(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(GetCustomerPendingPaymentsReport);
+      const orgId = req.user?.orgId!;
+      const interval = req.query.interval as string;
+      const pendingOnly = req.query.pendingOnly as string === 'true';
+
+      if (!interval) {
+        return res.status(400).json({
+          status: 'error',
+          data: { message: 'interval query parameter is required (format: startDate,endDate)' }
+        });
+      }
+
+      // Parse the interval - format: "startDate,endDate"
+      const [startDateStr, endDateStr] = interval.split(',').map(s => s.trim());
+
+      if (!startDateStr || !endDateStr) {
+        return res.status(400).json({
+          status: 'error',
+          data: { message: 'Invalid interval format. Expected: startDate,endDate' }
+        });
+      }
+
+      const startDate = new Date(startDateStr);
+      const endDate = new Date(endDateStr);
+
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return res.status(400).json({
+          status: 'error',
+          data: { message: 'Invalid date format in interval. Please use ISO format.' }
+        });
+      }
+
+      if (startDate > endDate) {
+        return res.status(400).json({
+          status: 'error',
+          data: { message: 'Start date must be before or equal to end date' }
+        });
+      }
+
+      const report = await useCase.execute(startDate, endDate, orgId, pendingOnly);
+
+      res.json({
+        status: 'success',
+        data: report,
+        count: report.length,
+        pendingOnly,
+        interval: {
+          start: startDate.toISOString(),
+          end: endDate.toISOString()
+        }
       });
     } catch (error: any) {
       res.status(500).json({

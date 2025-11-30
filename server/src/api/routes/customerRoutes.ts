@@ -10,6 +10,7 @@ export function registerCustomerRoutes(app: Express) {
     app.post('/customers', requireAuth(), auditLogger('customers'), customerCtrl.create);
     app.get('/customers', requireAuth(), customerCtrl.getAll);
     app.get('/customers/search', requireAuth(), customerCtrl.search);
+    app.get('/customers/report', requireAuth(), customerCtrl.getBookingsReport);
     app.get('/customers/:id', requireAuth(), auditLogger('customers'), customerCtrl.getById);
     app.put('/customers/:id', requireAuth(), auditLogger('customers'), customerCtrl.update);
     app.get('/customers/:id/stats', requireAuth(), customerCtrl.getStats);

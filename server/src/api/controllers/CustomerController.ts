@@ -356,6 +356,10 @@ export class CustomerController {
         });
       }
 
+      // Normalize to start of day and end of day
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+
       const report = await useCase.execute(startDate, endDate, orgId, pendingOnly);
 
       res.json({

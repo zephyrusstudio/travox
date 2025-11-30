@@ -74,10 +74,10 @@ const formatCurrency = (amount: number): string => {
 const getDefaultDateRange = (): { start: string; end: string } => {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   return {
-    start: start.toISOString().slice(0, 16),
-    end: end.toISOString().slice(0, 16),
+    start: start.toISOString().slice(0, 10),
+    end: end.toISOString().slice(0, 10),
   };
 };
 
@@ -467,10 +467,10 @@ const VendorReport: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Start Date
+                Booking Date <span className="text-blue-600 dark:text-blue-400 text-xs">Range From</span>
               </label>
               <input
-                type="datetime-local"
+                type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
@@ -478,10 +478,10 @@ const VendorReport: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                End Date
+                Booking Date <span className="text-blue-600 dark:text-blue-400 text-xs">Range To</span>
               </label>
               <input
-                type="datetime-local"
+                type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"

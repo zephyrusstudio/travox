@@ -81,12 +81,37 @@ const formatCurrency = (amount: number): string => {
 
 const getDefaultDateRange = (): { start: string; end: string } => {
   const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  return {
-    start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10),
+  const start = new Date(now.getFullYear(), now.getMonth() - 4, now.getDate());
+  const end = now;
+  
+  const formatLocalDate = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
+  
+  return {
+    start: formatLocalDate(start),
+    end: formatLocalDate(end),
+  };
+};
+
+const calculateWeeksBetween = (startDate: string, endDate: string): number => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const diffTime = Math.abs(end.getTime() - start.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.round(diffDays / 7);
+};
+
+const getExportFileName = (extension: string): string => {
+  const now = new Date();
+  const day = now.getDate().toString().padStart(2, '0');
+  const month = now.toLocaleString('en-IN', { month: 'short' });
+  const year = now.getFullYear();
+  const time = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }).replace(':', '');
+  return `Travox - Customer Payment Report - ${day}-${month}-${year} ${time}.${extension}`;
 };
 
 const CustomerReport: React.FC = () => {
@@ -220,8 +245,7 @@ const CustomerReport: React.FC = () => {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    const dateStr = new Date().toISOString().split("T")[0];
-    link.setAttribute("download", `customer_report_${dateStr}.csv`);
+    link.setAttribute("download", getExportFileName('csv'));
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
@@ -296,8 +320,7 @@ const CustomerReport: React.FC = () => {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    const dateStr = new Date().toISOString().split("T")[0];
-    link.setAttribute("download", `customer_report_${dateStr}.xls`);
+    link.setAttribute("download", getExportFileName('xls'));
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
@@ -515,7 +538,7 @@ const CustomerReport: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                &nbsp;
+                {calculateWeeksBetween(startDate, endDate)} weeks selected
               </label>
               <Button
                 onClick={fetchReport}

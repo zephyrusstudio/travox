@@ -65,7 +65,7 @@ export class OCRController {
       });
 
     } catch (error) {
-      logger.error('OCR extraction failed:', error);
+      logger.error({ err: error }, 'OCR extraction failed');
       
       res.status(500).json({
         status: 'error',
@@ -122,7 +122,7 @@ export class OCRController {
         downloadResult = await downloadFileUseCase.execute(fileId, user.orgId);
 
       } catch (error) {
-        logger.error(`Failed to fetch file ${fileId}:`, error);
+        logger.error({ err: error, fileId }, 'Failed to fetch file');
         res.status(404).json({
           status: 'error',
           message: error instanceof Error ? error.message : 'File not found or inaccessible'
@@ -155,12 +155,13 @@ export class OCRController {
         downloadResult.fileName
       );
 
-      logger.info(`OCR extraction completed for file: ${downloadResult.fileName}`, {
+      logger.info({
+        fileName: downloadResult.fileName,
         confidence: extractedData.extractionConfidence,
         extractedFields: extractedData.extractedFields,
         paxCount: extractedData.pax.length,
         itineraryCount: extractedData.itineraries.length
-      });
+      }, 'OCR extraction completed for file');
 
       // Optionally convert to booking format
       const format = req.query.format === 'true';
@@ -194,7 +195,7 @@ export class OCRController {
       });
 
     } catch (error) {
-      logger.error('OCR extraction from file failed:', error);
+      logger.error({ err: error }, 'OCR extraction from file failed');
       
       res.status(500).json({
         status: 'error',
@@ -253,12 +254,13 @@ export class OCRController {
         file.originalname
       );
 
-      logger.info(`OCR extraction completed for uploaded file: ${file.originalname}`, {
+      logger.info({
+        fileName: file.originalname,
         confidence: extractedData.extractionConfidence,
         extractedFields: extractedData.extractedFields,
         paxCount: extractedData.pax.length,
         itineraryCount: extractedData.itineraries.length
-      });
+      }, 'OCR extraction completed for uploaded file');
 
       // Optionally convert to booking format
       const format = req.query.format === 'true';
@@ -290,7 +292,7 @@ export class OCRController {
       });
 
     } catch (error) {
-      logger.error('OCR extraction from upload failed:', error);
+      logger.error({ err: error }, 'OCR extraction from upload failed');
       
       res.status(500).json({
         status: 'error',
@@ -330,7 +332,7 @@ export class OCRController {
         }
       });
     } catch (error) {
-      logger.error('Gemini connection test failed:', error);
+      logger.error({ err: error }, 'Gemini connection test failed');
       
       res.status(500).json({
         status: 'error',
@@ -362,7 +364,7 @@ export class OCRController {
         }
       });
     } catch (error) {
-      logger.error('Failed to get schema info:', error);
+      logger.error({ err: error }, 'Failed to get schema info');
       
       res.status(500).json({
         status: 'error',
@@ -469,7 +471,7 @@ export class OCRController {
       };
 
     } catch (error) {
-      logger.error('Failed to convert OCR data to booking:', error);
+      logger.error({ err: error }, 'Failed to convert OCR data to booking');
       throw error;
     }
   }

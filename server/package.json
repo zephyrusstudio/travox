@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon --exec ts-node src/index.ts",
-    "build": "tsc",
+    "build": "bunx tsc",
+    "deploy-indexes": "firebase deploy --only firestore:indexes --project $(bun -e \"console.log(JSON.parse(require('fs').readFileSync('./firestore-creds.json')).project_id)\")",
     "test": "echo \"No test specified\" && exit 1"
   },
   "keywords": [],
@@ -50,6 +51,7 @@
     "@types/node": "^24.0.13",
     "@types/pino": "^7.0.4",
     "@types/uuid": "^10.0.0",
+    "firebase-tools": "^13.0.0",
     "jest": "^30.0.4",
     "nodemon": "^3.1.10",
     "supertest": "^7.1.3",

@@ -36,7 +36,7 @@ export class RedisService {
       return null;
     } catch (error) {
       this.metrics.errors++;
-      logger.error(`Redis GET error for key ${key}:`, error);
+      logger.error({ err: error, key }, 'Redis GET error');
       return null;
     }
   }
@@ -50,7 +50,7 @@ export class RedisService {
       this.metrics.sets++;
     } catch (error) {
       this.metrics.errors++;
-      logger.error(`Redis SET error for key ${key}:`, error);
+      logger.error({ err: error, key }, 'Redis SET error');
     }
   }
 
@@ -63,7 +63,7 @@ export class RedisService {
       this.metrics.deletes++;
     } catch (error) {
       this.metrics.errors++;
-      logger.error(`Redis DELETE error for key ${key}:`, error);
+      logger.error({ err: error, key }, 'Redis DELETE error');
     }
   }
 
@@ -80,7 +80,7 @@ export class RedisService {
       }
     } catch (error) {
       this.metrics.errors++;
-      logger.error(`Redis INVALIDATE error for pattern ${pattern}:`, error);
+      logger.error({ err: error, pattern }, 'Redis INVALIDATE error');
     }
   }
 

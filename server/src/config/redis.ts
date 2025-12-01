@@ -24,7 +24,7 @@ redisClient.on('reconnecting', () => logger.warn('Redis Client Reconnecting'));
   try {
     await redisClient.connect();
   } catch (error) {
-    logger.error('Failed to connect to Redis:', error);
+    logger.error({ err: error }, 'Failed to connect to Redis');
   }
 })();
 

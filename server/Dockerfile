@@ -1,5 +1,5 @@
-# Use Node.js 20 Alpine as base image for smaller size
-FROM node:20-alpine
+# Use Bun 1.3.0 Alpine as base image
+FROM oven/bun:1.3.0-alpine
 
 # Set working directory
 WORKDIR /app
@@ -8,16 +8,22 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install all dependencies (including dev dependencies for building)
-RUN npm ci && npm cache clean --force
+RUN bun install
 
 # Copy source code
 COPY . .
 
+# Set Google Application Credentials for Firebase
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/firestore-creds.json
+
+# Deploy Firestore indexes
+RUN bun run deploy-indexes
+
 # Build the TypeScript code
-RUN npm run build
+RUN bun run build
 
 # Remove dev dependencies to reduce image size
-RUN npm prune --production
+RUN bun install --production
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -34,7 +40,7 @@ EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"
+    CMD bun -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => { process.exit(1) })"
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["bun", "run", "start"]

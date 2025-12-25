@@ -116,14 +116,17 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     !formData.passportNo || /^[A-Z0-9]{1,8}$/.test(formData.passportNo);
 
   const hasName = Boolean(formData.name?.trim());
+  
+  // Account is valid if either:
+  // 1. UPI ID is provided
+  // 2. Account No + IFSC are both provided
+  // Bank Name and Branch Name are optional
+  const hasUpiId = Boolean(accountForm.upiId.trim());
+  const hasBankDetails = Boolean(
+    accountForm.accountNo.trim() && accountForm.ifscCode.trim()
+  );
   const isAccountDetailsValid =
-    !isLinkingAccount ||
-    Boolean(
-      accountForm.bankName.trim() &&
-        accountForm.ifscCode.trim() &&
-        accountForm.branchName.trim() &&
-        accountForm.accountNo.trim()
-    );
+    !isLinkingAccount || hasUpiId || hasBankDetails;
 
   const canSubmit = useMemo(
     () =>
@@ -272,20 +275,23 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
 
   async function saveBankAccount(): Promise<{ id: string; isNew: boolean }> {
     const trimmedAccount = {
-      bankName: accountForm.bankName.trim(),
-      ifscCode: accountForm.ifscCode.trim().toUpperCase(),
-      branchName: accountForm.branchName.trim(),
-      accountNo: accountForm.accountNo.trim(),
-      upiId: accountForm.upiId.trim(),
+      bankName: accountForm.bankName.trim() || undefined,
+      ifscCode: accountForm.ifscCode.trim().toUpperCase() || undefined,
+      branchName: accountForm.branchName.trim() || undefined,
+      accountNo: accountForm.accountNo.trim() || undefined,
+      upiId: accountForm.upiId.trim() || undefined,
     };
 
-    if (
-      !trimmedAccount.bankName ||
-      !trimmedAccount.ifscCode ||
-      !trimmedAccount.branchName ||
-      !trimmedAccount.accountNo
-    ) {
-      throw new Error("Please complete all required bank account fields.");
+    // Validate: Must have either UPI ID or (Account No + IFSC)
+    const hasUpiId = Boolean(trimmedAccount.upiId);
+    const hasBankDetails = Boolean(
+      trimmedAccount.accountNo && trimmedAccount.ifscCode
+    );
+
+    if (!hasUpiId && !hasBankDetails) {
+      throw new Error(
+        "Please provide either UPI ID OR both Account Number and IFSC Code."
+      );
     }
 
     if (accountForm.id) {
@@ -762,54 +768,21 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
             <div className="space-y-4 border-t border-gray-200 bg-gray-50 px-4 py-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Bank Name <span className="text-rose-600">*</span>
+                  Bank Name
                 </label>
                 <input
                   type="text"
                   value={accountForm.bankName}
                   onChange={(e) => setAccountField("bankName", e.target.value)}
                   className="w-full border border-gray-300 px-3 py-2"
-                  placeholder="Enter bank name"
+                  placeholder="Enter bank name (optional)"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    IFSC Code <span className="text-rose-600">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={accountForm.ifscCode}
-                    onChange={(e) =>
-                      setAccountField("ifscCode", e.target.value)
-                    }
-                    className="w-full border border-gray-300 px-3 py-2 uppercase"
-                    placeholder="Enter IFSC code"
-                    maxLength={11}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Branch Name <span className="text-rose-600">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={accountForm.branchName}
-                    onChange={(e) =>
-                      setAccountField("branchName", e.target.value)
-                    }
-                    className="w-full border border-gray-300 px-3 py-2"
-                    placeholder="Enter branch name"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Account Number <span className="text-rose-600">*</span>
+                    Account Number
                   </label>
                   <input
                     type="text"
@@ -824,6 +797,39 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    IFSC Code
+                  </label>
+                  <input
+                    type="text"
+                    value={accountForm.ifscCode}
+                    onChange={(e) =>
+                      setAccountField("ifscCode", e.target.value)
+                    }
+                    className="w-full border border-gray-300 px-3 py-2 uppercase"
+                    placeholder="Enter IFSC code"
+                    maxLength={11}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Branch Name
+                  </label>
+                  <input
+                    type="text"
+                    value={accountForm.branchName}
+                    onChange={(e) =>
+                      setAccountField("branchName", e.target.value)
+                    }
+                    className="w-full border border-gray-300 px-3 py-2"
+                    placeholder="Enter branch name (optional)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     UPI ID
                   </label>
                   <input
@@ -831,14 +837,14 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                     value={accountForm.upiId}
                     onChange={(e) => setAccountField("upiId", e.target.value)}
                     className="w-full border border-gray-300 px-3 py-2"
-                    placeholder="Enter UPI ID (optional)"
+                    placeholder="Enter UPI ID"
                   />
                 </div>
               </div>
 
               {!isAccountDetailsValid && (
                 <p className="text-xs text-rose-600">
-                  Please fill all required bank account fields.
+                  Provide either UPI ID or Bank A/C No. and IFSC Code.
                 </p>
               )}
 

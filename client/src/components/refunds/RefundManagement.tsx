@@ -1,95 +1,234 @@
-import React, { useState } from 'react';
-import { Plus, Search, RefreshCw } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
-import Card, { CardHeader, CardContent } from '../ui/Card';
-import Button from '../ui/Button';
-import Modal from '../ui/Modal';
-import Table, { TableHeader, TableBody, TableRow, TableCell } from '../ui/Table';
-import Badge from '../ui/Badge';
-import { Refund } from '../../types';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { CreditCard, Plus, IndianRupee, RefreshCw, Search } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCachedSearch } from "../../hooks/useCachedSearch";
+import { ApiError, apiRequest } from "../../utils/apiConnector";
+import { successToast } from "../../utils/toasts";
+import Badge from "../ui/Badge";
+import Button from "../ui/Button";
+import Card, { CardContent, CardHeader } from "../ui/Card";
+import Pagination from "../ui/Pagination";
+import Spinner from "../ui/Spinner";
+import Loader from "../ui/Loader";
+import Table, {
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "../ui/Table";
+import CreateRefundDialog, { RefundFormData } from "./CreateRefundDialog";
+import {
+  formatDate,
+  fromBackendPaymentMode,
+  PAYMENT_MODE_BADGE,
+  PAYMENT_MODE_LABEL,
+  PaymentMode,
+} from "../payments/payment";
+import { Booking, Payment } from "../../types";
+
+type RefundRow = {
+  refund_id: string;
+  payment_id: string;
+  booking_id: string;
+  refund_date: string;
+  refund_amount: number;
+  refund_reason: string;
+  refund_mode: PaymentMode;
+  currency?: string;
+};
+
+type ApiBooking = Booking & {
+  id?: string;
+  packageName?: string;
+  customerName?: string;
+  customerId?: string;
+  primaryPaxName?: string;
+};
+
+type ApiCustomer = {
+  id: string;
+  name: string;
+  accountId?: string;
+};
 
 const RefundManagement: React.FC = () => {
-  const { refunds, bookings, addRefund } = useApp();
+  const [refunds, setRefunds] = useState<RefundRow[]>([]);
+  const [receivablePayments, setReceivablePayments] = useState<Payment[]>([]);
+  const [bookings, setBookings] = useState<ApiBooking[]>([]);
+  const [customers, setCustomers] = useState<ApiCustomer[]>([]);
+  
+  const [loadingRefunds, setLoadingRefunds] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [loadingData, setLoadingData] = useState(false);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [formData, setFormData] = useState({
-    booking_id: '',
-    refund_date: '',
-    refund_amount: 0,
-    refund_reason: '',
-    refund_mode: 'Bank Transfer'
+
+  // Helper to map API response to RefundRow
+  const mapRefundRecord = useCallback((record: any): RefundRow | null => {
+    if (!record) return null;
+    return {
+      refund_id: record.id,
+      payment_id: record.refundOfPaymentId || record.refund_of_payment_id || '',
+      booking_id: record.bookingId || record.booking_id || '',
+      refund_date: record.createdAt || record.created_at || new Date().toISOString(),
+      refund_amount: Number(record.amount || 0),
+      refund_reason: record.notes || '',
+      refund_mode: fromBackendPaymentMode(record.paymentMode || record.payment_mode),
+      currency: record.currency || 'INR',
+    };
+  }, []);
+
+  // Fetch Refunds (Paginated)
+  const fetchRefunds = useCallback(async () => {
+    setLoadingRefunds(true);
+    try {
+      const offset = (currentPage - 1) * itemsPerPage;
+      const res = await apiRequest<any>({
+        method: "GET",
+        url: "/payments",
+        params: { type: "REFUND_OUTBOUND", limit: itemsPerPage, offset },
+      });
+
+      const items = Array.isArray(res?.data) ? res.data : [];
+      const mapped = items
+        .map(mapRefundRecord)
+        .filter((item: any): item is RefundRow => Boolean(item));
+
+      mapped.sort(
+        (a: any, b:any) =>
+          new Date(b.refund_date).getTime() -
+          new Date(a.refund_date).getTime()
+      );
+
+      setRefunds(mapped);
+      setTotalItems(res?.count ?? mapped.length);
+    } catch (error) {
+      const err = error as ApiError;
+      console.error("Failed to fetch refunds:", err.message);
+    } finally {
+      setLoadingRefunds(false);
+    }
+  }, [currentPage, itemsPerPage, mapRefundRecord]);
+
+  // Fetch Bookings, Customers, and Receivable Payments
+  const fetchData = useCallback(async () => {
+    setLoadingData(true);
+    try {
+      const [bookingsRes, customersRes, paymentsRes] = await Promise.all([
+        apiRequest<any>({ method: "GET", url: "/bookings", params: { limit: 200, unmask: true } }),
+        apiRequest<any>({ method: "GET", url: "/customers", params: { unmask: true } }),
+        apiRequest<any>({ method: "GET", url: "/payments", params: { type: "RECEIVABLE", limit: 200 } }),
+      ]);
+      
+      setBookings(bookingsRes?.data || []);
+      
+      // Map customers
+      const customerItems = Array.isArray(customersRes?.data) ? customersRes.data : [];
+      const mappedCustomers = customerItems
+        .map((item: any) => ({
+          id: item?.id ? String(item.id) : item?.customerId ? String(item.customerId) : "",
+          name: item?.name || item?.fullName || item?.customer_name || item?.pocName || "",
+          accountId: item?.accountId ?? item?.account_id ?? undefined,
+        }))
+        .filter((item: ApiCustomer) => Boolean(item.id));
+      setCustomers(mappedCustomers);
+      
+      setReceivablePayments(paymentsRes?.data || []);
+    } catch (error) {
+      console.error('Error fetching auxiliary data:', error);
+    } finally {
+      setLoadingData(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRefunds();
+    fetchData();
+  }, [fetchRefunds, fetchData]);
+
+  const customersMap = useMemo(() => {
+    const map = new Map<string, ApiCustomer>();
+    customers.forEach((customer) => {
+      if (customer?.id) {
+        map.set(String(customer.id), customer);
+      }
+    });
+    return map;
+  }, [customers]);
+
+  const bookingsMap = useMemo(() => {
+    const map = new Map<string, ApiBooking & { resolvedCustomerName?: string }>();
+    bookings.forEach(b => {
+      const bookingId = b.booking_id || b.id || '';
+      const customerId = b.customer_id || b.customerId || '';
+      const customer = customerId ? customersMap.get(String(customerId)) : undefined;
+      const resolvedCustomerName = customer?.name || b.customer_name || b.customerName || b.primaryPaxName || '';
+      map.set(bookingId, { ...b, resolvedCustomerName });
+    });
+    return map;
+  }, [bookings, customersMap]);
+
+  // Search configuration - searchFields only accesses the raw payment data
+  const {
+    searchTerm,
+    setSearchTerm,
+    searchResults,
+    isSearching,
+    invalidateCache,
+  } = useCachedSearch<any>({
+    endpoint: "/payments?type=REFUND_OUTBOUND",
+    searchFields: (refund) => [
+      String(refund.amount || ''),
+      String(refund.bookingId || refund.booking_id || ''),
+    ],
+    initialFetch: true,
+    unmask: true,
   });
 
-  const refundModes = ['Bank Transfer', 'Cash', 'UPI', 'Cheque'];
+  // Search handling - enrich results with booking/customer data
+  const mappedSearchResults = useMemo(() => {
+    return searchResults
+      .map(mapRefundRecord)
+      .filter((item): item is RefundRow => Boolean(item));
+  }, [searchResults, mapRefundRecord]);
 
-  const filteredRefunds = refunds.filter(refund => {
-    const booking = bookings.find(b => b.booking_id === refund.booking_id);
-    return (
-      refund.refund_reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking?.package_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking?.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-
-  const handleOpenModal = () => {
-    setFormData({
-      booking_id: '',
-      refund_date: (() => {
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      })(),
-      refund_amount: 0,
-      refund_reason: '',
-      refund_mode: 'Bank Transfer'
+  // Filter to only show results that match search term when searching
+  const filteredRefunds = useMemo(() => {
+    if (!searchTerm) return refunds;
+    
+    const term = searchTerm.toLowerCase().trim();
+    return mappedSearchResults.filter(refund => {
+      const booking = bookingsMap.get(refund.booking_id);
+      const amount = String(refund.refund_amount || '');
+      const packageName = (booking?.packageName || booking?.package_name || '').toLowerCase();
+      const customerName = (booking?.resolvedCustomerName || '').toLowerCase();
+      
+      return amount.includes(term) || packageName.includes(term) || customerName.includes(term);
     });
-    setIsModalOpen(true);
+  }, [searchTerm, mappedSearchResults, refunds, bookingsMap]);
+
+  const handleSubmit = async (data: RefundFormData) => {
+    try {
+      await apiRequest({
+        method: 'POST',
+        url: '/payments/outbound-refund',
+        data: {
+          refundOfPaymentId: data.payment_id,
+          notes: data.refund_reason,
+        }
+      });
+      successToast("Refund processed successfully");
+      invalidateCache();
+      fetchRefunds();
+      fetchData();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error creating refund:', error);
+    }
   };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    addRefund(formData);
-    handleCloseModal();
-  };
-
-  const handleBookingSelect = (bookingId: string) => {
-    const booking = bookings.find(b => b.booking_id === bookingId);
-    setFormData({
-      ...formData,
-      booking_id: bookingId,
-      refund_amount: booking ? Math.min(booking.advance_received, booking.total_amount) : 0
-    });
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit',
-    });
-  };
-
-  const getRefundStats = () => {
-    const totalRefunds = refunds.length;
-    const totalAmount = refunds.reduce((sum, r) => sum + r.refund_amount, 0);
-    const thisMonthRefunds = refunds.filter(r => {
-      const refundDate = new Date(r.refund_date);
-      const now = new Date();
-      return refundDate.getMonth() === now.getMonth() && refundDate.getFullYear() === now.getFullYear();
-    });
-    const thisMonthAmount = thisMonthRefunds.reduce((sum, r) => sum + r.refund_amount, 0);
-
-    return { totalRefunds, totalAmount, thisMonthAmount };
-  };
-
-  const stats = getRefundStats();
 
   return (
     <div className="space-y-6">
@@ -99,34 +238,9 @@ const RefundManagement: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Refund Management</h1>
           <p className="text-gray-600">Process and track customer refunds</p>
         </div>
-        <Button onClick={handleOpenModal} icon={Plus}>
+        <Button onClick={() => setIsModalOpen(true)} icon={Plus}>
           Process Refund
         </Button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <RefreshCw className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-blue-600">{stats.totalRefunds}</p>
-            <p className="text-sm text-gray-600">Total Refunds</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <RefreshCw className="w-8 h-8 text-red-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-red-600">₹{stats.totalAmount.toLocaleString()}</p>
-            <p className="text-sm text-gray-600">Total Amount</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <RefreshCw className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-purple-600">₹{stats.thisMonthAmount.toLocaleString()}</p>
-            <p className="text-sm text-gray-600">This Month</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Search */}
@@ -140,166 +254,109 @@ const RefundManagement: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 pr-4 py-2 w-full border border-gray-300"
           />
+          <Loader isLoading={isSearching} />
         </div>
       </div>
 
-      {/* Refunds Table */}
-      <Card>
-        <CardHeader>
-          <h3 className="text-lg font-semibold text-gray-900">Refund History</h3>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableCell header>Booking Details</TableCell>
-                <TableCell header>Refund Date</TableCell>
-                <TableCell header>Amount</TableCell>
-                <TableCell header>Reason</TableCell>
-                <TableCell header>Mode</TableCell>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRefunds.map((refund) => {
-                const booking = bookings.find(b => b.booking_id === refund.booking_id);
-                return (
-                  <TableRow key={refund.refund_id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-gray-900">{booking?.package_name}</p>
-                        <p className="text-sm text-gray-500">{booking?.customer_name}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-gray-900">
-                        {formatDate(refund.refund_date)}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-semibold text-red-600">
-                        ₹{refund.refund_amount.toLocaleString()}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-gray-600">
-                        {refund.refund_reason}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="default" size="sm">
-                        {refund.refund_mode}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Pagination */}
+      {!loadingRefunds && (
+        filteredRefunds.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+            itemsPerPageOptions={[5, 10, 20, 50, 100]}
+          />
+        )
+      )}
 
-      {/* Process Refund Modal */}
-      <Modal
+      {/* Refunds Table */}
+      {loadingRefunds ? (
+        <Card>
+          <CardContent className="flex items-center justify-center py-16">
+            <div className="flex items-center space-x-3">
+              <Spinner size="md" />
+              <span className="text-gray-600">Loading refunds...</span>
+            </div>
+          </CardContent>
+        </Card>
+      ) : filteredRefunds.length === 0 ? (
+        <div className="text-center py-12">
+          <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Refunds Found
+          </h3>
+          <p className="text-gray-500">
+            No refunds found.
+          </p>
+        </div>
+      ) : (
+        <Card>
+          <CardHeader>
+            <h3 className="text-lg font-semibold text-gray-900">Refund History</h3>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableCell header>Booking Details</TableCell>
+                  <TableCell header>Refund Date</TableCell>
+                  <TableCell header>Amount</TableCell>
+                  <TableCell header>Reason</TableCell>
+                  <TableCell header>Mode</TableCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRefunds.map((refund) => {
+                  const booking = bookingsMap.get(refund.booking_id);
+                  return (
+                    <TableRow key={refund.refund_id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-gray-900">{booking?.package_name || booking?.packageName || "---"}</p>
+                          <p className="text-sm text-gray-500">{booking?.resolvedCustomerName || booking?.customer_name || booking?.customerName || "---"}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-gray-900">
+                          {formatDate(refund.refund_date)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-semibold text-red-600">
+                          ₹{refund.refund_amount.toLocaleString()}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-gray-600">
+                          {refund.refund_reason}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={PAYMENT_MODE_BADGE[refund.refund_mode] as any} size="sm">
+                          {PAYMENT_MODE_LABEL[refund.refund_mode]}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      <CreateRefundDialog
         isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        title="Process Refund"
-        size="lg"
-      >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Booking *
-              </label>
-              <select
-                required
-                value={formData.booking_id}
-                onChange={(e) => handleBookingSelect(e.target.value)}
-                className="w-full border border-gray-300 px-3 py-2"
-              >
-                <option value="">Select Booking</option>
-                {bookings
-                  .filter(booking => booking.advance_received > 0)
-                  .map(booking => (
-                    <option key={booking.booking_id} value={booking.booking_id}>
-                      {booking.package_name} - {booking.customer_name} (Paid: ₹{booking.advance_received.toLocaleString()})
-                    </option>
-                  ))}
-              </select>
-              {formData.booking_id && (
-                <p className="text-sm text-gray-500 mt-1">
-                  Max refundable: ₹{bookings.find(b => b.booking_id === formData.booking_id)?.advance_received.toLocaleString()}
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Refund Date *
-              </label>
-              <input
-                type="date"
-                required
-                value={formData.refund_date}
-                onChange={(e) => setFormData({ ...formData, refund_date: e.target.value })}
-                className="w-full border border-gray-300 px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Refund Amount *
-              </label>
-              <input
-                type="number"
-                required
-                min="0"
-                step="1"
-                value={formData.refund_amount}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  setFormData({ ...formData, refund_amount: value ? Math.ceil(value) : 0 });
-                }}
-                className="w-full border border-gray-300 px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Refund Mode *
-              </label>
-              <select
-                required
-                value={formData.refund_mode}
-                onChange={(e) => setFormData({ ...formData, refund_mode: e.target.value })}
-                className="w-full border border-gray-300 px-3 py-2"
-              >
-                {refundModes.map(mode => (
-                  <option key={mode} value={mode}>{mode}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Refund Reason *
-            </label>
-            <textarea
-              rows={3}
-              required
-              value={formData.refund_reason}
-              onChange={(e) => setFormData({ ...formData, refund_reason: e.target.value })}
-              placeholder="Explain why the refund is being processed..."
-              className="w-full border border-gray-300 px-3 py-2"
-            />
-          </div>
-          <div className="flex items-center justify-end space-x-3 pt-4">
-            <Button type="button" variant="outline" onClick={handleCloseModal}>
-              Cancel
-            </Button>
-            <Button type="submit" icon={RefreshCw}>
-              Process Refund
-            </Button>
-          </div>
-        </form>
-      </Modal>
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleSubmit}
+        payments={receivablePayments}
+        bookings={bookings}
+        customers={customers}
+        existingRefunds={refunds}
+      />
     </div>
   );
 };

@@ -231,6 +231,9 @@ export function useBookingFormV2({
     vendorId: '',
   });
 
+  // Track due amount from backend (for edit/view mode)
+  const [backendDueAmount, setBackendDueAmount] = useState<number | null>(null);
+
   const [paxList, setPaxList] = useState<PaxFormState[]>([createEmptyPax()]);
   const [itineraries, setItineraries] = useState<ItineraryFormState[]>([]);
 
@@ -251,7 +254,10 @@ export function useBookingFormV2({
   const advanceAmount = typeof formData.advanceAmount === 'number'
     ? formData.advanceAmount
     : normalizeAmount(formData.advanceAmount);
-  const balance = totalAmount - advanceAmount;
+  // Use backend dueAmount if available (edit/view mode), otherwise calculate locally (create mode)
+  const balance = backendDueAmount !== null 
+    ? backendDueAmount 
+    : totalAmount - advanceAmount;
 
   // ─── Load Existing Booking (Edit/View Mode) ──────────────────────────────────
   useEffect(() => {
@@ -270,6 +276,13 @@ export function useBookingFormV2({
         status: selectedBooking.status || BookingStatus.DRAFT,
         vendorId: selectedBooking.vendorId || '',
       });
+
+      // Set backend due amount from the booking
+      setBackendDueAmount(
+        selectedBooking.dueAmount ?? 
+        selectedBooking.balance_amount ?? 
+        null
+      );
 
       // Load pax
       if (selectedBooking.pax && Array.isArray(selectedBooking.pax)) {

@@ -28,6 +28,14 @@ export interface IBookingRepository {
     bookingCount: number;
   }>;
   
+  getStats(orgId: string): Promise<{
+    totalBookings: number;
+    confirmedBookings: number;
+    totalRevenue: number;
+    revenueForecast: number;
+    pendingAmount: number;
+  }>;
+  
   // Payment related
   updatePayment(bookingId: string, paidAmount: number, orgId: string, updatedBy: string): Promise<boolean>;
   getOverdueBookings(orgId: string): Promise<Booking[]>;

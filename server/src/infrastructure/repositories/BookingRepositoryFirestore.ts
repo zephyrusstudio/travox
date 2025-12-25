@@ -215,14 +215,67 @@ export class BookingRepositoryFirestore implements IBookingRepository {
     const snapshot = await query.get();
     const bookings = snapshot.docs.map(doc => this.fromFirestore(doc));
     
-    const totalRevenue = bookings.reduce((sum, b) => sum + b.totalAmount, 0);
+    // Revenue is calculated using paid amount
+    const totalRevenue = bookings.reduce((sum, b) => sum + b.paidAmount, 0);
+    const totalAmount = bookings.reduce((sum, b) => sum + b.totalAmount, 0);
     const paidAmount = bookings.reduce((sum, b) => sum + b.paidAmount, 0);
+    
+    // Revenue forecast excludes cancelled and refunded bookings
+    const forecastBookings = bookings.filter(b => 
+      b.status !== BookingStatus.CANCELLED && b.status !== BookingStatus.REFUNDED
+    );
+    const revenueForecast = forecastBookings.reduce((sum, b) => sum + b.totalAmount, 0);
     
     return {
       totalRevenue,
       paidAmount,
-      dueAmount: totalRevenue - paidAmount,
-      bookingCount: bookings.length
+      dueAmount: totalAmount - paidAmount,
+      bookingCount: bookings.length,
+      revenueForecast
+    };
+  }
+
+  async getStats(orgId: string): Promise<{
+    totalBookings: number;
+    confirmedBookings: number;
+    totalRevenue: number;
+    revenueForecast: number;
+    pendingAmount: number;
+  }> {
+    // Get all non-deleted bookings
+    const allSnapshot = await this.collection
+      .where('org_id', '==', orgId)
+      .where('is_deleted', '==', false)
+      .get();
+    
+    const allBookings = allSnapshot.docs.map(doc => this.fromFirestore(doc));
+    
+    // Filter confirmed bookings (includes Confirmed, Ticketed, In Progress, Completed)
+    const confirmedStatuses = [
+      BookingStatus.CONFIRMED,
+      BookingStatus.TICKETED,
+      BookingStatus.IN_PROGRESS,
+      BookingStatus.COMPLETED
+    ];
+    const confirmedBookings = allBookings.filter(b => confirmedStatuses.includes(b.status));
+    
+    // Calculate revenue using paid amount, excluding cancelled bookings
+    const nonCancelledBookings = allBookings.filter(b => b.status !== BookingStatus.CANCELLED);
+    const totalRevenue = nonCancelledBookings.reduce((sum, b) => sum + b.paidAmount, 0);
+    const pendingAmount = nonCancelledBookings.reduce((sum, b) => sum + b.dueAmount, 0);
+    
+    // Revenue forecast uses total amount, excluding cancelled and refunded bookings
+    const forecastBookings = allBookings.filter(b => 
+      b.status !== BookingStatus.CANCELLED && b.status !== BookingStatus.REFUNDED
+    );
+    const revenueForecast = forecastBookings.reduce((sum, b) => sum + b.totalAmount, 0);
+    
+    return {
+      totalBookings: allBookings.length,
+      confirmedBookings: confirmedBookings.length,
+      totalRevenue,
+      revenueForecast,
+      pendingAmount
     };
   }
 
@@ -439,6 +492,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
       currency: booking.currency,
       total_amount: booking.totalAmount,
       paid_amount: booking.paidAmount,
+      due_amount: booking.dueAmount,
       status: booking.status,
       vendor_id: booking.vendorId || null,
       created_by: booking.createdBy,
@@ -576,6 +630,7 @@ export class BookingRepositoryFirestore implements IBookingRepository {
         i.updated_at.toDate()
       )),
       data.paid_amount || 0,
+      data.due_amount !== undefined ? data.due_amount : (data.total_amount - (data.paid_amount || 0)),
       data.package_name,
       data.pnr_no,
       data.mode_of_journey,

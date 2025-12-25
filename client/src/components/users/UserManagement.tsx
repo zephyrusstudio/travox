@@ -166,9 +166,9 @@ const UserManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-          <div>
+      <div className="grid gap-4 md:grid-cols-5">
+        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm col-span-2">
+          <div className="truncate">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Signed in as</p>
             <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100 truncate max-w-fit" title={currentUser?.username || currentUser?.name}>
               {currentUser?.username || currentUser?.name || "Unknown"}

@@ -97,6 +97,7 @@ export interface Expense {
 
 export interface Refund {
   refund_id: string;
+  payment_id: string;
   booking_id: string;
   refund_date: string;
   refund_amount: number;

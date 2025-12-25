@@ -9,6 +9,7 @@ const VendorReportPage = lazy(() => import("../pages/VendorReportPage"));
 const BookingsPage = lazy(() => import("../pages/BookingsPage"));
 const PaymentsPage = lazy(() => import("../pages/PaymentsPage"));
 const ExpensesPage = lazy(() => import("../pages/ExpensesPage"));
+const RefundsPage = lazy(() => import("../pages/RefundsPage"));
 const AuditLogsPage = lazy(() => import("../pages/AuditLogsPage"));
 const UsersPage = lazy(() => import("../pages/UsersPage"));
 
@@ -61,6 +62,12 @@ export const routes: RouteConfig[] = [
     module: "expenses",
     component: ExpensesPage,
     label: "Expenses",
+  },
+  {
+    path: "/refunds",
+    module: "refunds",
+    component: RefundsPage,
+    label: "Refunds",
   },
   {
     path: "/logs",

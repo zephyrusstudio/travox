@@ -1,7 +1,7 @@
 export interface Account {
   id: string;
   orgId: string;
-  bankName: string;
+  bankName?: string;
   ifscCode?: string;
   branchName?: string;
   accountNo?: string;
@@ -15,7 +15,7 @@ export interface Account {
 }
 
 export interface CreateAccountDTO {
-  bankName: string;
+  bankName?: string;
   ifscCode?: string;
   branchName?: string;
   accountNo?: string;

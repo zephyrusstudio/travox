@@ -456,4 +456,20 @@ export class BookingController {
       });
     }
   }
+
+  async getStats(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(GetBookings);
+      const stats = await useCase.getStats(req.user?.orgId!);
+      res.json({
+        status: 'success',
+        data: stats
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
 }

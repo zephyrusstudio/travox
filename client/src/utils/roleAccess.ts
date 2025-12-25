@@ -13,6 +13,7 @@ export type AppModule =
   | "bookings"
   | "payments"
   | "expenses"
+  | "refunds"
   | "logs"
   | "users";
 
@@ -22,6 +23,7 @@ const MODULE_ACCESS: Record<AppModule, UserRole[]> = {
   bookings: ["Owner", "Admin"],
   payments: ["Owner", "Admin"],
   expenses: ["Owner", "Admin"],
+  refunds: ["Owner", "Admin"],
   logs: ["Owner"],
   users: ["Owner"],
 };

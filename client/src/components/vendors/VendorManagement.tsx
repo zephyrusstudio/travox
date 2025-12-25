@@ -9,6 +9,7 @@ import Card, { CardContent } from "../ui/Card";
 import ConfirmDestructionModal from "../ui/common/ConfirmDestructionModal";
 import Pagination from "../ui/Pagination";
 import Spinner from "../ui/Spinner";
+import Loader from "../ui/Loader";
 import AccountFormModal, { AccountFormState } from "../ui/common/AccountFormModal";
 import VendorFormModal, { VendorFormState } from "./VendorFormModal";
 import VendorTable from "./VendorTable";
@@ -61,6 +62,7 @@ const VendorManagement: React.FC = () => {
     searchTerm,
     setSearchTerm,
     searchResults,
+    isSearching,
     invalidateCache,
   } = useCachedSearch<Vendor>({
     endpoint: "/vendors",
@@ -239,10 +241,13 @@ const VendorManagement: React.FC = () => {
 
       {/* Search */}
       <div className="grid grid-cols-1 gap-6">
-        <VendorTable.SearchBox
-          value={searchTerm}
-          onChange={setSearchTerm}
-        />
+        <div className="relative">
+          <VendorTable.SearchBox
+            value={searchTerm}
+            onChange={setSearchTerm}
+          />
+          <Loader isLoading={isSearching} />
+        </div>
       </div>
 
       {/* Pagination */}

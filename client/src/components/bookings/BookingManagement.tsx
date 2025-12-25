@@ -68,6 +68,22 @@ const BookingManagement: React.FC = () => {
   );
   const [useV2Form, setUseV2Form] = useState(false);
 
+  // ── Stats state ───────────────────────────────────────────────────────
+  const [stats, setStats] = useState<{
+    totalBookings: number;
+    confirmedBookings: number;
+    revenueForecast: number;
+    totalRevenue: number;
+    pendingAmount: number;
+  }>({
+    totalBookings: 0,
+    confirmedBookings: 0,
+    revenueForecast: 0,
+    totalRevenue: 0,
+    pendingAmount: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(false);
+
   // ── Search state ──────────────────────────────────────────────────────
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<BookingRow[]>([]);
@@ -175,8 +191,9 @@ const BookingManagement: React.FC = () => {
               record?.advanceAmount ??
               record?.advance_received
           ) || 0;
+        // Use dueAmount from backend, fallback to balance_amount for old data
         const balanceAmount =
-          Number(record?.dueAmount ?? totalAmount - paidAmount) || 0;
+          Number(record?.dueAmount ?? record?.balance_amount ?? (totalAmount - paidAmount)) || 0;
 
         const booking: BookingRow = {
           booking_id: record?.id ? String(record.id) : "",
@@ -353,8 +370,9 @@ const BookingManagement: React.FC = () => {
               record?.advanceAmount ??
               record?.advance_received
           ) || 0;
+        // Use dueAmount from backend, fallback to balance_amount for old data
         const balanceAmount =
-          Number(record?.dueAmount ?? totalAmount - paidAmount) || 0;
+          Number(record?.dueAmount ?? record?.balance_amount ?? (totalAmount - paidAmount)) || 0;
 
         const booking: BookingRow = {
           booking_id: record?.id ? String(record.id) : "",
@@ -433,10 +451,9 @@ const BookingManagement: React.FC = () => {
     const paidAmount = Number(
       record.paidAmount ?? record.advanceAmount ?? record.advance_received ?? 0
     );
+    // Use dueAmount from backend as primary source
     const dueAmount =
-      Number(
-        record.dueAmount ?? record.balance_amount ?? totalAmount - paidAmount
-      ) || 0;
+      Number(record.dueAmount ?? record.balance_amount ?? (totalAmount - paidAmount)) || 0;
     const modeOfJourneyValue =
       record.mode_of_journey ??
       record.modeOfJourney ??
@@ -621,8 +638,9 @@ const BookingManagement: React.FC = () => {
               record?.advanceAmount ??
               record?.advance_received
           ) || 0;
+        // Use dueAmount from backend, fallback to balance_amount for old data
         const balanceAmount =
-          Number(record?.dueAmount ?? totalAmount - paidAmount) || 0;
+          Number(record?.dueAmount ?? record?.balance_amount ?? (totalAmount - paidAmount)) || 0;
 
         const booking: BookingRow = {
           booking_id: record?.id ? String(record.id) : "",
@@ -658,9 +676,36 @@ const BookingManagement: React.FC = () => {
     }
   }, [currentPage, itemsPerPage]);
 
+  const fetchStats = useCallback(async () => {
+    setStatsLoading(true);
+    try {
+      const res = await apiRequest<{
+        data: {
+          totalBookings: number;
+          confirmedBookings: number;
+          totalRevenue: number;
+          revenueForecast: number;
+          pendingAmount: number;
+        };
+      }>({
+        method: "GET",
+        url: "/bookings/stats",
+      });
+      if (res?.data) {
+        setStats(res.data);
+      }
+    } catch (error) {
+      // Silently fail - stats are not critical
+      console.error("Failed to fetch stats:", error);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchBookings();
-  }, [fetchBookings]);
+    fetchStats();
+  }, [fetchBookings, fetchStats]);
 
   const fetchCustomers = useCallback(async () => {
     setCustomersLoading(true);
@@ -860,6 +905,7 @@ const BookingManagement: React.FC = () => {
         performSearch(searchTerm);
       }
       await fetchBookings();
+      await fetchStats();
     } catch (error) {
       const apiError = error as ApiError;
       const message = apiError.message ?? "Failed to delete booking";
@@ -901,22 +947,6 @@ const BookingManagement: React.FC = () => {
         return "default";
     }
   };
-
-  const stats = useMemo(() => {
-    const totalBookings = bookings.length;
-    const confirmedBookings = bookings.filter(
-      (b) => b.status === BookingStatus.CONFIRMED
-    ).length;
-    const totalRevenue = bookings.reduce(
-      (sum, b) => sum + (Number(b.total_amount) || 0),
-      0
-    );
-    const pendingAmount = bookings.reduce(
-      (sum, b) => sum + (Number(b.balance_amount) || 0),
-      0
-    );
-    return { totalBookings, confirmedBookings, totalRevenue, pendingAmount };
-  }, [bookings]);
 
   const submitBooking = useCallback(
     async (payload: any) => {
@@ -986,6 +1016,7 @@ const BookingManagement: React.FC = () => {
           performSearch(searchTerm);
         }
         await fetchBookings();
+        await fetchStats();
         return response;
       } catch (error) {
         const apiError = error as ApiError;
@@ -993,7 +1024,7 @@ const BookingManagement: React.FC = () => {
         throw apiError;
       }
     },
-    [fetchBookings, formMode, selectedBooking, searchTerm, performSearch]
+    [fetchBookings, fetchStats, formMode, selectedBooking, searchTerm, performSearch]
   );
 
   return (
@@ -1010,10 +1041,13 @@ const BookingManagement: React.FC = () => {
         </div>
         <div className="flex items-center space-x-4">
           <Button
-            onClick={fetchBookings}
+            onClick={() => {
+              fetchBookings();
+              fetchStats();
+            }}
             icon={RefreshCw}
             variant="outline"
-            disabled={bookingsLoading}
+            disabled={bookingsLoading || statsLoading}
           >
             Refresh
           </Button>
@@ -1036,7 +1070,7 @@ const BookingManagement: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
           <div>
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Bookings</p>
@@ -1291,14 +1325,7 @@ const BookingManagement: React.FC = () => {
         isOpen={isModalOpen}
         onClose={resetAndClose}
         title={
-          formMode === "create"
-            ? useV2Form
-              ? "Create Booking v2"
-              : "Create Booking"
-            : formMode === "edit"
-            ? useV2Form ? "Edit Booking v2" : "Edit Booking"
-            : useV2Form ? "View Booking v2"
-            : "View Booking"
+          formMode === "create" ? "Create Booking" : formMode === "edit" ? "Edit Booking" : "View Booking"
         }
         size="xl"
       >

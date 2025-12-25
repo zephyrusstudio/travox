@@ -21,6 +21,7 @@ export class Booking {
     public pax: BookingPax[] = [],
     public itineraries: BookingItinerary[] = [],
     public paidAmount: number = 0,
+    public dueAmount: number = totalAmount,
     public packageName?: string,
     public pnrNo?: string,
     public modeOfJourney?: string,
@@ -71,6 +72,7 @@ export class Booking {
       options?.pax || [],
       options?.itineraries || [],
       0,
+      totalAmount,
       options?.packageName,
       options?.pnrNo,
       options?.modeOfJourney,
@@ -98,16 +100,30 @@ export class Booking {
 
   // --- Property Getters ---
 
-  get dueAmount(): number {
-    return this.totalAmount - this.paidAmount;
+  get isPaid(): boolean {
+    return this.dueAmount <= 0;
   }
 
   // --- Public Methods ---
 
   addPayment(amount: number, updatedBy: string = ''): void {
     this.paidAmount += amount;
+    this.dueAmount -= amount;
     this.updatedBy = updatedBy;
     this.updatedAt = new Date();
+  }
+
+  deductPayment(amount: number, updatedBy: string = ''): void {
+    this.paidAmount = Math.max(0, this.paidAmount - amount);
+    // dueAmount is NOT updated here because this is typically used for refunds
+    // where we return money but don't expect the customer to pay it back.
+    this.updatedBy = updatedBy;
+    this.updatedAt = new Date();
+    
+    // Set status to Refunded if paid amount reaches zero
+    if (this.paidAmount === 0 && this.status !== BookingStatus.REFUNDED) {
+      this.status = BookingStatus.REFUNDED;
+    }
   }
 
   updateStatus(status: BookingStatus, updatedBy: string = ''): void {
@@ -117,7 +133,16 @@ export class Booking {
   }
 
   updateAmount(totalAmount: number, updatedBy: string = ''): void {
+    const diff = totalAmount - this.totalAmount;
     this.totalAmount = totalAmount;
+    this.dueAmount = Math.max(0, this.dueAmount + diff);
+    
+    // If new total amount is less than paid amount, this creates an overpayment scenario
+    // In this case, dueAmount stays at 0 (no further payment needed)
+    if (totalAmount < this.paidAmount) {
+      this.dueAmount = 0;
+    }
+    
     this.updatedBy = updatedBy;
     this.updatedAt = new Date();
   }

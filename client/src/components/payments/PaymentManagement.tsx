@@ -9,6 +9,7 @@ import Button from "../ui/Button";
 import Card, { CardContent } from "../ui/Card";
 import Pagination from "../ui/Pagination";
 import Spinner from "../ui/Spinner";
+import Loader from "../ui/Loader";
 import Table, {
   TableBody,
   TableCell,
@@ -78,22 +79,6 @@ const PaymentManagement: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
 
-  // ── Search with caching ──────────────────────────────────────────────────────
-  const {
-    searchTerm,
-    setSearchTerm,
-    searchResults,
-    invalidateCache,
-  } = useCachedSearch<any>({
-    endpoint: "/payments?type=RECEIVABLE",
-    searchFields: (payment) => [
-      payment.receipt_number || payment.receiptNo || payment.receipt_no || "",
-      payment.notes || "",
-    ],
-    initialFetch: true,
-    unmask: true,
-  });
-
   const customersMap = useMemo(() => {
     const map = new Map<string, ApiCustomer>();
     customers.forEach((customer) => {
@@ -153,6 +138,23 @@ const PaymentManagement: React.FC = () => {
     });
     return map;
   }, [bookings]);
+
+  // ── Search with caching ──────────────────────────────────────────────────────
+  const {
+    searchTerm,
+    setSearchTerm,
+    searchResults,
+    isSearching,
+    invalidateCache,
+  } = useCachedSearch<any>({
+    endpoint: "/payments?type=RECEIVABLE",
+    searchFields: (payment) => [
+      String(payment.amount || ''),
+      String(payment.bookingId || payment.booking_id || ''),
+    ],
+    initialFetch: true,
+    unmask: true,
+  });
 
   const ensureIsoString = (value: unknown): string => {
     if (!value) return new Date().toISOString();
@@ -409,8 +411,18 @@ const PaymentManagement: React.FC = () => {
 
   // Use search results when searching, otherwise use receivable payments
   const filteredPayments = useMemo(() => {
-    return searchTerm ? mappedSearchResults : receivablePayments;
-  }, [searchTerm, mappedSearchResults, receivablePayments]);
+    if (!searchTerm) return receivablePayments;
+    
+    const term = searchTerm.toLowerCase().trim();
+    return mappedSearchResults.filter(payment => {
+      const booking = bookingsMap.get(payment.booking_id);
+      const amount = String(payment.amount || '');
+      const packageName = (booking?.package_name || '').toLowerCase();
+      const customerName = (booking?.customer_name || '').toLowerCase();
+      
+      return amount.includes(term) || packageName.includes(term) || customerName.includes(term);
+    });
+  }, [searchTerm, mappedSearchResults, receivablePayments, bookingsMap]);
 
   const isLoading = loadingPayments || loadingBookings || loadingCustomers;
 
@@ -462,27 +474,6 @@ const PaymentManagement: React.FC = () => {
     }));
   };
 
-  const stats = useMemo(() => {
-    const totalPayments = receivablePayments.length;
-    const totalAmount = receivablePayments.reduce(
-      (sum, p) => sum + p.amount,
-      0
-    );
-
-    const now = new Date();
-    const thisMonthAmount = receivablePayments
-      .filter((p) => {
-        const d = new Date(p.payment_date);
-        return (
-          d.getMonth() === now.getMonth() &&
-          d.getFullYear() === now.getFullYear()
-        );
-      })
-      .reduce((sum, p) => sum + p.amount, 0);
-
-    return { totalPayments, totalAmount, thisMonthAmount };
-  }, [receivablePayments]);
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -509,37 +500,6 @@ const PaymentManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Payments</p>
-            <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">{stats.totalPayments}</p>
-          </div>
-          <div className="rounded-full p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-            <CreditCard className="h-5 w-5" />
-          </div>
-        </div>
-        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Amount</p>
-            <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">₹{stats.totalAmount.toLocaleString()}</p>
-          </div>
-          <div className="rounded-full p-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
-            <IndianRupee className="h-5 w-5" />
-          </div>
-        </div>
-        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">This Month</p>
-            <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">₹{stats.thisMonthAmount.toLocaleString()}</p>
-          </div>
-          <div className="rounded-full p-3 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-            <IndianRupee className="h-5 w-5" />
-          </div>
-        </div>
-      </div>
-
       {/* Search */}
       <div className="flex items-center space-x-4">
         <div className="flex-1 relative">
@@ -551,6 +511,7 @@ const PaymentManagement: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 pr-4 py-2 w-full border border-gray-300"
           />
+          <Loader isLoading={isSearching} />
         </div>
       </div>
 
@@ -594,7 +555,7 @@ const PaymentManagement: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableCell header>IndianRupee No.</TableCell>
+                  <TableCell header>Receipt No.</TableCell>
                   <TableCell header>Booking Details</TableCell>
                   <TableCell header>Date</TableCell>
                   <TableCell header>Amount</TableCell>

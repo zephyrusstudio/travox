@@ -101,7 +101,6 @@ export class AccountRepositoryFirestore implements IAccountRepository {
     
     const docData: any = {
       org_id: orgId,
-      bank_name: accountData.bankName,
       is_active: accountData.isActive ?? true,
       created_by: userId,
       updated_by: userId,
@@ -111,6 +110,7 @@ export class AccountRepositoryFirestore implements IAccountRepository {
     };
 
     // Only add optional fields if they are provided
+    if (accountData.bankName !== undefined) docData.bank_name = accountData.bankName;
     if (accountData.ifscCode !== undefined) docData.ifsc_code = accountData.ifscCode;
     if (accountData.branchName !== undefined) docData.branch_name = accountData.branchName;
     if (accountData.accountNo !== undefined) docData.account_no = accountData.accountNo;

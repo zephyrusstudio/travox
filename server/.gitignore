@@ -1,6 +1,7 @@
-node_modules
-dist
-.env
-*creds.json
-doc
-test
+node_modules/
+dist/
+coverage/
+test/
+
+.env*
+*creds.json*

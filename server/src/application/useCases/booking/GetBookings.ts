@@ -105,4 +105,14 @@ export class GetBookings {
   }> {
     return await this.bookingRepo.getRevenueStats(orgId, startDate, endDate);
   }
+
+  async getStats(orgId: string): Promise<{
+    totalBookings: number;
+    confirmedBookings: number;
+    totalRevenue: number;
+    revenueForecast: number;
+    pendingAmount: number;
+  }> {
+    return await this.bookingRepo.getStats(orgId);
+  }
 }

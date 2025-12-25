@@ -236,6 +236,33 @@ export class CachedBookingRepository implements IBookingRepository {
     return stats;
   }
 
+  async getStats(orgId: string): Promise<{
+    totalBookings: number;
+    confirmedBookings: number;
+    totalRevenue: number;
+    revenueForecast: number;
+    pendingAmount: number;
+  }> {
+    const cacheKey = `${COLLECTION_NAME}:${orgId}:stats`;
+    
+    const cached = await this.cache.get<{
+      totalBookings: number;
+      confirmedBookings: number;
+      totalRevenue: number;
+      revenueForecast: number;
+      pendingAmount: number;
+    }>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const stats = await this.baseRepo.getStats(orgId);
+    
+    await this.cache.set(cacheKey, stats, STATS_TTL);
+    
+    return stats;
+  }
+
   async updatePayment(bookingId: string, paidAmount: number, orgId: string, updatedBy: string): Promise<boolean> {
     const result = await this.baseRepo.updatePayment(bookingId, paidAmount, orgId, updatedBy);
     

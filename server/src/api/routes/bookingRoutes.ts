@@ -14,6 +14,7 @@ export function registerBookingRoutes(app: Express) {
     app.get('/bookings/upcoming', requireAuth(), bookingCtrl.getUpcoming.bind(bookingCtrl));
     app.get('/bookings/overdue', requireAuth(), bookingCtrl.getOverdue.bind(bookingCtrl));
     app.get('/bookings/revenue-stats', requireAuth(), bookingCtrl.getRevenueStats.bind(bookingCtrl));
+    app.get('/bookings/stats', requireAuth(), bookingCtrl.getStats.bind(bookingCtrl));
     app.get('/bookings/travel-dates', requireAuth(), bookingCtrl.getByTravelDates.bind(bookingCtrl));
     //app.get('/bookings/customer/:customerId', requireAuth(), bookingCtrl.getByCustomerId);
     app.get('/bookings/:id', requireAuth(), auditLogger('bookings'), bookingCtrl.getById.bind(bookingCtrl));

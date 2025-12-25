@@ -433,7 +433,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
               />
             </Labeled>
 
-            <Labeled label="Advance Amount">
+            <Labeled label="Paid Amount">
               <input
                 type="number"
                 min="0"
@@ -447,7 +447,7 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
               />
             </Labeled>
 
-            <Labeled label="Balance">
+            <Labeled label="Due Amount">
               <input
                 type="text"
                 value={balance}

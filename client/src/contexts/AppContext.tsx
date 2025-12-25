@@ -59,7 +59,9 @@ export const useApp = () => {
     customers: [],
     payments: [],
     expenses: [],
+    refunds: [],
     vendors: [],
+    addRefund: () => {},
     getDashboardStats: () => ({
       totalRevenue: 12500000,
       pendingAmount: 875000,

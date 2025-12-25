@@ -198,6 +198,7 @@ export interface BookingDocument extends BaseDocument {
   travel_end_at?: Timestamp;
   total_amount: number;
   paid_amount: number;
+  refunded_amount?: number;
   due_amount: number;
   advance_amount?: number;
   status: BookingStatus;

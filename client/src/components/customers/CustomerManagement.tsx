@@ -11,6 +11,7 @@ import Card, { CardContent } from "../ui/Card";
 import ConfirmDestructionModal from "../ui/common/ConfirmDestructionModal";
 import Pagination from "../ui/Pagination";
 import Spinner from "../ui/Spinner";
+import Loader from "../ui/Loader";
 import AccountFormModal, {
   AccountFormState,
 } from "../ui/common/AccountFormModal";
@@ -46,6 +47,7 @@ const CustomerManagement: React.FC = () => {
 
   // ── Search state ─────────────────────────────────────────────────────────────
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<Customer[]>([]);
   const searchAbortControllerRef = useRef<AbortController | null>(null);
 
@@ -62,11 +64,13 @@ const CustomerManagement: React.FC = () => {
     const trimmedTerm = term.trim();
     if (!trimmedTerm) {
       setSearchResults([]);
+      setIsSearching(false);
       return;
     }
 
     const abortController = new AbortController();
     searchAbortControllerRef.current = abortController;
+    setIsSearching(true);
 
     try {
       const params = new URLSearchParams();
@@ -95,6 +99,7 @@ const CustomerManagement: React.FC = () => {
       }
     } finally {
       if (!abortController.signal.aborted) {
+        setIsSearching(false);
         searchAbortControllerRef.current = null;
       }
     }
@@ -255,6 +260,7 @@ const CustomerManagement: React.FC = () => {
             value={searchTerm}
             onChange={setSearchTerm}
           />
+          <Loader isLoading={isSearching} />
         </div>
       </div>
 

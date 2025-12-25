@@ -28,16 +28,15 @@ import Table, {
   TableHeader,
   TableRow,
 } from "../ui/Table";
-import BookingForm from "./BookingForm";
 import BookingFormV2 from "./BookingFormV2";
 import BookingFilter, { BookingFilterParams } from "./BookingFilter";
 import {
   BookingStatus,
   CustomerLite,
-  ModeOfJourneyOption,
+  ModeOfJourney,
   NewCustomerData,
-} from "./booking.types";
-import { VendorLite } from "./booking.v2.types";
+  VendorLite,
+} from "./booking.v2.types";
 import Loader from "../ui/Loader";
 
 type BookingRow = Booking & { pnr?: string };
@@ -66,7 +65,6 @@ const BookingManagement: React.FC = () => {
   const [formMode, setFormMode] = useState<"create" | "edit" | "view">(
     "create"
   );
-  const [useV2Form, setUseV2Form] = useState(false);
 
   // ── Stats state ───────────────────────────────────────────────────────
   const [stats, setStats] = useState<{
@@ -459,7 +457,7 @@ const BookingManagement: React.FC = () => {
       record.modeOfJourney ??
       firstSegment?.modeOfJourney ??
       firstSegment?.mode_of_journey ??
-      ModeOfJourneyOption.HOTEL;
+      ModeOfJourney.HOTEL;
 
     const normalized = {
       ...record,
@@ -507,7 +505,6 @@ const BookingManagement: React.FC = () => {
         record.extractionMetadata ?? record.extraction_metadata ?? null,
       customerId: record.customerId ?? record.customer_id ?? "",
       totalAmount,
-      advanceAmount: record.advanceAmount ?? paidAmount,
       paidAmount,
       dueAmount,
       bookingDate: bookingDateRaw,
@@ -862,11 +859,9 @@ const BookingManagement: React.FC = () => {
 
   const handleOpenModal = (
     booking?: BookingRow,
-    mode: "create" | "edit" | "view" = "create",
-    useV2: boolean = false
+    mode: "create" | "edit" | "view" = "create"
   ) => {
     setFormMode(mode);
-    setUseV2Form(useV2);
 
     if (!booking) {
       setSelectedBooking(null);
@@ -1051,17 +1046,8 @@ const BookingManagement: React.FC = () => {
           >
             Refresh
           </Button>
-          {/*<Button
-            onClick={() => handleOpenModal(undefined, "create", false)}
-            icon={Plus}
-            variant="outline"
-           
-          >
-            Create Booking
-          </Button>
-          */}
           <Button
-            onClick={() => handleOpenModal(undefined, "create", true)}
+            onClick={() => handleOpenModal(undefined, "create")}
             icon={Plus}
           >
             Create Booking
@@ -1269,7 +1255,7 @@ const BookingManagement: React.FC = () => {
                           variant="outline"
                           size="sm"
                           icon={Eye}
-                          onClick={() => handleOpenModal(b, "view", true)}
+                          onClick={() => handleOpenModal(b, "view")}
                           title="View booking"
                         >
                           View
@@ -1278,7 +1264,7 @@ const BookingManagement: React.FC = () => {
                           variant="outline"
                           size="sm"
                           icon={Edit}
-                          onClick={() => handleOpenModal(b, "edit", true)}
+                          onClick={() => handleOpenModal(b, "edit")}
                           title="Edit booking"
                         >
                           Edit
@@ -1352,36 +1338,20 @@ const BookingManagement: React.FC = () => {
           </div>
         )}
         {(!selectedBookingLoading || selectedBooking) && (
-          useV2Form ? (
-            <BookingFormV2
-              key={
-                selectedBooking
-                  ? selectedBooking.booking_id || selectedBooking.id
-                  : "new-v2"
-              }
-              selectedBooking={selectedBooking}
-              customers={customers}
-              vendors={vendors}
-              onAddCustomer={addCustomer}
-              onSubmitBooking={submitBooking}
-              onCancel={resetAndClose}
-              mode={formMode}
-            />
-          ) : (
-            <BookingForm
-              key={
-                selectedBooking
-                  ? selectedBooking.booking_id || selectedBooking.id
-                  : "new"
-              }
-              selectedBooking={selectedBooking}
-              customers={customers}
-              onAddCustomer={addCustomer}
-              onSubmitBooking={submitBooking}
-              onCancel={resetAndClose}
-              mode={formMode}
-            />
-          )
+          <BookingFormV2
+            key={
+              selectedBooking
+                ? selectedBooking.booking_id || selectedBooking.id
+                : "new-v2"
+            }
+            selectedBooking={selectedBooking}
+            customers={customers}
+            vendors={vendors}
+            onAddCustomer={addCustomer}
+            onSubmitBooking={submitBooking}
+            onCancel={resetAndClose}
+            mode={formMode}
+          />
         )}
       </Modal>
     </div>

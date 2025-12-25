@@ -163,7 +163,8 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
     paxList,
     itineraries,
     ui,
-    balance,
+    paidAmount,
+    dueAmount,
     setFormField,
     handleFileUpload,
     addPax,
@@ -433,28 +434,28 @@ const BookingFormV2: React.FC<BookingFormV2Props> = ({
               />
             </Labeled>
 
-            <Labeled label="Paid Amount">
-              <input
-                type="number"
-                min="0"
-                step="1"
-                value={formData.advanceAmount}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  setFormField('advanceAmount', value ? Math.ceil(value) : '');
-                }}
-                className="w-full border border-gray-300 px-3 py-2"
-              />
-            </Labeled>
+            {/* Show Paid/Due amounts only in edit/view mode */}
+            {(isEditMode || isViewMode) && (
+              <>
+                <Labeled label="Paid Amount">
+                  <input
+                    type="text"
+                    value={paidAmount.toLocaleString()}
+                    readOnly
+                    className="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-700"
+                  />
+                </Labeled>
 
-            <Labeled label="Due Amount">
-              <input
-                type="text"
-                value={balance}
-                readOnly
-                className="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-700"
-              />
-            </Labeled>
+                <Labeled label="Due Amount">
+                  <input
+                    type="text"
+                    value={dueAmount.toLocaleString()}
+                    readOnly
+                    className="w-full border border-gray-300 px-3 py-2 bg-gray-100 text-gray-700"
+                  />
+                </Labeled>
+              </>
+            )}
           </div>
         </AccordionSection>
 
@@ -983,7 +984,7 @@ const SegmentEditor: React.FC<SegmentEditorProps> = ({
         <div className="mt-3">
           <details className="text-xs">
             <summary className="cursor-pointer text-gray-600 hover:text-gray-800">
-              Additional Fields (JSON)
+              Miscellaneous
             </summary>
             <textarea
               value={JSON.stringify(segment.misc, null, 2)}

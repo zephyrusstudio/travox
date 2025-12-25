@@ -226,12 +226,12 @@ export function useBookingFormV2({
     packageName: '',
     pnrNo: '',
     modeOfJourney: '',
-    advanceAmount: '',
     status: BookingStatus.DRAFT,
     vendorId: '',
   });
 
-  // Track due amount from backend (for edit/view mode)
+  // Track paidAmount and dueAmount from backend (for edit/view mode)
+  const [backendPaidAmount, setBackendPaidAmount] = useState<number | null>(null);
   const [backendDueAmount, setBackendDueAmount] = useState<number | null>(null);
 
   const [paxList, setPaxList] = useState<PaxFormState[]>([createEmptyPax()]);
@@ -251,13 +251,9 @@ export function useBookingFormV2({
   const totalAmount = typeof formData.totalAmount === 'number' 
     ? formData.totalAmount 
     : normalizeAmount(formData.totalAmount);
-  const advanceAmount = typeof formData.advanceAmount === 'number'
-    ? formData.advanceAmount
-    : normalizeAmount(formData.advanceAmount);
-  // Use backend dueAmount if available (edit/view mode), otherwise calculate locally (create mode)
-  const balance = backendDueAmount !== null 
-    ? backendDueAmount 
-    : totalAmount - advanceAmount;
+  // For edit/view mode, use backend values; for create mode, show 0
+  const paidAmount = backendPaidAmount ?? 0;
+  const dueAmount = backendDueAmount ?? 0;
 
   // ─── Load Existing Booking (Edit/View Mode) ──────────────────────────────────
   useEffect(() => {
@@ -272,16 +268,20 @@ export function useBookingFormV2({
         packageName: selectedBooking.packageName || '',
         pnrNo: selectedBooking.pnrNo || '',
         modeOfJourney: selectedBooking.modeOfJourney || '',
-        advanceAmount: selectedBooking.advanceAmount || '',
         status: selectedBooking.status || BookingStatus.DRAFT,
         vendorId: selectedBooking.vendorId || '',
       });
 
-      // Set backend due amount from the booking
+      // Set backend paid and due amounts from the booking
+      setBackendPaidAmount(
+        selectedBooking.paidAmount ?? 
+        selectedBooking.advance_received ?? 
+        0
+      );
       setBackendDueAmount(
         selectedBooking.dueAmount ?? 
         selectedBooking.balance_amount ?? 
-        null
+        0
       );
 
       // Load pax
@@ -635,7 +635,6 @@ export function useBookingFormV2({
         packageName: formData.packageName.trim() || undefined,
         pnrNo: formData.pnrNo.trim() || undefined,
         modeOfJourney: formData.modeOfJourney.trim() || undefined,
-        advanceAmount: normalizeAmount(formData.advanceAmount) || undefined,
         status: formData.status,
         vendorId: formData.vendorId.trim() || undefined,
       };
@@ -678,8 +677,8 @@ export function useBookingFormV2({
 
     // Computed
     totalAmount,
-    advanceAmount,
-    balance,
+    paidAmount,
+    dueAmount,
     customers,
     vendors,
 

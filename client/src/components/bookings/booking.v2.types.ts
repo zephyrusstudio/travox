@@ -70,7 +70,7 @@ export interface SegmentDTO {
   operatorName?: string;
   boardingPoint?: string;
   dropPoint?: string;
-  misc?: Record<string, any>;
+  misc?: Record<string, unknown>;
 }
 
 export interface ItineraryDTO {
@@ -89,7 +89,6 @@ export interface CreateBookingDTO {
   packageName?: string;
   pnrNo?: string;
   modeOfJourney?: string;
-  advanceAmount?: number;
   status?: BookingStatus;
   vendorId?: string;
 }
@@ -136,7 +135,7 @@ export interface SegmentFormState {
   boardingPoint: string;
   dropPoint: string;
   // Misc fields (flexible JSON)
-  misc: Record<string, any>;
+  misc: Record<string, unknown>;
 }
 
 /**
@@ -159,7 +158,6 @@ export interface BookingFormStateV2 {
   packageName: string;
   pnrNo: string;
   modeOfJourney: string;
-  advanceAmount: number | '';
   status: BookingStatus;
   vendorId: string;
 }

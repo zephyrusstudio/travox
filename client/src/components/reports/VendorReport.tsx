@@ -437,8 +437,8 @@ const VendorReport: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             Vendor Expense Report
           </h1>
@@ -446,7 +446,7 @@ const VendorReport: React.FC = () => {
             View expense payments made to vendors within a date range
           </p>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           <Button onClick={fetchReport} icon={RefreshCw} variant="outline" disabled={loading}>
             Refresh
           </Button>

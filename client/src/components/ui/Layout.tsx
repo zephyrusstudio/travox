@@ -19,6 +19,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../../contexts/AppContext";
 import { AppModule, canAccessModule } from "../../utils/roleAccess";
 import { successToast } from "../../utils/toasts";
+import MaintenanceBanner from "./MaintenanceBanner";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -69,7 +70,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["ledgers"]);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('darkMode') === 'true';
+      return localStorage.getItem('travox-theme') === 'true';
     }
     return false;
   });
@@ -84,7 +85,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
     } else {
       document.documentElement.classList.remove('dark');
     }
-    localStorage.setItem('darkMode', String(darkMode));
+    localStorage.setItem('travox-theme', String(darkMode));
   }, [darkMode]);
 
   React.useEffect(() => {
@@ -128,6 +129,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between h-16 px-6 bg-gradient-to-t from-blue-600 to-blue-700 relative" >
           <div className="relative z-10 flex items-center space-x-3">
@@ -204,6 +206,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
                             <Link
                               key={subItem.id}
                               to={`/${subItem.id}`}
+                              onClick={() => setSidebarOpen(false)}
                               className={`flex items-center px-4 py-2 text-sm font-medium transition-all duration-200 ${
                                 isSubActive
                                   ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-l-2 border-blue-600"
@@ -221,6 +224,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
                 ) : (
                   <Link
                     to={`/${item.id}`}
+                    onClick={() => setSidebarOpen(false)}
                     className={`flex items-center px-4 py-3 mb-2 text-sm font-medium transition-all duration-200 group ${
                       isActive
                         ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
@@ -276,10 +280,38 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
         </div>
       </div>
 
+      {/* Floating hamburger button for mobile */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="lg:hidden fixed top-4 right-4 z-40 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        aria-label="Toggle menu"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+
       {/* Main content */}
       <div className="lg:pl-64 min-h-screen">
+        {/* Maintenance Banner */}
+        <MaintenanceBanner
+          isEnabled={import.meta.env.VITE_MAINTENANCE_MODE === 'true'}
+          message={import.meta.env.VITE_MAINTENANCE_MESSAGE}
+          details={import.meta.env.VITE_MAINTENANCE_DETAILS}
+        />
+        
         {/* Page content */}
-        <main className="p-6 min-h-screen">{children}</main>
+        <main className="p-4 sm:p-6 min-h-screen">{children}</main>
       </div>
     </div>
   );

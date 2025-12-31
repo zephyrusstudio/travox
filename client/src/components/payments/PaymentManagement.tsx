@@ -118,7 +118,7 @@ const PaymentManagement: React.FC = () => {
 
         return {
           booking_id: bookingId,
-          package_name: record?.packageName || "Untitled Package",
+          package_name: record?.packageName || "-",
           customer_name: customerName,
           balance_amount: balance,
           customer_id: customerId,
@@ -477,24 +477,23 @@ const PaymentManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-900">
             Payment Management
           </h1>
           <p className="text-gray-600">Track and manage customer payments</p>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           <Button
             onClick={fetchPayments}
             icon={RefreshCw}
             variant="outline"
             disabled={loadingPayments}
-            className="[&>svg]:hidden sm:[&>svg]:inline-flex"
           >
             Refresh
           </Button>
-          <Button onClick={handleOpenModal} icon={Plus} className="[&>svg]:hidden sm:[&>svg]:inline-flex">
+          <Button onClick={handleOpenModal} icon={Plus}>
             Record Payment
           </Button>
         </div>

@@ -197,7 +197,7 @@ const BookingManagement: React.FC = () => {
           booking_id: record?.id ? String(record.id) : "",
           customer_id: record?.customerId ? String(record.customerId) : "",
           customer_name: record?.customerName || record?.customer?.name || "",
-          package_name: record?.packageName || "Untitled Package",
+          package_name: record?.packageName || "-",
           booking_date: bookingDate,
           travel_start_date: travelStart,
           travel_end_date: travelEnd,
@@ -376,7 +376,7 @@ const BookingManagement: React.FC = () => {
           booking_id: record?.id ? String(record.id) : "",
           customer_id: record?.customerId ? String(record.customerId) : "",
           customer_name: record?.customerName || record?.customer?.name || "",
-          package_name: record?.packageName || "Untitled Package",
+          package_name: record?.packageName || "-",
           booking_date: bookingDate,
           travel_start_date: travelStart,
           travel_end_date: travelEnd,
@@ -643,7 +643,7 @@ const BookingManagement: React.FC = () => {
           booking_id: record?.id ? String(record.id) : "",
           customer_id: record?.customerId ? String(record.customerId) : "",
           customer_name: record?.customerName || record?.customer?.name || "",
-          package_name: record?.packageName || "Untitled Package",
+          package_name: record?.packageName || "-",
           booking_date: bookingDate,
           travel_start_date: travelStart,
           travel_end_date: travelEnd,
@@ -1025,8 +1025,8 @@ const BookingManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-900">
             Booking Management
           </h1>
@@ -1034,7 +1034,7 @@ const BookingManagement: React.FC = () => {
             Manage travel bookings and customer reservations
           </p>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           <Button
             onClick={() => {
               fetchBookings();

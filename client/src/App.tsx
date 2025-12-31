@@ -120,10 +120,20 @@ const SessionExpiredHandler: React.FC = () => {
 
 export default function App() {
   const isMobile = useIsMobile();
+  const [showUnsupportedDevice, setShowUnsupportedDevice] = useState(() => {
+    // Check if user has chosen to continue on mobile
+    const continueOnMobile = localStorage.getItem('travox-continue-mobile');
+    return isMobile && continueOnMobile !== 'true';
+  });
+
+  const handleContinueOnMobile = () => {
+    localStorage.setItem('travox-continue-mobile', 'true');
+    setShowUnsupportedDevice(false);
+  };
 
   // Show unsupported device message on mobile
-  if (isMobile) {
-    return <UnsupportedDevice />;
+  if (showUnsupportedDevice) {
+    return <UnsupportedDevice onContinue={handleContinueOnMobile} />;
   }
 
   return (

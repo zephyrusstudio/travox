@@ -23,7 +23,7 @@ const MaintenanceBanner: React.FC<MaintenanceBannerProps> = ({
     <>
       {/* Thin Banner */}
       <div
-        className="bg-amber-500 dark:bg-amber-600 text-white px-4 py-1.5 flex items-center justify-center cursor-pointer hover:bg-amber-600 dark:hover:bg-amber-700 transition-colors relative z-50"
+        className="bg-amber-500 dark:bg-amber-600 text-white px-4 py-1.5 flex items-center justify-center cursor-pointer hover:bg-amber-600 dark:hover:bg-amber-700 transition-colors"
         onClick={() => setShowOverlay(true)}
         role="button"
         tabIndex={0}

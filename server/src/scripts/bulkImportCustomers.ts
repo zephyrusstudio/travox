@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import admin from 'firebase-admin';
+import { v4 as uuidv4 } from 'uuid';
 
 // Usage:
 //   ORG_ID=<orgId> npm run import:customers -- --csv=./customer.csv
@@ -9,6 +10,11 @@ import admin from 'firebase-admin';
 
 const DEFAULT_PHONE = '+91-9332100486';
 const DEFAULT_EMAIL = 'esanchar@gmail.com';
+
+// Placeholder bank account values (same as CreateCustomer use case)
+const PLACEHOLDER_ACCOUNT_NO = '0000000000';
+const PLACEHOLDER_IFSC = 'PLHR0000000';
+const PLACEHOLDER_UPI = 'placeholder@upi';
 
 // Regex pattern for Indian GSTIN: 2 digits (state code) + 10 alphanumeric (PAN) + 1 digit (entity number) + 1 letter (Z) + 1 alphanumeric (checksum)
 // Format: ##AAAAAAAAAA#A# (15 characters total)
@@ -158,6 +164,7 @@ async function main() {
   const argv = process.argv.slice(2);
   let csvPathArg = '';
   let limitArg = 0;
+  let orgId = '';
   for (const a of argv) {
     if (a.startsWith('--csv=')) csvPathArg = a.split('=')[1];
     if (a === '--csv') {
@@ -165,6 +172,15 @@ async function main() {
       csvPathArg = argv[idx + 1] || '';
     }
     if (a.startsWith('--limit=')) limitArg = parseInt(a.split('=')[1], 10);
+    if (a === '--limit') {
+      const idx = argv.indexOf(a);
+      limitArg = parseInt(argv[idx + 1] || '0', 10);
+    }
+    if (a.startsWith('--org=')) orgId = a.split('=')[1];
+    if (a === '--org') {
+      const idx = argv.indexOf(a);
+      orgId = argv[idx + 1] || '';
+    }
   }
 
   const csvPath = csvPathArg || path.resolve(process.cwd(), 'customer.csv');
@@ -187,7 +203,11 @@ async function main() {
 
   const dataRows = rows.slice(headerIdx + 1);
 
-  const orgId = process.env.ORG_ID || process.env.ORGANIZATION_ID || 'default-org';
+  if (!orgId || orgId === '') {
+    console.error('Organization ID (--org) is required');
+    process.exit(1);
+  }
+
   console.log('========================================');
   console.log('Starting Customer Import');
   console.log('========================================');
@@ -198,6 +218,7 @@ async function main() {
   console.log('========================================\n');
 
   const collection = firestore.collection('customers');
+  const accountsCollection = firestore.collection('accounts');
 
   // Batch writes in groups of 400
   let batch = firestore.batch();
@@ -236,11 +257,34 @@ async function main() {
 
     const now = admin.firestore.Timestamp.now();
 
+    // First, create a placeholder bank account for the customer
+    const accountId = uuidv4();
+    const accountDocRef = accountsCollection.doc(accountId);
+    const accountData: any = {
+      org_id: orgId,
+      account_no: PLACEHOLDER_ACCOUNT_NO,
+      ifsc_code: PLACEHOLDER_IFSC,
+      upi_id: PLACEHOLDER_UPI,
+      bank_name: '',
+      branch_name: '',
+      is_active: true,
+      created_by: 'system',
+      updated_by: 'system',
+      created_at: now,
+      updated_at: now,
+      archived_at: null,
+    };
+
+    batch.set(accountDocRef, accountData);
+    count++;
+
+    // Then create the customer with the linked account ID
     const docData: any = {
       org_id: orgId,
       name,
       phone,
       email,
+      account_id: accountDocRef.id, // Link to the newly created account
       total_bookings: 0,
       total_spent: 0,
       created_by: 'system',
@@ -257,15 +301,15 @@ async function main() {
 
     const docRef = collection.doc();
     batch.set(docRef, docData);
-    count++;
+    count++; // Increment for customer doc
     total++;
 
     const gstinInfo = gstin ? ` | GSTIN: ${gstin}` : '';
-    console.log(`[${total}] Adding customer: ${name} | Phone: ${phone} | Email: ${email}${gstinInfo}`);
+    console.log(`[${total}] Adding customer: ${name} | Phone: ${phone} | Email: ${email}${gstinInfo} | Account: ${accountId}`);
 
     if (count >= BATCH_LIMIT) {
       await batch.commit();
-      console.log(`✓ Committed batch of ${count} documents (Total: ${total})`);
+      console.log(`✓ Committed batch of ${count} documents (${Math.floor(count/2)} customers + ${Math.floor(count/2)} accounts) | Total customers: ${total}`);
       batch = firestore.batch();
       count = 0;
     }
@@ -273,12 +317,13 @@ async function main() {
 
   if (count > 0) {
     await batch.commit();
-    console.log(`✓ Committed final batch of ${count} documents (Total: ${total})`);
+    console.log(`✓ Committed final batch of ${count} documents (${Math.floor(count/2)} customers + ${Math.floor(count/2)} accounts) | Total customers: ${total}`);
   }
 
   console.log(`\n========================================`);
   console.log(`✓ Import complete!`);
   console.log(`  Total customers added: ${total}`);
+  console.log(`  Total accounts created: ${total}`);
   console.log(`  Organization ID: ${orgId}`);
   console.log(`========================================\n`);
   process.exit(0);

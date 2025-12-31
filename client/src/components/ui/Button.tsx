@@ -70,18 +70,18 @@ const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <>
           <Spinner size="sm" color="white" />
-          {children && <span className="ml-0 sm:ml-2">{children}</span>}
+          {children && <span className="ml-2">{children}</span>}
         </>
       ) : Icon && iconPosition === "left" ? (
         <>
           <Icon className="w-4 h-4" />
-          {children && <span className="ml-0 sm:ml-2">{children}</span>}
+          {children && <span className="ml-2">{children}</span>}
         </>
       ) : (
         <>
           {children}
           {Icon && iconPosition === "right" && (
-            <Icon className="w-4 h-4 ml-0 sm:ml-2" />
+            <Icon className="w-4 h-4 ml-2" />
           )}
         </>
       )}

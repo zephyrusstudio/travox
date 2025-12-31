@@ -6,6 +6,7 @@ import {
   Clock,
   CreditCard,
   LogOut,
+  Menu,
   Moon,
   Plane,
   Receipt,
@@ -20,6 +21,7 @@ import { useApp } from "../../contexts/AppContext";
 import { AppModule, canAccessModule } from "../../utils/roleAccess";
 import { successToast } from "../../utils/toasts";
 import MaintenanceBanner from "./MaintenanceBanner";
+import Button from "./Button";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -281,25 +283,15 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
       </div>
 
       {/* Floating hamburger button for mobile */}
-      <button
+      { !sidebarOpen && <Button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="lg:hidden fixed top-4 right-4 z-40 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className="lg:hidden fixed top-4 p-0 right-4 z-40 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all duration-200"
+        icon={Menu}
+        size="md"
         aria-label="Toggle menu"
       >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 6h16M4 12h16M4 18h16"
-          />
-        </svg>
-      </button>
+        
+      </Button>}
 
       {/* Main content */}
       <div className="lg:pl-64 min-h-screen">

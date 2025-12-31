@@ -2,49 +2,30 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "../utils/apiConnector";
 
-interface UseCachedSearchOptions<T> {
+interface UseSearchOptions<T> {
   endpoint: string;
   searchFields: (item: T) => string[];
-  initialFetch?: boolean;
+  initialFetch?: boolean; // Kept for API compatibility, but not used
   unmask?: boolean;
   filterFn?: (item: any) => boolean;
 }
 
-interface SearchCache<T> {
-  data: T[];
-  timestamp: number;
-  isComplete: boolean; // whether we've fetched all data
-}
-
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
-const INITIAL_SEARCH_LIMIT = 500;
-
-export function useCachedSearch<T = any>(options: UseCachedSearchOptions<T>) {
-  const { endpoint, searchFields, initialFetch = true, unmask = true, filterFn } = options;
+export function useSearch<T = any>(options: UseSearchOptions<T>) {
+  const { endpoint, searchFields, unmask = true, filterFn } = options;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<T[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  // Cache stored in ref to persist across renders without causing re-renders
-  const cacheRef = useRef<SearchCache<T> | null>(null);
   const searchAbortControllerRef = useRef<AbortController | null>(null);
 
-  // Check if cache is valid
-  const isCacheValid = useCallback(() => {
-    if (!cacheRef.current) return false;
-    const age = Date.now() - cacheRef.current.timestamp;
-    return age < CACHE_DURATION;
-  }, []);
-
-  // Fetch data for search cache
-  const fetchSearchCache = useCallback(
-    async (limit?: number): Promise<T[]> => {
+  // Fetch data for search
+  const fetchData = useCallback(
+    async (): Promise<T[]> => {
       try {
         const params = new URLSearchParams();
         if (unmask) params.append("unmask", "true");
-        if (limit) params.append("limit", limit.toString());
 
         const queryString = params.toString();
         const separator = endpoint.includes('?') ? '&' : '?';
@@ -55,23 +36,23 @@ export function useCachedSearch<T = any>(options: UseCachedSearchOptions<T>) {
           url,
         });
 
-        // apiRequest returns response directly, check for data property
         let data = response?.data ?? response ?? [];
         data = Array.isArray(data) ? data : [];
+        
         // Apply filter function if provided
         if (filterFn && Array.isArray(data)) {
           data = data.filter(filterFn);
         }
         return data;
       } catch (error) {
-        console.error("Failed to fetch search cache:", error);
+        console.error("Failed to fetch data:", error);
         throw error;
       }
     },
-    [endpoint, unmask]
+    [endpoint, unmask, filterFn]
   );
 
-  // Perform search on cached data
+  // Perform search
   const performSearch = useCallback(
     async (term: string) => {
       // Cancel any ongoing search
@@ -96,58 +77,21 @@ export function useCachedSearch<T = any>(options: UseCachedSearchOptions<T>) {
       searchAbortControllerRef.current = abortController;
 
       try {
-        // Check if we have valid cache
-        if (!isCacheValid()) {
-          // Fetch initial 500 items
-          const initialData = await fetchSearchCache(INITIAL_SEARCH_LIMIT);
-          cacheRef.current = {
-            data: initialData,
-            timestamp: Date.now(),
-            isComplete: false,
-          };
-        }
+        // Fetch all data
+        const data = await fetchData();
 
         // Check if aborted
         if (abortController.signal.aborted) return;
 
-        // Search in cached data
-        const cached = cacheRef.current!;
-        const results = cached.data.filter((item) => {
+        // Search in data
+        const results = data.filter((item) => {
           const fields = searchFields(item);
           return fields.some((field) =>
             field.toLowerCase().includes(trimmedTerm)
           );
         });
 
-        // If we found results or cache is complete, return them
-        if (results.length > 0 || cached.isComplete) {
-          setSearchResults(results);
-          setIsSearching(false);
-          return;
-        }
-
-        // No results found in initial 500, fetch all data
-        const allData = await fetchSearchCache();
-
-        // Check if aborted
-        if (abortController.signal.aborted) return;
-
-        // Update cache with complete data
-        cacheRef.current = {
-          data: allData,
-          timestamp: Date.now(),
-          isComplete: true,
-        };
-
-        // Search in complete data
-        const allResults = allData.filter((item) => {
-          const fields = searchFields(item);
-          return fields.some((field) =>
-            field.toLowerCase().includes(trimmedTerm)
-          );
-        });
-
-        setSearchResults(allResults);
+        setSearchResults(results);
       } catch (error: any) {
         // Don't set error if aborted
         if (!abortController.signal.aborted) {
@@ -160,12 +104,12 @@ export function useCachedSearch<T = any>(options: UseCachedSearchOptions<T>) {
         }
       }
     },
-    [fetchSearchCache, isCacheValid, searchFields]
+    [fetchData, searchFields]
   );
 
-  // Invalidate cache (useful when data changes)
+  // Invalidate cache function (no-op since we don't cache)
   const invalidateCache = useCallback(() => {
-    cacheRef.current = null;
+    // No-op - kept for API compatibility
   }, []);
 
   // Effect to perform search when search term changes (with debounce)
@@ -183,25 +127,7 @@ export function useCachedSearch<T = any>(options: UseCachedSearchOptions<T>) {
     // Cleanup timeout on searchTerm change or unmount
     return () => clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm]); // Only depend on searchTerm, not performSearch
-
-  // Pre-fetch cache on mount if initialFetch is true
-  useEffect(() => {
-    if (initialFetch && !cacheRef.current) {
-      fetchSearchCache(INITIAL_SEARCH_LIMIT)
-        .then((data) => {
-          cacheRef.current = {
-            data,
-            timestamp: Date.now(),
-            isComplete: false,
-          };
-        })
-        .catch((error) => {
-          console.error("Failed to pre-fetch search cache:", error);
-        });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialFetch]); // Only depend on initialFetch, not fetchSearchCache
+  }, [searchTerm]); // Only depend on searchTerm
 
   // Cleanup on unmount
   useEffect(() => {

@@ -76,11 +76,16 @@ export class CachedAccountRepository implements IAccountRepository {
   }
 
   async update(id: string, accountData: UpdateAccountDTO, userId: string): Promise<Account | null> {
-    const result = await this.baseRepo.update(id, accountData, userId);
-    
-    if (result) {
-      await this.invalidateAccountCache(id, result.orgId);
+    // Fetch account first to get orgId for cache invalidation
+    const existing = await this.baseRepo.findById(id);
+    if (!existing) {
+      return null;
     }
+    
+    // Invalidate caches BEFORE update to prevent race conditions
+    await this.invalidateAccountCache(id, existing.orgId);
+    
+    const result = await this.baseRepo.update(id, accountData, userId);
     
     return result;
   }
@@ -89,11 +94,12 @@ export class CachedAccountRepository implements IAccountRepository {
     // Get account before deleting to invalidate proper caches
     const account = await this.baseRepo.findById(id);
     
-    const result = await this.baseRepo.delete(id);
-    
-    if (result && account) {
+    if (account) {
+      // Invalidate caches BEFORE delete to prevent race conditions
       await this.invalidateAccountCache(id, account.orgId);
     }
+    
+    const result = await this.baseRepo.delete(id);
     
     return result;
   }

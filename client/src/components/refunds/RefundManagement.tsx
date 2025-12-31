@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CreditCard, Plus, IndianRupee, RefreshCw, Search } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useCachedSearch } from "../../hooks/useCachedSearch";
+import { useSearch } from "../../hooks/useSearch";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import { successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
@@ -178,7 +178,7 @@ const RefundManagement: React.FC = () => {
     searchResults,
     isSearching,
     invalidateCache,
-  } = useCachedSearch<any>({
+  } = useSearch<any>({
     endpoint: "/payments?type=REFUND_OUTBOUND",
     searchFields: (refund) => [
       String(refund.amount || ''),

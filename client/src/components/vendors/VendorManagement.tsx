@@ -1,7 +1,7 @@
 import { Building2, FileText, Plus, RefreshCw } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCachedSearch } from "../../hooks/useCachedSearch";
+import { useSearch } from "../../hooks/useSearch";
 import { Vendor } from "../../types";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import Button from "../ui/Button";
@@ -57,14 +57,14 @@ const VendorManagement: React.FC = () => {
   
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // ── Search with caching ──────────────────────────────────────────────────────
+  // ── Search ──────────────────────────────────────────────────────
   const {
     searchTerm,
     setSearchTerm,
     searchResults,
     isSearching,
     invalidateCache,
-  } = useCachedSearch<Vendor>({
+  } = useSearch<Vendor>({
     endpoint: "/vendors",
     searchFields: (vendor) => [
       vendor.name || "",

@@ -31,8 +31,6 @@ const extractErrorMessage = (payload: unknown, fallback: string): string => {
 };
 
 class UserService {
-  private userCache = new Map<string, User>();
-
   async getUsers(limit?: number, offset?: number): Promise<{ users: User[]; count?: number }> {
     const params: Record<string, number> = {};
     if (limit !== undefined) params.limit = limit;
@@ -45,15 +43,10 @@ class UserService {
     });
 
     if (response.status === "success") {
-      // Cache users for quick lookup
       const normalizedUsers = response.data.map((user) => ({
         ...user,
         role: normalizeRole(user.role),
       }));
-
-      normalizedUsers.forEach((user) => {
-        this.userCache.set(user.id, user);
-      });
 
       return { users: normalizedUsers, count: response.count };
     }
@@ -62,10 +55,6 @@ class UserService {
   }
 
   async getUserById(id: string): Promise<User | null> {
-    // Check cache first
-    if (this.userCache.has(id)) {
-      return this.userCache.get(id)!;
-    }
 
     try {
       const response = await apiRequest<ApiResponse<User>>({
@@ -74,12 +63,10 @@ class UserService {
       });
 
       if (response.status === "success") {
-        // Cache the user
         const normalized = {
           ...response.data,
           role: normalizeRole(response.data.role),
         };
-        this.userCache.set(id, normalized);
         return normalized;
       }
     } catch (error) {
@@ -91,27 +78,18 @@ class UserService {
 
   async getUsersByIds(ids: string[]): Promise<Map<string, User>> {
     const userMap = new Map<string, User>();
-    const missingIds: string[] = [];
 
-    // Check cache first
-    ids.forEach((id) => {
-      if (this.userCache.has(id)) {
-        userMap.set(id, this.userCache.get(id)!);
-      } else {
-        missingIds.push(id);
-      }
-    });
-
-    // Fetch missing users if any
-    if (missingIds.length > 0) {
+    // Fetch all users
+    if (ids.length > 0) {
       try {
-        // Get all users to populate cache (since there's no bulk get by IDs endpoint)
-        await this.getUsers();
+        // Get all users (since there's no bulk get by IDs endpoint)
+        const { users } = await this.getUsers();
 
-        // Try to get missing users from cache again
-        missingIds.forEach((id) => {
-          if (this.userCache.has(id)) {
-            userMap.set(id, this.userCache.get(id)!);
+        // Map requested users
+        ids.forEach((id) => {
+          const user = users.find(u => u.id === id);
+          if (user) {
+            userMap.set(id, user);
           }
         });
       } catch (error) {
@@ -120,10 +98,6 @@ class UserService {
     }
 
     return userMap;
-  }
-
-  clearCache(): void {
-    this.userCache.clear();
   }
 
   async changeRole(userId: string, role: UserRole): Promise<User> {
@@ -138,7 +112,6 @@ class UserService {
         ...response.data,
         role: normalizeRole(response.data.role),
       };
-      this.userCache.set(normalized.id, normalized);
       return normalized;
     }
 
@@ -164,7 +137,6 @@ class UserService {
         ...response.data.user,
         role: normalizeRole(response.data.user.role),
       };
-      this.userCache.set(normalized.id, normalized);
       return normalized;
     }
 
@@ -190,7 +162,6 @@ class UserService {
         ...response.data.user,
         role: normalizeRole(response.data.user.role),
       };
-      this.userCache.set(normalized.id, normalized);
       return normalized;
     }
 

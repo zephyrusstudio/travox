@@ -1,10 +1,13 @@
 import { normalizeRole } from "../utils/roleAccess";
 
+const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY || "travox-at";
+const USER_KEY = import.meta.env.VITE_USER_KEY || "travox-ua";
+
 export const useApp = () => {
   const getStoredUser = () => {
     const raw =
       typeof window !== "undefined"
-        ? sessionStorage.getItem("user") || localStorage.getItem("user")
+        ? sessionStorage.getItem(USER_KEY) || localStorage.getItem(USER_KEY)
         : null;
 
     if (!raw) {
@@ -49,10 +52,13 @@ export const useApp = () => {
     currentUser: user,
     authUser: user,
     logout: () => {
-      sessionStorage?.removeItem("user");
-      localStorage?.removeItem("user");
-      sessionStorage?.removeItem("token");
-      localStorage?.removeItem("token");
+      // Clear local storage
+      // Note: The travox-at cookie is httpOnly and on a different domain,
+      // so it must be cleared server-side via /auth/logout endpoint
+      sessionStorage?.removeItem(USER_KEY);
+      localStorage?.removeItem(USER_KEY);
+      sessionStorage?.removeItem(TOKEN_KEY);
+      localStorage?.removeItem(TOKEN_KEY);
     },
     logs: [],
     bookings: [],

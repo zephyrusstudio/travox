@@ -112,9 +112,10 @@ export class CachedUserRepository implements IUserRepository {
   }
 
   async update(user: User): Promise<User> {
-    const result = await this.baseRepo.update(user);
-    
+    // Invalidate caches BEFORE update to prevent race conditions
     await this.invalidateUserCache(user.id, user.orgId);
+    
+    const result = await this.baseRepo.update(user);
     
     return result;
   }
@@ -123,11 +124,12 @@ export class CachedUserRepository implements IUserRepository {
     // Get user before deleting to invalidate proper caches
     const user = await this.baseRepo.findById(id);
     
-    await this.baseRepo.delete(id);
-    
     if (user) {
+      // Invalidate caches BEFORE delete to prevent race conditions
       await this.invalidateUserCache(id, user.orgId);
     }
+    
+    await this.baseRepo.delete(id);
   }
 
   /**

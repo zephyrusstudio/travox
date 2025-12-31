@@ -27,7 +27,8 @@ if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
 }
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY || "token";
+const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY || "travox-at";
+const USER_KEY = import.meta.env.VITE_USER_KEY || "travox-ua";
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
@@ -99,8 +100,8 @@ const AuthPage: React.FC = () => {
       // persist token for guards and API
       localStorage.setItem(TOKEN_KEY, accessToken);
       sessionStorage.setItem(TOKEN_KEY, accessToken);
-      localStorage.setItem("user", JSON.stringify(user));
-      sessionStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+      sessionStorage.setItem(USER_KEY, JSON.stringify(user));
 
       navigate("/customers", { replace: true });
     } catch (e: any) {

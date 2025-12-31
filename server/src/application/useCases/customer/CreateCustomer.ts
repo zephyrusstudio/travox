@@ -1,6 +1,7 @@
 import { injectable, inject } from 'tsyringe';
 import { ICustomerRepository } from '../../repositories/ICustomerRepository';
 import { Customer } from '../../../domain/Customer';
+import { CreateAccount } from '../account/CreateAccount';
 
 interface CreateCustomerDTO {
   name: string;
@@ -13,31 +14,41 @@ interface CreateCustomerDTO {
   accountId?: string;
 }
 
+const PLACEHOLDER_ACCOUNT_NO = '0000000000';
+const PLACEHOLDER_IFSC = 'PLHR0000000';
+const PLACEHOLDER_UPI = 'placeholder@upi';
+
 @injectable()
 export class CreateCustomer {
   private static readonly DEFAULT_EMAIL = 'esanchar@gmail.com';
-  private static readonly DEFAULT_PHONE = '+91-9332100485';
+  private static readonly DEFAULT_PHONE = '+91-9332100486';
 
   constructor(
-    @inject('ICustomerRepository') private customerRepo: ICustomerRepository
+    @inject('ICustomerRepository') private customerRepo: ICustomerRepository,
+    @inject(CreateAccount) private createAccount: CreateAccount
   ) {}
 
   async execute(data: CreateCustomerDTO, orgId: string, createdBy: string): Promise<Customer> {
-    // Validate mandatory fields - either phone or email is required
+    // Validate mandatory fields - only name is required
     if (!data.name?.trim()) {
       throw new Error('Customer name is required');
     }
 
-    if (!data.phone && !data.email) {
-      throw new Error('Either phone or email is required');
+    // Auto-fill missing email or phone with placeholders
+    if (!data.email?.trim()) {
+      data.email = CreateCustomer.DEFAULT_EMAIL;
     }
 
-    // Validate Aadhaar format (12 digits)
+    if (!data.phone?.trim()) {
+      data.phone = CreateCustomer.DEFAULT_PHONE;
+    }
+
+    // Validate Aadhaar format (12 digits) - optional
     if (data.aadhaarNo && !this.isValidAadhaar(data.aadhaarNo)) {
       throw new Error('Aadhaar number must be exactly 12 digits');
     }
 
-    // Validate GSTIN format (15 characters)
+    // Validate GSTIN format (15 characters) - optional
     if (data.gstin && !this.isValidGSTIN(data.gstin)) {
       throw new Error('GSTIN must be exactly 15 characters');
     }
@@ -57,7 +68,18 @@ export class CreateCustomer {
       }
     }
 
-    // Create new customer
+    // Create placeholder bank account for the customer
+    const placeholderAccount = await this.createAccount.execute(
+      {
+        accountNo: PLACEHOLDER_ACCOUNT_NO,
+        ifscCode: PLACEHOLDER_IFSC,
+        upiId: PLACEHOLDER_UPI,
+      },
+      orgId,
+      createdBy
+    );
+
+    // Create new customer with linked account
     const customer = Customer.create(orgId, data.name.trim(), createdBy, {
       phone: data.phone?.trim(),
       email: data.email?.trim(),
@@ -65,7 +87,7 @@ export class CreateCustomer {
       aadhaarNo: data.aadhaarNo?.trim(),
       visaNo: data.visaNo?.trim(),
       gstin: data.gstin?.trim().toUpperCase(),
-      accountId: data.accountId,
+      accountId: placeholderAccount.id,
     });
 
     return await this.customerRepo.create(customer, orgId);

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CreditCard, Plus, IndianRupee, RefreshCw, Search } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useCachedSearch } from "../../hooks/useCachedSearch";
+import { useSearch } from "../../hooks/useSearch";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
@@ -139,14 +139,14 @@ const PaymentManagement: React.FC = () => {
     return map;
   }, [bookings]);
 
-  // ── Search with caching ──────────────────────────────────────────────────────
+  // ── Search ──────────────────────────────────────────────────────
   const {
     searchTerm,
     setSearchTerm,
     searchResults,
     isSearching,
     invalidateCache,
-  } = useCachedSearch<any>({
+  } = useSearch<any>({
     endpoint: "/payments?type=RECEIVABLE",
     searchFields: (payment) => [
       String(payment.amount || ''),

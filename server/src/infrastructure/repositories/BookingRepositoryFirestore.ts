@@ -648,4 +648,11 @@ export class BookingRepositoryFirestore implements IBookingRepository {
 
     return booking;
   }
+
+  /**
+   * No-op for base Firestore repository (only cached repo needs this)
+   */
+  async invalidateCacheForBooking(bookingId: string, orgId: string): Promise<void> {
+    // No-op: Base Firestore repository doesn't use cache
+  }
 }

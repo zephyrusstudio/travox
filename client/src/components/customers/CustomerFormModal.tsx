@@ -88,7 +88,6 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     ...ACCOUNT_INITIAL_STATE,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showDefaultConfirmation, setShowDefaultConfirmation] = useState(false);
 
   // Validation
   const phoneDigits = formData.phone?.replace(/^\+\d{1,4}-/, "") ?? "";
@@ -106,8 +105,6 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     ? "Enter a valid email."
     : "";
   const isEmailValid = !hasEmail || emailError === "";
-  
-  const hasEitherContact = hasPhone || hasEmail;
 
   const isAadhaarValid =
     !formData.aadhaarNo || /^[0-9]{12}$/.test(formData.aadhaarNo);
@@ -197,13 +194,10 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     setAccountForm({ ...ACCOUNT_INITIAL_STATE });
 
   async function createCustomer(): Promise<string> {
-    const finalEmail = trimmedEmail || (hasPhone ? undefined : "esanchar@gmail.com");
-    const finalPhone = formData.phone || (hasEmail ? undefined : "+91-9332100485");
-
     const payload: Record<string, unknown> = {
       name: formData.name?.trim(),
-      email: finalEmail,
-      phone: finalPhone,
+      email: trimmedEmail || undefined,
+      phone: formData.phone || undefined,
       passportNo: formData.passportNo || undefined,
       aadhaarNo: formData.aadhaarNo || undefined,
       visaNo: formData.visaNo || undefined,
@@ -339,12 +333,6 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     e.preventDefault();
     if (!canSubmit || isSubmitting) return;
     
-    // Show confirmation UI if both contact fields are empty
-    if (!hasPhone && !hasEmail) {
-      setShowDefaultConfirmation(true);
-      return;
-    }
-    
     await performSubmit();
   };
 
@@ -384,15 +372,6 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     }
   };
 
-  const handleConfirmDefaults = async () => {
-    setShowDefaultConfirmation(false);
-    await performSubmit();
-  };
-
-  const handleCancelDefaults = () => {
-    setShowDefaultConfirmation(false);
-  };
-
   const onClose = () => {
     setFormData({
       id: "",
@@ -417,7 +396,6 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     setIsLinkingAccount(false);
     resetAccountForm();
     setIsSubmitting(false);
-    setShowDefaultConfirmation(false);
     setIsFormOpen(false);
     setSelectedCustomer(null);
   };
@@ -516,68 +494,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
   // Render
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="lg">
-      {showDefaultConfirmation ? (
-        <div className="space-y-6 py-4">
-          <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4">
-              <svg
-                className="w-8 h-8 text-amber-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Missing Contact Information
-            </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Both email and phone are missing. The customer will be saved with default values:
-            </p>
-          </div>
-
-          <div className="bg-gray-50 p-4 space-y-2">
-            <div className="flex items-start">
-              <span className="text-sm font-medium text-gray-700 w-20">Email:</span>
-              <span className="text-sm text-gray-900 font-mono">esanchar@gmail.com</span>
-            </div>
-            <div className="flex items-start">
-              <span className="text-sm font-medium text-gray-700 w-20">Phone:</span>
-              <span className="text-sm text-gray-900 font-mono">+91-9332100485</span>
-            </div>
-          </div>
-
-          <p className="text-xs text-gray-500 text-center">
-            You can edit these values later from the customer details page.
-          </p>
-
-          <div className="flex items-center justify-end space-x-3 pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancelDefaults}
-              disabled={isSubmitting}
-            >
-              Back
-            </Button>
-            <Button
-              type="button"
-              onClick={handleConfirmDefaults}
-              loading={isSubmitting}
-              disabled={isSubmitting}
-            >
-              Continue
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <form onSubmit={submitForm} className="space-y-4">
+      <form onSubmit={submitForm} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Name */}
           <div>
@@ -598,7 +515,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email {!hasPhone && <span className="text-rose-600">*</span>}
+              Email
             </label>
             <input
               type="email"
@@ -612,15 +529,12 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
             {emailError && (
               <p className="mt-1 text-xs text-rose-600">{emailError}</p>
             )}
-            {!hasEitherContact && (
-              <p className="mt-1 text-xs text-amber-600">Email or phone is required</p>
-            )}
           </div>
 
           {/* Phone */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone {!hasEmail && <span className="text-rose-600">*</span>}
+              Phone
             </label>
             <div className="flex">
               <input
@@ -661,9 +575,6 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
             </div>
             {phoneError && (
               <p className="mt-1 text-xs text-rose-600">{phoneError}</p>
-            )}
-            {!hasEitherContact && (
-              <p className="mt-1 text-xs text-amber-600">Email or phone is required</p>
             )}
           </div>
 
@@ -874,7 +785,6 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
           </Button>
         </div>
       </form>
-      )}
     </Modal>
   );
 };

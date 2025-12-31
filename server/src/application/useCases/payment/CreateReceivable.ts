@@ -35,10 +35,22 @@ export class CreateReceivable {
       throw new Error('Amount must be greater than 0');
     }
 
-    // Verify booking exists
+    // CRITICAL: Invalidate cache first to prevent race conditions
+    // This ensures we always get fresh data from Firestore
+    await this.bookingRepo.invalidateCacheForBooking(data.bookingId, orgId);
+
+    // Verify booking exists - now with fresh data
     const booking = await this.bookingRepo.findById(data.bookingId, orgId);
     if (!booking) {
       throw new Error('Booking not found');
+    }
+
+    // CRITICAL: Validate payment won't exceed due amount to prevent overpayments
+    if (data.amount > booking.dueAmount) {
+      throw new Error(
+        `Payment amount (${data.amount}) exceeds booking due amount (${booking.dueAmount}). ` +
+        `Total: ${booking.totalAmount}, Paid: ${booking.paidAmount}, Due: ${booking.dueAmount}`
+      );
     }
 
     // Derive customer ID from fromAccountId

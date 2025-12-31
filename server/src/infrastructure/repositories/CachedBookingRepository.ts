@@ -150,29 +150,29 @@ export class CachedBookingRepository implements IBookingRepository {
   }
 
   async update(booking: Booking, orgId: string): Promise<Booking> {
-    const result = await this.baseRepo.update(booking, orgId);
-    
+    // CRITICAL: Invalidate cache BEFORE update to prevent race conditions
+    // This prevents serving stale cached data while the update is happening
     await this.invalidateBookingCache(booking.id, orgId);
+    
+    const result = await this.baseRepo.update(booking, orgId);
     
     return result;
   }
 
   async updateFields(id: string, fields: Record<string, any>, orgId: string): Promise<boolean> {
-    const result = await this.baseRepo.updateFields(id, fields, orgId);
+    // CRITICAL: Invalidate cache BEFORE update to prevent race conditions
+    await this.invalidateBookingCache(id, orgId);
     
-    if (result) {
-      await this.invalidateBookingCache(id, orgId);
-    }
+    const result = await this.baseRepo.updateFields(id, fields, orgId);
     
     return result;
   }
 
   async softDelete(id: string, orgId: string, updatedBy: string): Promise<boolean> {
-    const result = await this.baseRepo.softDelete(id, orgId, updatedBy);
+    // CRITICAL: Invalidate cache BEFORE delete to prevent race conditions
+    await this.invalidateBookingCache(id, orgId);
     
-    if (result) {
-      await this.invalidateBookingCache(id, orgId);
-    }
+    const result = await this.baseRepo.softDelete(id, orgId, updatedBy);
     
     return result;
   }
@@ -299,6 +299,14 @@ export class CachedBookingRepository implements IBookingRepository {
   async filter(params: BookingFilterParams, orgId: string): Promise<Booking[]> {
     // Filter is not cached due to the dynamic nature of filter params
     return await this.baseRepo.filter(params, orgId);
+  }
+
+  /**
+   * Public method to invalidate cache for a specific booking
+   * Used by use cases that need to ensure fresh data (e.g., payment creation)
+   */
+  async invalidateCacheForBooking(bookingId: string, orgId: string): Promise<void> {
+    await this.invalidateBookingCache(bookingId, orgId);
   }
 
   /**

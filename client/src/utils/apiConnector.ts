@@ -4,7 +4,8 @@ import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import { errorToast } from "./toasts";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
-const TOKEN_KEY = "token";
+const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY || "travox-at";
+const USER_KEY = import.meta.env.VITE_USER_KEY || "travox-ua";
 
 // Session expired event for modal
 export const SESSION_EXPIRED_EVENT = "session-expired";
@@ -14,9 +15,13 @@ export const dispatchSessionExpired = () => {
 };
 
 // Logout utility function
+// Note: For cross-domain setups, cookies are cleared server-side via /auth/logout
+// The travox-at cookie is httpOnly and set by a different domain, so we can't clear it from JS
 export const handleLogout = () => {
-  localStorage?.clear();
-  sessionStorage?.clear();
+  localStorage?.removeItem(TOKEN_KEY);
+  sessionStorage?.removeItem(TOKEN_KEY);
+  localStorage?.removeItem(USER_KEY);
+  sessionStorage?.removeItem(USER_KEY);
   
   // Dispatch session expired event to show modal
   dispatchSessionExpired();
@@ -24,13 +29,15 @@ export const handleLogout = () => {
 
 export const api = axios.create({
   baseURL: API_BASE,
-  withCredentials: true,
+  withCredentials: true, // Important: sends cookies with cross-origin requests
 });
 
-// attach bearer automatically
+// Attach bearer token from localStorage/sessionStorage
+// Note: The server also accepts the token from the travox-at cookie (sent automatically by browser)
+// but we include Authorization header as well for compatibility
 api.interceptors.request.use((config) => {
-  const token =
-    localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY);
+  const token = localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY);
+  
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;

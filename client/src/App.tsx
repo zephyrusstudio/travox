@@ -40,7 +40,7 @@ const PageLoader: React.FC = () => (
 // Auth guard wrapper component
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
-  const token = localStorage.getItem("token") ?? sessionStorage.getItem("token");
+  const token = localStorage.getItem("travox-at") ?? sessionStorage.getItem("travox-at");
 
   if (!token) {
     return <Navigate to="/" state={{ from: location }} replace />;
@@ -68,7 +68,7 @@ const RequireAccess: React.FC<{
 
 // Public route guard (redirects authenticated users away from auth page)
 const PublicOnly: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const token = localStorage.getItem("token") ?? sessionStorage.getItem("token");
+  const token = localStorage.getItem("travox-at") ?? sessionStorage.getItem("travox-at");
   const { currentUser } = useApp();
   const accessibleModules = getAccessibleModules(currentUser?.role);
 

@@ -82,6 +82,7 @@ export class PaymentRepositoryFirestore implements IPaymentRepository {
       .where('org_id', '==', orgId)
       .where('booking_id', '==', bookingId)
       .where('is_deleted', '==', false)
+      .orderBy('created_at', 'desc')
       .get();
     
     return snapshot.docs.map(doc => {
@@ -118,6 +119,7 @@ export class PaymentRepositoryFirestore implements IPaymentRepository {
       .where('org_id', '==', orgId)
       .where('customer_id', '==', customerId)
       .where('is_deleted', '==', false)
+      .orderBy('created_at', 'desc')
       .get();
     
     return snapshot.docs.map(doc => {
@@ -169,6 +171,7 @@ export class PaymentRepositoryFirestore implements IPaymentRepository {
       .where('org_id', '==', orgId)
       .where('vendor_id', '==', vendorId)
       .where('is_deleted', '==', false)
+      .orderBy('created_at', 'desc')
       .get();
     
     return snapshot.docs.map(doc => {
@@ -205,6 +208,7 @@ export class PaymentRepositoryFirestore implements IPaymentRepository {
       .where('org_id', '==', orgId)
       .where('payment_type', '==', paymentType)
       .where('is_deleted', '==', false)
+      .orderBy('created_at', 'desc')
       .get();
     
     return snapshot.docs.map(doc => {
@@ -246,6 +250,7 @@ export class PaymentRepositoryFirestore implements IPaymentRepository {
     }
     
     const snapshot = await query
+      .orderBy('created_at', 'desc')
       .limit(limit)
       .offset(offset)
       .get();

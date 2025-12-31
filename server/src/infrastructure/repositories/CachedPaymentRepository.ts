@@ -19,10 +19,11 @@ export class CachedPaymentRepository implements IPaymentRepository {
   ) {}
 
   async create(payment: Payment, orgId: string): Promise<Payment> {
-    const result = await this.baseRepo.create(payment, orgId);
-    
-    // Invalidate all payment caches for this org
+    // CRITICAL: Invalidate cache BEFORE create to prevent serving stale aggregated data
+    // This is especially important for getTotalReceivablesByBooking and similar queries
     await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:*`);
+    
+    const result = await this.baseRepo.create(payment, orgId);
     
     return result;
   }
@@ -147,19 +148,19 @@ export class CachedPaymentRepository implements IPaymentRepository {
   }
 
   async update(payment: Payment, orgId: string): Promise<Payment> {
-    const result = await this.baseRepo.update(payment, orgId);
-    
+    // CRITICAL: Invalidate cache BEFORE update to prevent race conditions
     await this.invalidatePaymentCache(payment.id, orgId);
+    
+    const result = await this.baseRepo.update(payment, orgId);
     
     return result;
   }
 
   async delete(id: string, orgId: string): Promise<boolean> {
-    const result = await this.baseRepo.delete(id, orgId);
+    // CRITICAL: Invalidate cache BEFORE delete to prevent race conditions
+    await this.invalidatePaymentCache(id, orgId);
     
-    if (result) {
-      await this.invalidatePaymentCache(id, orgId);
-    }
+    const result = await this.baseRepo.delete(id, orgId);
     
     return result;
   }

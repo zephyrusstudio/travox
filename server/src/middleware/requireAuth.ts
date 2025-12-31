@@ -6,6 +6,9 @@ import { IJwtService } from '../application/services/IJwtService';
 import { IUserRepository } from '../application/repositories/IUserRepository';
 import { UserRole } from '../models/FirestoreTypes';
 
+// Cookie name for access token
+const ACCESS_TOKEN_COOKIE = 'travox-at';
+
 // Extend Express Request type to add user property
 declare module 'express-serve-static-core' {
     interface Request {
@@ -22,17 +25,25 @@ declare module 'express-serve-static-core' {
 
 /**
  * Middleware to require a valid JWT access token for protected routes.
+ * Accepts token from Authorization header (Bearer) or 'travox-at' cookie.
  * Optionally, you can pass requiredRoles for RBAC.
  */
 export function requireAuth(requiredRoles?: UserRole[]) {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Get token from Authorization header
+            // Get token from Authorization header or cookie
+            let token: string | undefined;
+            
             const authHeader = req.headers['authorization'];
-            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+                token = authHeader.split(' ')[1];
+            } else if (req.cookies?.[ACCESS_TOKEN_COOKIE]) {
+                token = req.cookies[ACCESS_TOKEN_COOKIE];
+            }
+
+            if (!token) {
                 return res.status(401).json({ message: 'Authorization token missing' });
             }
-            const token = authHeader.split(' ')[1];
 
             // Use DI for JWT verification
             const jwtService = container.resolve<IJwtService>('IJwtService');

@@ -39,4 +39,7 @@ export interface IBookingRepository {
   // Payment related
   updatePayment(bookingId: string, paidAmount: number, orgId: string, updatedBy: string): Promise<boolean>;
   getOverdueBookings(orgId: string): Promise<Booking[]>;
+  
+  // Cache management
+  invalidateCacheForBooking(bookingId: string, orgId: string): Promise<void>;
 }

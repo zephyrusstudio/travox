@@ -143,8 +143,6 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
     try {
       const payload = {
         name: customerName,
-        email: 'esanchar@gmail.com',
-        phone: '+91-9332100485',
       };
 
       const response = await apiRequest<{ data: any }>({

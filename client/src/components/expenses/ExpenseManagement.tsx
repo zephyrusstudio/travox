@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Building2,
-  ClipboardList,
   Plus,
   IndianRupee,
   RefreshCw,
@@ -9,7 +8,7 @@ import {
   Wallet,
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useCachedSearch } from "../../hooks/useCachedSearch";
+import { useSearch } from "../../hooks/useSearch";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
@@ -95,14 +94,14 @@ const ExpenseManagement: React.FC = () => {
     });
   }, [expenses, vendorMap]);
 
-  // ── Search with caching ──────────────────────────────────────────────────────
+  // ── Search ──────────────────────────────────────────────────────
   const {
     searchTerm,
     setSearchTerm,
     searchResults,
     isSearching,
     invalidateCache,
-  } = useCachedSearch<any>({
+  } = useSearch<any>({
     endpoint: "/payments?type=EXPENSE",
     searchFields: (expense) => [
       String(expense.amount || ''),

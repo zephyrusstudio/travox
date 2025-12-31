@@ -83,7 +83,7 @@ export class GeminiOCRService {
     fileName: string
   ): Promise<OCRExtractedBooking> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemma-3-12b-it' });
       
       const systemPrompt = this.buildSystemPrompt();
       
@@ -225,7 +225,7 @@ If any information is unclear or missing, indicate this in the notes field. Prov
 
   async testConnection(): Promise<boolean> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemma-3-12b-it' });
       const result = await model.generateContent('Test connection');
       return !!result.response;
     } catch (error) {

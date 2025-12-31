@@ -131,40 +131,37 @@ export class CachedCustomerRepository implements ICustomerRepository {
   }
 
   async update(customer: Customer, orgId: string): Promise<Customer> {
-    const result = await this.baseRepo.update(customer, orgId);
-    
-    // Invalidate caches
+    // Invalidate caches BEFORE update to prevent race conditions
     await this.invalidateCustomerCache(customer.id, orgId);
+    
+    const result = await this.baseRepo.update(customer, orgId);
     
     return result;
   }
 
   async softDelete(id: string, orgId: string, updatedBy: string): Promise<boolean> {
-    const result = await this.baseRepo.softDelete(id, orgId, updatedBy);
+    // Invalidate caches BEFORE delete to prevent race conditions
+    await this.invalidateCustomerCache(id, orgId);
     
-    if (result) {
-      await this.invalidateCustomerCache(id, orgId);
-    }
+    const result = await this.baseRepo.softDelete(id, orgId, updatedBy);
     
     return result;
   }
 
   async delete(id: string, orgId: string): Promise<boolean> {
-    const result = await this.baseRepo.delete(id, orgId);
+    // Invalidate caches BEFORE delete to prevent race conditions
+    await this.invalidateCustomerCache(id, orgId);
     
-    if (result) {
-      await this.invalidateCustomerCache(id, orgId);
-    }
+    const result = await this.baseRepo.delete(id, orgId);
     
     return result;
   }
 
   async archive(id: string, orgId: string, updatedBy: string): Promise<boolean> {
-    const result = await this.baseRepo.archive(id, orgId, updatedBy);
+    // Invalidate caches BEFORE archive to prevent race conditions
+    await this.invalidateCustomerCache(id, orgId);
     
-    if (result) {
-      await this.invalidateCustomerCache(id, orgId);
-    }
+    const result = await this.baseRepo.archive(id, orgId, updatedBy);
     
     return result;
   }

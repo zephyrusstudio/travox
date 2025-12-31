@@ -7,10 +7,15 @@ import { IRefreshTokenRepository } from '../../application/repositories/IRefresh
 import { IUserRepository } from '../../application/repositories/IUserRepository';
 import { shouldUnmask } from '../../utils/unmask';
 
+// Cookie names
+const ACCESS_TOKEN_COOKIE = 'travox-at';
+const REFRESH_TOKEN_COOKIE = 'refreshToken';
+
 export class AuthController {
     async googleLogin(req: Request, res: Response) {
         try {
             const useCase = container.resolve(GoogleLogin);
+            const jwtService = container.resolve<IJwtService>('IJwtService');
             const { idToken, orgId } = req.body;
             
             if (!idToken) {
@@ -26,13 +31,11 @@ export class AuthController {
                 req.get('User-Agent')
             );
 
+            // Set access token as cookie (travox-at)
+            res.cookie(ACCESS_TOKEN_COOKIE, result.accessToken, jwtService.getCookieConfig('access'));
+
             // Set refresh token as HTTP-only cookie
-            res.cookie('refreshToken', result.refreshToken, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-                maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-            });
+            res.cookie(REFRESH_TOKEN_COOKIE, result.refreshToken, jwtService.getCookieConfig('refresh'));
 
             res.json({
                 status: 'success',
@@ -52,7 +55,8 @@ export class AuthController {
     async logout(req: Request, res: Response) {
         try {
             const useCase = container.resolve(LogoutUser);
-            const refreshToken = req.cookies?.refreshToken;
+            const jwtService = container.resolve<IJwtService>('IJwtService');
+            const refreshToken = req.cookies?.[REFRESH_TOKEN_COOKIE];
             
             await useCase.execute(
                 { userId: req.user!.sub, refreshToken },
@@ -60,8 +64,23 @@ export class AuthController {
                 req.get('User-Agent')
             );
 
+            // Get cookie config for clearing (need domain for cross-domain)
+            const cookieConfig = jwtService.getCookieConfig('access');
+            
+            // Clear access token cookie
+            res.clearCookie(ACCESS_TOKEN_COOKIE, {
+                domain: cookieConfig.domain,
+                secure: cookieConfig.secure,
+                sameSite: cookieConfig.sameSite,
+            });
+            
             // Clear refresh token cookie
-            res.clearCookie('refreshToken');
+            res.clearCookie(REFRESH_TOKEN_COOKIE, {
+                domain: cookieConfig.domain,
+                secure: cookieConfig.secure,
+                sameSite: cookieConfig.sameSite,
+            });
+            
             res.json({
                 status: 'success',
                 data: { message: 'Logged out successfully' }
@@ -78,7 +97,7 @@ export class AuthController {
         try {
             // 1. Get refresh token from cookie or body
             const refreshToken =
-                req.cookies?.refreshToken || req.body?.refreshToken || req.headers['x-refresh-token'];
+                req.cookies?.[REFRESH_TOKEN_COOKIE] || req.body?.refreshToken || req.headers['x-refresh-token'];
             if (!refreshToken || typeof refreshToken !== 'string') {
                 return res.status(400).json({
                     status: 'error',
@@ -147,15 +166,13 @@ export class AuthController {
                 expiresAt: jwtService.getRefreshTokenExpiryDate(),
             });
 
-            // 8. Set new refresh token as cookie
-            res.cookie('refreshToken', newRefreshToken, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
-                expires: jwtService.getRefreshTokenExpiryDate(),
-            });
+            // 8. Set new access token as cookie (travox-at)
+            res.cookie(ACCESS_TOKEN_COOKIE, newAccessToken, jwtService.getCookieConfig('access'));
 
-            // 9. Return new access token
+            // 9. Set new refresh token as cookie
+            res.cookie(REFRESH_TOKEN_COOKIE, newRefreshToken, jwtService.getCookieConfig('refresh'));
+
+            // 10. Return new access token
             return res.json({
                 status: 'success',
                 data: {

@@ -123,6 +123,9 @@ export class Booking {
     // Set status to Refunded if paid amount reaches zero
     if (this.paidAmount === 0 && this.status !== BookingStatus.REFUNDED) {
       this.status = BookingStatus.REFUNDED;
+
+      // if a refund causes paidAmount to be 0, also set dueAmount to 0 and mark as refunded
+      this.dueAmount = 0;
     }
   }
 
@@ -130,6 +133,12 @@ export class Booking {
     this.status = status;
     this.updatedBy = updatedBy;
     this.updatedAt = new Date();
+
+    // When booking is refunded, reset payment amounts
+    if (status === BookingStatus.REFUNDED) {
+      this.paidAmount = 0;
+      this.dueAmount = 0;
+    }
   }
 
   updateAmount(totalAmount: number, updatedBy: string = ''): void {

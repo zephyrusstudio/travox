@@ -134,9 +134,8 @@ export class Booking {
     this.updatedBy = updatedBy;
     this.updatedAt = new Date();
 
-    // When booking is refunded, reset payment amounts
+    // When booking is refunded, reset due amount
     if (status === BookingStatus.REFUNDED) {
-      this.paidAmount = 0;
       this.dueAmount = 0;
     }
   }

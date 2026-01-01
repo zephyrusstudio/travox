@@ -114,11 +114,6 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
     [receivablePayments, formData.payment_id]
   );
 
-  const selectedBooking = useMemo(
-    () => bookings.find(b => (b.booking_id || b.id) === (selectedPayment?.booking_id || selectedPayment?.bookingId)),
-    [bookings, selectedPayment]
-  );
-
   const handlePaymentSelect = (paymentId: string) => {
     const payment = receivablePayments.find(p => (p.payment_id || p.id) === paymentId);
     if (payment) {
@@ -156,7 +151,7 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
               required
               value={formData.payment_id}
               onChange={(e) => handlePaymentSelect(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              className="w-full border border-gray-300 px-3 py-2"
             >
               <option value="">Select a payment to refund</option>
               {receivablePayments.map(payment => {
@@ -180,18 +175,6 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
                 No payments available for refund
               </p>
             )}
-            {selectedBooking && (
-              <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                <p className="text-sm font-medium text-gray-900">{selectedBooking.package_name || selectedBooking.packageName || 'Unknown Package'}</p>
-                <p className="text-sm text-gray-600">
-                  {(() => {
-                    const customerId = selectedBooking.customer_id || selectedBooking.customerId || '';
-                    const customer = customerId ? customersMap.get(String(customerId)) : undefined;
-                    return customer?.name || selectedBooking.customer_name || selectedBooking.customerName || selectedBooking.primaryPaxName || 'Unknown Customer';
-                  })()}
-                </p>
-              </div>
-            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -204,7 +187,7 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
                 required
                 value={formData.refund_date}
                 onChange={(e) => setFormData({ ...formData, refund_date: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                className="w-full border border-gray-300 px-3 py-2"
               />
             </div>
 
@@ -216,7 +199,7 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
                 required
                 value={formData.refund_mode}
                 onChange={(e) => setFormData({ ...formData, refund_mode: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                className="w-full border border-gray-300 px-3 py-2"
               >
                 {REFUND_MODES.map(mode => (
                   <option key={mode} value={mode}>{mode}</option>
@@ -239,7 +222,7 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
                 const value = parseFloat(e.target.value);
                 setFormData({ ...formData, refund_amount: value ? Math.ceil(value) : 0 });
               }}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              className="w-full border border-gray-300 px-3 py-2"
             />
             {selectedPayment && (
               <p className="text-sm text-gray-500 mt-1">
@@ -257,7 +240,7 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
               value={formData.refund_reason}
               onChange={(e) => setFormData({ ...formData, refund_reason: e.target.value })}
               placeholder="Explain why the refund is being processed (optional)..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              className="w-full border border-gray-300 px-3 py-2"
             />
           </div>
         </div>

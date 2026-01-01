@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CreditCard, Plus, IndianRupee, RefreshCw, Search } from "lucide-react";
+import { CreditCard, Plus, Search, RefreshCw } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearch } from "../../hooks/useSearch";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
@@ -239,6 +239,17 @@ const RefundManagement: React.FC = () => {
           <p className="text-gray-600">Process and track customer refunds</p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+          <Button
+            onClick={() => {
+              fetchRefunds();
+              fetchData();
+            }}
+            icon={RefreshCw}
+            variant="outline"
+            disabled={loadingRefunds || loadingData}
+          >
+            Refresh
+          </Button>
           <Button onClick={() => setIsModalOpen(true)} icon={Plus}>
             Process Refund
           </Button>
@@ -306,8 +317,8 @@ const RefundManagement: React.FC = () => {
                   <TableCell header>Booking Details</TableCell>
                   <TableCell header>Refund Date</TableCell>
                   <TableCell header>Amount</TableCell>
-                  <TableCell header>Reason</TableCell>
                   <TableCell header>Mode</TableCell>
+                  <TableCell header>Reason</TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -332,14 +343,14 @@ const RefundManagement: React.FC = () => {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm text-gray-600">
-                          {refund.refund_reason}
-                        </span>
-                      </TableCell>
-                      <TableCell>
                         <Badge variant={PAYMENT_MODE_BADGE[refund.refund_mode] as any} size="sm">
                           {PAYMENT_MODE_LABEL[refund.refund_mode]}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-gray-600">
+                          {refund.refund_reason}
+                        </span>
                       </TableCell>
                     </TableRow>
                   );

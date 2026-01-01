@@ -1,4 +1,4 @@
-import { Calendar, Eye, User } from "lucide-react";
+import { Calendar, Eye } from "lucide-react";
 import React from "react";
 import { AuditLog } from "../../types";
 import { User as UserType } from "../../services";
@@ -60,10 +60,7 @@ const AuditLogTable: React.FC<AuditLogTableProps> = ({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center">
-                      <User className="w-4 h-4 text-gray-400 dark:text-gray-500 mr-2" />
-                      <div className="font-medium">{userInfo.name}</div>
-                    </div>
+                    <div className="font-medium">{userInfo.name}</div>
                   </TableCell>
                   <TableCell>
                     <Button

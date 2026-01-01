@@ -50,7 +50,7 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     // Check for authentication errors (401 Unauthorized or 403 Forbidden)
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    if (error.response?.status === 401) {
       // Dispatch session expired event to show modal
       handleLogout();
     }

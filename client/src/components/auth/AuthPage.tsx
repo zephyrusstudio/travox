@@ -118,53 +118,50 @@ const AuthPage: React.FC = () => {
   }, [btnRef.current]);
 
   return (
-    <div className="min-h-screen grid place-items-center bg-gradient-to-br from-blue-300 to-blue-100">
-      <div
-        role="main"
-        aria-busy={loading}
-        className="w-full h-screen sm:h-auto sm:max-w-md px-8 py-24 sm:shadow-2xl overflow-hidden relative bg-gradient-to-t from-blue-600 to-blue-400 bg-cover bg-center sm:sm:border-white sm:border-2 flex items-center justify-center"
-        //style={{
-        //  backgroundImage: "url('https://images.unsplash.com/photo-1548266652-99cf27701ced')",
-        //}}
-      >
-        {/* Content wrapper */}
-        <div className="relative z-10 w-full">
-        {/* Travel Icon */}
-        <Plane className="mx-auto mb-4 text-white" size={100} />
+    <div
+      className="min-h-dvh bg-cover bg-left md:bg-center flex items-center justify-center"
+      style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1582457493468-1cd9a3b48e79?auto=format&fit=crop&q=85&w=2560')",
+      }}
+    >
+      <div className="bg-black bg-opacity-70 backdrop-blur-sm px-8 py-24 rounded-lg max-w-md w-full mx-4">
+        <div className="text-center">
+          {/* Travel Icon */}
+          <Plane className="mx-auto mb-4 text-white" size={100} />
 
-        {/* App Name */}
-        <h1 className="text-5xl font-bold text-white text-center mb-3 tracking-tight">
-          Travox
-        </h1>
+          {/* App Name */}
+          <h1 className="text-5xl font-bold text-white mb-3 tracking-tight">
+            Travox
+          </h1>
 
-        {/* Tagline */}
-        <p className="text-base font-medium text-white/90 text-center mb-10">
-          B2B Travel Management Platform
-        </p>
+          {/* Tagline */}
+          <p className="text-base font-medium text-white/90 mb-10">
+            B2B Travel Management Platform
+          </p>
 
-        <h2 className="text-lg font-semibold text-white text-center mb-5">
-          Sign up / Sign in
-        </h2>
+          <h2 className="text-lg font-semibold text-white mb-5">
+            Sign up / Sign in
+          </h2>
 
-        {err && (
-          <div className="mb-4 px-3.5 py-3 bg-red-50/95 text-red-800 border border-red-200/50 text-sm font-medium">
-            {err}
-          </div>
-        )}
-
-        {/* Google Sign-In Button Container */}
-        <div className="relative flex justify-center mb-4">
-          <div ref={btnRef} className={loading ? 'opacity-0' : 'opacity-100'} />
-          {loading && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Spinner size="md" color="white" />
+          {err && (
+            <div className="mb-4 px-3.5 py-3 bg-red-50/95 text-red-800 border border-red-200/50 text-sm font-medium rounded">
+              {err}
             </div>
           )}
-        </div>
 
-        <p className="mt-4 text-xs text-white text-center">
-          By continuing, you agree to the <span className="underline">Terms of Service</span> and <span className="underline">Privacy Policy</span>.
-        </p>
+          {/* Google Sign-In Button Container */}
+          <div className="relative flex justify-center mb-4">
+            <div ref={btnRef} className={loading ? 'opacity-0' : 'opacity-100'} />
+            {loading && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Spinner size="md" color="white" />
+              </div>
+            )}
+          </div>
+
+          <p className="mt-4 text-xs text-white text-center">
+            By continuing, you agree to the <span className="underline">Terms of Service</span> and <span className="underline">Privacy Policy</span>.
+          </p>
         </div>
       </div>
     </div>

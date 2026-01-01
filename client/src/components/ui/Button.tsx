@@ -4,7 +4,7 @@ import Spinner from "./Spinner";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger" | "outline" | "ghost";
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "vr";
   icon?: LucideIcon;
   iconPosition?: "left" | "right";
   loading?: boolean;
@@ -26,14 +26,14 @@ const Button: React.FC<ButtonProps> = ({
 
   const variantClasses = {
     primary:
-      "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl",
+      "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl border-2 border-blue-500",
     secondary:
-      "bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-gray-700 hover:to-gray-800 shadow-lg hover:shadow-xl",
+      "bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-gray-700 hover:to-gray-800 shadow-lg hover:shadow-xl border-2 border-gray-500",
     danger:
-      "bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 shadow-lg hover:shadow-xl",
+      "bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 shadow-lg hover:shadow-xl border-2 border-red-500",
     outline:
-      "border-2 border-gray-300 dark:border-gray-600 flex itmes-center bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 shadow-sm hover:shadow-md",
-    ghost: "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700",
+      "border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 shadow-sm hover:shadow-md",
+    ghost: "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-600",
   };
 
   // Dynamic sizing based on whether button has children (text) or is icon-only
@@ -41,7 +41,8 @@ const Button: React.FC<ButtonProps> = ({
     const baseSize = {
       sm: "text-xs sm:text-sm",
       md: "text-xs sm:text-sm", 
-      lg: "text-sm sm:text-base"
+      lg: "text-sm sm:text-base",
+      vr: "text-sm sm:text-base"
     };
     
     if (children) {
@@ -49,7 +50,8 @@ const Button: React.FC<ButtonProps> = ({
       const paddingSize = {
         sm: "px-2.5 sm:px-3 py-1.5 sm:py-2",
         md: "px-3 sm:px-4 py-2 sm:py-2.5",
-        lg: "px-4 sm:px-6 py-2.5 sm:py-3"
+        lg: "px-4 sm:px-6 py-2.5 sm:py-3",
+        vr: "px-4 sm:px-6 py-2.5 sm:py-3"
       };
       return `${paddingSize[size]} ${baseSize[size]}`;
     } else {
@@ -57,7 +59,8 @@ const Button: React.FC<ButtonProps> = ({
       const iconPaddingSize = {
         sm: "px-1 sm:px-3 py-1 sm:py-2",
         md: "px-1.5 sm:px-4 py-1.5 sm:py-2.5", 
-        lg: "px-2 sm:px-6 py-2 sm:py-3"
+        lg: "px-2 sm:px-6 py-2 sm:py-3",
+        vr: "px-3 py-4"
       };
       return `${iconPaddingSize[size]} ${baseSize[size]}`;
     }

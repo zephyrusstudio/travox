@@ -241,7 +241,7 @@ const CustomerManagement: React.FC = () => {
             Refresh
           </Button>
           <Button onClick={() => openForm()} icon={Plus}>
-            Save / Add Customer
+            Create Customer
           </Button>
         </div>
       </div>

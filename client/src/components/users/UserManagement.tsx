@@ -166,8 +166,8 @@ const UserManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-5">
-        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm col-span-2">
+      <div className="grid grid-cols-0 md:grid-cols-3 gap-4">
+        <div className="flex col-span-1 items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
           <div className="truncate">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Signed in as</p>
             <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100 truncate max-w-fit" title={currentUser?.username || currentUser?.name}>
@@ -178,6 +178,7 @@ const UserManagement: React.FC = () => {
             {currentUser?.role || "User"}
           </div>
         </div>
+        <div className="hidden col-span-2 grid-cols-3 gap-4 md:grid">
         <StatCard
           label="Total members"
           value={totalUsers}
@@ -195,6 +196,7 @@ const UserManagement: React.FC = () => {
           accent="warning"
           icon={<ShieldOff className="h-5 w-5" />}
         />
+        </div>
       </div>
 
       {/* Pagination */}

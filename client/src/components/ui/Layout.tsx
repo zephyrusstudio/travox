@@ -14,6 +14,7 @@ import {
   Shield,
   Sun,
   Users,
+  X,
 } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -263,7 +264,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
                 </p>
               </div>
             </div>
-            <button
+            <Button
               onClick={() => {
                 localStorage?.clear();
                 sessionStorage?.clear();
@@ -273,25 +274,26 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
                   window.location.reload();
                 }, 500);
               }}
-              className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
               title="Logout"
+              variant="ghost"
+              icon={LogOut}
+              size="vr"
             >
-              <LogOut className="w-6 h-6" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Floating hamburger button for mobile */}
-      { !sidebarOpen && <Button
+      <Button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="lg:hidden fixed top-4 p-0 right-4 z-40 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all duration-200"
-        icon={Menu}
+        className={`lg:hidden fixed top-4 p-0 right-4 z-40 bg-blue-600 hover:bg-blue-700 text-white shadow-md ${sidebarOpen ? 'rotate-180' : ''} transition-transform duration-200`}
+        icon={sidebarOpen ? X : Menu}
+        variant={sidebarOpen ? 'danger' : 'primary'}
         size="md"
         aria-label="Toggle menu"
       >
-        
-      </Button>}
+      </Button>
 
       {/* Main content */}
       <div className="lg:pl-64 min-h-screen">

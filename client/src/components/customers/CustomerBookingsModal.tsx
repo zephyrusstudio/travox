@@ -22,6 +22,7 @@ type Booking = {
   status: string;
   totalAmount: number;
   paidAmount: number;
+  dueAmount: number;
   currency: string;
   itineraries?: Array<{ destination?: string }>;
 };
@@ -114,8 +115,6 @@ const CustomerBookingsModal: React.FC<CustomerBookingsModalProps> = ({
         ) : bookings.length > 0 ? (
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {bookings.map((booking) => {
-              const dueAmount =
-                (booking.totalAmount ?? 0) - (booking.paidAmount ?? 0);
               const destination = booking.itineraries?.[0]?.destination;
 
               return (
@@ -179,10 +178,10 @@ const CustomerBookingsModal: React.FC<CustomerBookingsModalProps> = ({
                         <span className="font-medium">Paid:</span>{" "}
                         {formatAmount(booking.paidAmount, booking.currency)}
                       </p>
-                      {dueAmount > 0 && (
+                      {booking.dueAmount > 0 && (
                         <p className="text-red-600 ml-6">
                           <span className="font-medium">Due:</span>{" "}
-                          {formatAmount(dueAmount, booking.currency)}
+                          {formatAmount(booking.dueAmount, booking.currency)}
                         </p>
                       )}
                     </div>

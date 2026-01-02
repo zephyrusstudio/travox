@@ -83,7 +83,8 @@ export class CachedUserRepository implements IUserRepository {
     const cacheKey = this.cache.generateListKey(COLLECTION_NAME, orgId, { limit, offset });
     
     const cached = await this.cache.get<User[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(u => this.rehydrateUser(u));
     }
 

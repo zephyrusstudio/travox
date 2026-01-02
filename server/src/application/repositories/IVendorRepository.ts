@@ -22,4 +22,7 @@ export interface IVendorRepository {
     totalBookings: number;
     lastTransactionDate?: Date;
   }>;
+  
+  // Cache management
+  invalidateCacheForVendor(vendorId: string, orgId: string): Promise<void>;
 }

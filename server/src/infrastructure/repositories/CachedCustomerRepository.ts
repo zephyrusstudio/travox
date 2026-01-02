@@ -117,7 +117,8 @@ export class CachedCustomerRepository implements ICustomerRepository {
     const cacheKey = this.cache.generateListKey(COLLECTION_NAME, orgId, { limit });
     
     const cached = await this.cache.get<Customer[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(c => this.rehydrateCustomer(c));
     }
 
@@ -184,7 +185,8 @@ export class CachedCustomerRepository implements ICustomerRepository {
     });
     
     const cached = await this.cache.get<Customer[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(c => this.rehydrateCustomer(c));
     }
 
@@ -232,6 +234,14 @@ export class CachedCustomerRepository implements ICustomerRepository {
     await this.cache.set(cacheKey, stats, LIST_TTL);
     
     return stats;
+  }
+
+  /**
+   * Public method to invalidate cache for a specific customer
+   * Used by use cases that need to ensure fresh data (e.g., refund creation)
+   */
+  async invalidateCacheForCustomer(customerId: string, orgId: string): Promise<void> {
+    await this.invalidateCustomerCache(customerId, orgId);
   }
 
   /**

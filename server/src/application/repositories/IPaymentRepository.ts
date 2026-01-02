@@ -15,4 +15,8 @@ export interface IPaymentRepository {
   getTotalReceivablesByBooking(bookingId: string, orgId: string): Promise<number>;
   getTotalExpensesByVendor(vendorId: string, orgId: string): Promise<number>;
   getTotalRefundsByBooking(bookingId: string, orgId: string): Promise<{ inbound: number; outbound: number }>;
+  
+  // Cache management
+  invalidateCacheForPayment(paymentId: string, orgId: string): Promise<void>;
+  invalidateCacheForBookingPayments(bookingId: string, orgId: string): Promise<void>;
 }

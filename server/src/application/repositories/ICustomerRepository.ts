@@ -29,4 +29,7 @@ export interface ICustomerRepository {
     totalSpent: number;
     lastBookingDate?: Date;
   }>;
+  
+  // Cache management
+  invalidateCacheForCustomer(customerId: string, orgId: string): Promise<void>;
 }

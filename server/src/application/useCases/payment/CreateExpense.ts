@@ -36,6 +36,9 @@ export class CreateExpense {
     if (!vendor) {
       throw new Error('No vendor found for the specified account');
     }
+    
+    // CRITICAL: Invalidate vendor cache to ensure fresh totalExpense data
+    await this.vendorRepo.invalidateCacheForVendor(vendor.id, orgId);
 
     const payment = Payment.createExpense(
       orgId,

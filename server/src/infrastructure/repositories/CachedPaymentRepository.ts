@@ -49,7 +49,8 @@ export class CachedPaymentRepository implements IPaymentRepository {
     const cacheKey = `${COLLECTION_NAME}:${orgId}:booking:${bookingId}`;
     
     const cached = await this.cache.get<Payment[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(p => this.rehydratePayment(p));
     }
 
@@ -66,7 +67,8 @@ export class CachedPaymentRepository implements IPaymentRepository {
     const cacheKey = `${COLLECTION_NAME}:${orgId}:customer:${customerId}`;
     
     const cached = await this.cache.get<Payment[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(p => this.rehydratePayment(p));
     }
 
@@ -83,7 +85,8 @@ export class CachedPaymentRepository implements IPaymentRepository {
     const cacheKey = `${COLLECTION_NAME}:${orgId}:vendor:${vendorId}`;
     
     const cached = await this.cache.get<Payment[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(p => this.rehydratePayment(p));
     }
 
@@ -100,7 +103,8 @@ export class CachedPaymentRepository implements IPaymentRepository {
     const cacheKey = `${COLLECTION_NAME}:${orgId}:type:${paymentType}`;
     
     const cached = await this.cache.get<Payment[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(p => this.rehydratePayment(p));
     }
 
@@ -134,7 +138,8 @@ export class CachedPaymentRepository implements IPaymentRepository {
     const cacheKey = this.cache.generateListKey(COLLECTION_NAME, orgId, { limit, offset, paymentType });
     
     const cached = await this.cache.get<Payment[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array (empty arrays should re-query)
+    if (cached && cached.length > 0) {
       return cached.map(p => this.rehydratePayment(p));
     }
 
@@ -208,6 +213,27 @@ export class CachedPaymentRepository implements IPaymentRepository {
     await this.cache.set(cacheKey, refunds, LIST_TTL);
     
     return refunds;
+  }
+
+  /**
+   * Public method to invalidate cache for a specific payment
+   * Used by use cases that need to ensure fresh data
+   */
+  async invalidateCacheForPayment(paymentId: string, orgId: string): Promise<void> {
+    await this.invalidatePaymentCache(paymentId, orgId);
+  }
+
+  /**
+   * Invalidate all payment caches related to a specific booking
+   * Used when booking payments need to be refreshed (e.g., after refund)
+   */
+  async invalidateCacheForBookingPayments(bookingId: string, orgId: string): Promise<void> {
+    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:booking:${bookingId}`);
+    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:receivables:${bookingId}`);
+    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:refunds:${bookingId}`);
+    // Also invalidate list caches as they may contain these payments
+    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:list*`);
+    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:type:*`);
   }
 
   /**

@@ -19,6 +19,8 @@ export class CreateInboundRefund {
   ) {}
 
   async execute(data: CreateInboundRefundDTO, orgId: string, createdBy: string): Promise<Payment> {
+    // CRITICAL: Invalidate payment cache first to ensure we get fresh original payment data
+    await this.paymentRepo.invalidateCacheForPayment(data.refundOfPaymentId, orgId);
     
     const originalPayment = await this.paymentRepo.findById(data.refundOfPaymentId, orgId);
     if (!originalPayment || originalPayment.paymentType !== 'EXPENSE') {
@@ -34,6 +36,10 @@ export class CreateInboundRefund {
     if (!vendorId) {
       throw new Error('Original payment must have a vendor ID');
     }
+
+    // CRITICAL: Invalidate vendor cache first to ensure fresh data
+    // This prevents race conditions with concurrent refund operations
+    await this.vendorRepo.invalidateCacheForVendor(vendorId, orgId);
 
     const vendor = await this.vendorRepo.findById(vendorId, orgId);
     if (!vendor) {

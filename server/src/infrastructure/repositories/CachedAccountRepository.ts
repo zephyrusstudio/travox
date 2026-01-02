@@ -38,7 +38,8 @@ export class CachedAccountRepository implements IAccountRepository {
     const cacheKey = this.cache.generateListKey(COLLECTION_NAME, orgId, { limit, offset });
     
     const cached = await this.cache.get<Account[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(a => this.rehydrateAccount(a));
     }
 

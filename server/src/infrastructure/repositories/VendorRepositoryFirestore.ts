@@ -247,6 +247,13 @@ export class VendorRepositoryFirestore implements IVendorRepository {
     };
   }
 
+  /**
+   * No-op for base Firestore repository (only cached repo needs this)
+   */
+  async invalidateCacheForVendor(vendorId: string, orgId: string): Promise<void> {
+    // No-op: Base repository doesn't use cache
+  }
+
   private mapFirestoreToVendor(doc: VendorDocument, id: string): Vendor {
     return new Vendor(
       id,

@@ -20,21 +20,31 @@ import logger from '../../config/logger';
  * 3. PAYMENT RACE CONDITIONS:
  *    - Multiple concurrent payment requests MUST invalidate cache before fetching booking
  *    - CreateReceivable validates payment won't exceed dueAmount
- *    - Cache invalidated BEFORE payment creation and booking update
+ *    - CreateOutboundRefund/CreateInboundRefund invalidate caches before fetching related entities
+ *    - Cache invalidated BEFORE payment creation and entity updates
  * 
- * 4. WHEN TO USE TRANSACTIONS (Not currently implemented):
+ * 4. CROSS-ENTITY CACHE INVALIDATION:
+ *    - Refunds affect bookings, customers, and vendors - all caches must be invalidated
+ *    - Use invalidateCacheForBooking(), invalidateCacheForCustomer(), invalidateCacheForVendor()
+ *    - Use invalidateCacheForPayment() and invalidateCacheForBookingPayments() for payment caches
+ * 
+ * 5. WHEN TO USE TRANSACTIONS (Not currently implemented):
  *    - For critical operations requiring atomic reads + writes
  *    - Consider Firestore transactions if concurrent payments are frequent
  *    - Current strategy relies on optimistic validation (check before write)
  * 
- * 5. TTL VALUES:
+ * 6. TTL VALUES:
  *    - ENTITY_TTL: 300s (5 min) - Individual records
  *    - LIST_TTL: 900s (15 min) - List queries and aggregations  
  *    - STATS_TTL: 120s (2 min) - Computed statistics
  * 
- * @see CachedBookingRepository - Invalidates before update()
- * @see CachedPaymentRepository - Invalidates before create()
- * @see CreateReceivable - Invalidates cache before fetching booking
+ * @see CachedBookingRepository - Invalidates before update(), exposes invalidateCacheForBooking()
+ * @see CachedPaymentRepository - Invalidates before create(), exposes invalidateCacheForPayment()
+ * @see CachedCustomerRepository - Exposes invalidateCacheForCustomer()
+ * @see CachedVendorRepository - Exposes invalidateCacheForVendor()
+ * @see CreateReceivable - Invalidates booking and customer caches before operations
+ * @see CreateOutboundRefund - Invalidates payment, booking, and customer caches before operations
+ * @see CreateInboundRefund - Invalidates payment and vendor caches before operations
  */
 
 interface CacheMetrics {
@@ -149,6 +159,78 @@ export class RedisService {
   }
 
   /**
+   * Delete multiple keys at once (more efficient than multiple individual deletes)
+   */
+  async deleteMany(keys: string[]): Promise<void> {
+    if (keys.length === 0) return;
+    
+    try {
+      await redisClient.del(keys);
+      this.metrics.deletes += keys.length;
+      logger.debug(`Deleted ${keys.length} keys`);
+    } catch (error) {
+      this.metrics.errors++;
+      logger.error({ err: error, keyCount: keys.length }, 'Redis DELETE MANY error');
+    }
+  }
+
+  /**
+   * Invalidate multiple patterns at once (more efficient than sequential pattern invalidation)
+   * This is especially useful for cross-entity cache invalidation
+   */
+  async invalidatePatterns(patterns: string[]): Promise<void> {
+    if (patterns.length === 0) return;
+    
+    try {
+      const allKeys: string[] = [];
+      
+      // Gather all keys matching any pattern
+      for (const pattern of patterns) {
+        const keys = await redisClient.keys(pattern);
+        allKeys.push(...keys);
+      }
+      
+      // Remove duplicates and delete all at once
+      const uniqueKeys = [...new Set(allKeys)];
+      if (uniqueKeys.length > 0) {
+        await redisClient.del(uniqueKeys);
+        this.metrics.deletes += uniqueKeys.length;
+        logger.info(`Invalidated ${uniqueKeys.length} keys matching ${patterns.length} patterns`);
+      }
+    } catch (error) {
+      this.metrics.errors++;
+      logger.error({ err: error, patterns }, 'Redis INVALIDATE PATTERNS error');
+    }
+  }
+
+  /**
+   * Check if a key exists in cache (useful for pre-validation)
+   */
+  async exists(key: string): Promise<boolean> {
+    try {
+      const result = await redisClient.exists(key);
+      return result === 1;
+    } catch (error) {
+      this.metrics.errors++;
+      logger.error({ err: error, key }, 'Redis EXISTS error');
+      return false;
+    }
+  }
+
+  /**
+   * Get remaining TTL for a key (useful for debugging cache issues)
+   */
+  async getTTL(key: string): Promise<number> {
+    try {
+      return await redisClient.ttl(key);
+    } catch (error) {
+      this.metrics.errors++;
+      logger.error({ err: error, key }, 'Redis TTL error');
+      return -2; // Key doesn't exist
+    }
+  }
+
+  /**
    * Generate cache key for entity by ID
    */
   generateKey(collection: string, orgId: string, id: string): string {
@@ -157,9 +239,11 @@ export class RedisService {
 
   /**
    * Generate cache key for list queries
+   * Note: Filters out undefined/null values to ensure consistent cache keys
    */
   generateListKey(collection: string, orgId: string, params: Record<string, any> = {}): string {
     const paramString = Object.keys(params)
+      .filter(key => params[key] !== undefined && params[key] !== null)
       .sort()
       .map(key => `${key}=${params[key]}`)
       .join('&');

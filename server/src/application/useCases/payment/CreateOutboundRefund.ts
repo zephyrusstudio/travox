@@ -21,6 +21,9 @@ export class CreateOutboundRefund {
   ) {}
 
   async execute(data: CreateOutboundRefundDTO, orgId: string, createdBy: string): Promise<Payment> {
+    // CRITICAL: Invalidate payment cache first to ensure we get fresh original payment data
+    await this.paymentRepo.invalidateCacheForPayment(data.refundOfPaymentId, orgId);
+    
     const originalPayment = await this.paymentRepo.findById(data.refundOfPaymentId, orgId);
     if (!originalPayment) {
       throw new Error('Original receivable payment not found');
@@ -37,10 +40,20 @@ export class CreateOutboundRefund {
       throw new Error('Original payment must have a customer ID');
     }
 
-    // Verify customer exists
+    // CRITICAL: Invalidate customer cache first to ensure fresh data
+    // This prevents race conditions with concurrent refund operations
+    await this.customerRepo.invalidateCacheForCustomer(customerId, orgId);
+
+    // Verify customer exists with fresh data
     const customer = await this.customerRepo.findById(customerId, orgId);
     if (!customer) {
       throw new Error('Customer not found');
+    }
+
+    // CRITICAL: Invalidate booking cache BEFORE any operations to ensure fresh data
+    // This prevents refund failures when booking has stale paidAmount or status
+    if (bookingId) {
+      await this.bookingRepo.invalidateCacheForBooking(bookingId, orgId);
     }
 
     // Create outbound refund payment

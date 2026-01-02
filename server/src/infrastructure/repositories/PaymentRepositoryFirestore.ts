@@ -366,4 +366,18 @@ export class PaymentRepositoryFirestore implements IPaymentRepository {
 
     return { inbound, outbound };
   }
+
+  /**
+   * No-op for base Firestore repository (only cached repo needs this)
+   */
+  async invalidateCacheForPayment(paymentId: string, orgId: string): Promise<void> {
+    // No-op: Base repository doesn't use cache
+  }
+
+  /**
+   * No-op for base Firestore repository (only cached repo needs this)
+   */
+  async invalidateCacheForBookingPayments(bookingId: string, orgId: string): Promise<void> {
+    // No-op: Base repository doesn't use cache
+  }
 }

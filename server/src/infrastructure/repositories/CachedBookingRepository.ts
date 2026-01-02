@@ -53,7 +53,8 @@ export class CachedBookingRepository implements IBookingRepository {
     const cacheKey = `${COLLECTION_NAME}:${orgId}:customer:${customerId}`;
     
     const cached = await this.cache.get<Booking[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(b => this.rehydrateBooking(b));
     }
 
@@ -87,7 +88,8 @@ export class CachedBookingRepository implements IBookingRepository {
     const cacheKey = `${COLLECTION_NAME}:${orgId}:status:${status}`;
     
     const cached = await this.cache.get<Booking[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(b => this.rehydrateBooking(b));
     }
 
@@ -104,7 +106,8 @@ export class CachedBookingRepository implements IBookingRepository {
     const cacheKey = `${COLLECTION_NAME}:${orgId}:daterange:${startDate.toISOString()}:${endDate.toISOString()}`;
     
     const cached = await this.cache.get<Booking[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(b => this.rehydrateBooking(b));
     }
 
@@ -121,7 +124,8 @@ export class CachedBookingRepository implements IBookingRepository {
     const cacheKey = this.cache.generateListKey(COLLECTION_NAME, orgId, { limit, offset });
     
     const cached = await this.cache.get<Booking[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(b => this.rehydrateBooking(b));
     }
 
@@ -191,7 +195,8 @@ export class CachedBookingRepository implements IBookingRepository {
     const cacheKey = `${COLLECTION_NAME}:${orgId}:upcoming:${days || 30}`;
     
     const cached = await this.cache.get<Booking[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(b => this.rehydrateBooking(b));
     }
 
@@ -208,7 +213,8 @@ export class CachedBookingRepository implements IBookingRepository {
     const cacheKey = `${COLLECTION_NAME}:${orgId}:travel:${startDate.toISOString()}:${endDate.toISOString()}`;
     
     const cached = await this.cache.get<Booking[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(b => this.rehydrateBooking(b));
     }
 
@@ -277,7 +283,8 @@ export class CachedBookingRepository implements IBookingRepository {
     const cacheKey = `${COLLECTION_NAME}:${orgId}:overdue`;
     
     const cached = await this.cache.get<Booking[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(b => this.rehydrateBooking(b));
     }
 

@@ -62,6 +62,9 @@ export class CreateReceivable {
     if (!customer) {
       throw new Error('No customer found for the specified account');
     }
+    
+    // CRITICAL: Invalidate customer cache to ensure fresh totalSpent data
+    await this.customerRepo.invalidateCacheForCustomer(customer.id, orgId);
 
     // Create receivable payment
     const payment = Payment.createReceivable(

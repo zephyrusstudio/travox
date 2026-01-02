@@ -116,7 +116,8 @@ export class CachedVendorRepository implements IVendorRepository {
     const cacheKey = `${COLLECTION_NAME}:${orgId}:service:${serviceType}`;
     
     const cached = await this.cache.get<Vendor[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(v => this.rehydrateVendor(v));
     }
 
@@ -133,7 +134,8 @@ export class CachedVendorRepository implements IVendorRepository {
     const cacheKey = this.cache.generateListKey(COLLECTION_NAME, orgId, { limit, offset });
     
     const cached = await this.cache.get<Vendor[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(v => this.rehydrateVendor(v));
     }
 
@@ -206,7 +208,8 @@ export class CachedVendorRepository implements IVendorRepository {
     const cacheKey = `${COLLECTION_NAME}:${orgId}:active`;
     
     const cached = await this.cache.get<Vendor[]>(cacheKey);
-    if (cached) {
+    // Only return cached data if it's a non-empty array
+    if (cached && cached.length > 0) {
       return cached.map(v => this.rehydrateVendor(v));
     }
 
@@ -239,6 +242,14 @@ export class CachedVendorRepository implements IVendorRepository {
     await this.cache.set(cacheKey, stats, LIST_TTL);
     
     return stats;
+  }
+
+  /**
+   * Public method to invalidate cache for a specific vendor
+   * Used by use cases that need to ensure fresh data (e.g., refund creation)
+   */
+  async invalidateCacheForVendor(vendorId: string, orgId: string): Promise<void> {
+    await this.invalidateVendorCache(vendorId, orgId);
   }
 
   /**

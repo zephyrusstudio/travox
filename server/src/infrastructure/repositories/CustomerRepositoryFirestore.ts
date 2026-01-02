@@ -305,6 +305,13 @@ export class CustomerRepositoryFirestore implements ICustomerRepository {
     };
   }
 
+  /**
+   * No-op for base Firestore repository (only cached repo needs this)
+   */
+  async invalidateCacheForCustomer(customerId: string, orgId: string): Promise<void> {
+    // No-op: Base repository doesn't use cache
+  }
+
   private documentToDomain(doc: CustomerDocument, id: string): Customer {
     return new Customer(
       id,

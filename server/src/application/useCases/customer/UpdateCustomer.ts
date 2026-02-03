@@ -16,6 +16,9 @@ interface UpdateCustomerDTO {
 
 @injectable()
 export class UpdateCustomer {
+  private static readonly DEFAULT_EMAIL = 'esanchar@gmail.com';
+  private static readonly DEFAULT_PHONE = '+91-9332100486';
+
   constructor(
     @inject('ICustomerRepository') private customerRepo: ICustomerRepository
   ) {}
@@ -27,11 +30,8 @@ export class UpdateCustomer {
       throw new Error('Customer not found');
     }
 
-    // Skip uniqueness checks for specific email and phone
-    const skipUniquenessCheck = data.email === 'esanchar@gmail.com' && data.phone === '+91-9332100485';
-
     // Validate if email conflicts with another customer
-    if (!skipUniquenessCheck && data.email && data.email !== existingCustomer.email) {
+    if (data.email !== UpdateCustomer.DEFAULT_EMAIL && data.email && data.email !== existingCustomer.email) {
       const existingByEmail = await this.customerRepo.findByEmail(data.email, orgId);
       if (existingByEmail && existingByEmail.id !== customerId) {
         throw new Error('Customer with this email already exists');
@@ -39,7 +39,7 @@ export class UpdateCustomer {
     }
 
     // Validate if phone conflicts with another customer
-    if (!skipUniquenessCheck && data.phone && data.phone !== existingCustomer.phone) {
+    if (data.phone !== UpdateCustomer.DEFAULT_PHONE && data.phone && data.phone !== existingCustomer.phone) {
       const existingByPhone = await this.customerRepo.findByPhone(data.phone, orgId);
       if (existingByPhone && existingByPhone.id !== customerId) {
         throw new Error('Customer with this phone already exists');

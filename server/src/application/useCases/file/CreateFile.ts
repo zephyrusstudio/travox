@@ -3,7 +3,6 @@ import { IFileRepository } from '../../repositories/IFileRepository';
 import { IGoogleDriveService } from '../../services/IGoogleDriveService';
 import { IBookingRepository } from '../../repositories/IBookingRepository';
 import { FileDocument, FileKind } from '../../../models/FirestoreTypes';
-import { Timestamp } from 'firebase-admin/firestore';
 
 export interface CreateFileRequest {
   name: string;
@@ -40,7 +39,7 @@ export class CreateFile {
         kind: request.kind,
         gdrive_id: driveFileId, // Store Google Drive file ID
         uploaded_by: uploadedBy,
-        uploaded_at: Timestamp.now()
+        uploaded_at: new Date()
       });
 
       // If this is a ticket file associated with a booking, update the booking

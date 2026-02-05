@@ -1,13 +1,13 @@
 
 
-import { Timestamp } from 'firebase-admin/firestore';
-
+// Type definitions for document interfaces
+// Used by both domain models and repository implementations
 
 export interface BaseDocument {
   id: string;
   org_id: string;
-  created_at: Timestamp;
-  updated_at: Timestamp;
+  created_at: Date;
+  updated_at: Date;
 }
 
 
@@ -95,7 +95,7 @@ export enum OCRStatus {
 export interface OrganizationDocument {
   id: string;
   name: string;
-  created_at: Timestamp;
+  created_at: Date;
 }
 
 
@@ -118,8 +118,8 @@ export interface AuthIdentityDocument extends BaseDocument {
 export interface AuthTokenDocument extends BaseDocument {
   user_id: string;
   token_hash: string;
-  expires_at: Timestamp;
-  revoked_at?: Timestamp;
+  expires_at: Date;
+  revoked_at?: Date;
 }
 
 
@@ -133,7 +133,7 @@ export interface AuditLogDocument {
   diff: Record<string, any>;
   ip: string;
   user_agent: string;
-  created_at: Timestamp;
+  created_at: Date;
 }
 
 
@@ -146,7 +146,7 @@ export interface AccountDocument extends BaseDocument {
   is_active: boolean;
   created_by: string;
   updated_by: string;
-  archived_at?: Timestamp;
+  archived_at?: Date;
 }
 
 
@@ -164,7 +164,7 @@ export interface CustomerDocument extends BaseDocument {
   created_by: string;
   updated_by: string;
   is_deleted: boolean;
-  archived_at?: Timestamp;
+  archived_at?: Date;
 }
 
 
@@ -181,21 +181,21 @@ export interface VendorDocument extends BaseDocument {
   created_by: string;
   updated_by: string;
   is_deleted: boolean;
-  archived_at?: Timestamp;
+  archived_at?: Date;
 }
 
 
 export interface BookingDocument extends BaseDocument {
   customer_id: string;
   package_name?: string;
-  booking_date: Timestamp;
+  booking_date: Date;
   pax_count: number;
   primary_pax_name?: string;
   pnr_no?: string;
   mode_of_journey?: string;
   currency: string;
-  travel_start_at?: Timestamp;
-  travel_end_at?: Timestamp;
+  travel_start_at?: Date;
+  travel_end_at?: Date;
   total_amount: number;
   paid_amount: number;
   refunded_amount?: number;
@@ -205,7 +205,7 @@ export interface BookingDocument extends BaseDocument {
   created_by: string;
   updated_by: string;
   is_deleted: boolean;
-  archived_at?: Timestamp;
+  archived_at?: Date;
   ticket_id?: string;
 }
 
@@ -216,7 +216,7 @@ export interface BookingPAXDocument extends BaseDocument {
   pax_type: PAXType;
   sex?: Sex;
   passport_no?: string; 
-  dob?: Timestamp; 
+  dob?: Date; 
 }
 
 
@@ -235,14 +235,14 @@ export interface BookingSegmentDocument extends BaseDocument {
   number?: string;
   dep_code?: string;
   arr_code?: string;
-  dep_at?: Timestamp;
-  arr_at?: Timestamp;
+  dep_at?: Date;
+  arr_at?: Date;
   class_code?: string;
   baggage?: string;
   hotel_name?: string;
   hotel_address?: string;
-  check_in?: Timestamp;
-  check_out?: Timestamp;
+  check_in?: Date;
+  check_out?: Date;
   room_type?: string;
   meal_plan?: string;
   operator_name?: string;
@@ -259,7 +259,7 @@ export interface FileDocument extends BaseDocument {
   kind: FileKind;
   gdrive_id: string;
   uploaded_by: string;
-  uploaded_at: Timestamp;
+  uploaded_at: Date;
 }
 
 
@@ -277,7 +277,7 @@ export interface InvoiceDocument extends BaseDocument {
   customer_id?: string;
   vendor_id?: string;
   invoice_no: string;
-  invoice_date: Timestamp;
+  invoice_date: Date;
   currency: string;
   place_of_supply?: string;
   buyer_gstin?: string;
@@ -324,5 +324,5 @@ export interface PaymentDocument extends BaseDocument {
   created_by: string;
   updated_by: string;
   is_deleted: boolean;
-  archived_at?: Timestamp;
+  archived_at?: Date;
 }

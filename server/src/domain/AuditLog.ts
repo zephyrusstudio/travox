@@ -1,6 +1,4 @@
 
-import { Timestamp } from 'firebase-admin/firestore';
-
 export class AuditLog {
   constructor(
     public id: string,
@@ -12,7 +10,7 @@ export class AuditLog {
     public diff: Record<string, any>,
     public ip: string,
     public userAgent: string,
-    public createdAt: Timestamp = Timestamp.now()
+    public createdAt: Date = new Date()
   ) {}
 
   static create(
@@ -35,7 +33,7 @@ export class AuditLog {
       diff,
       ip,
       userAgent,
-      Timestamp.now()
+      new Date()
     );
   }
 
@@ -70,8 +68,7 @@ export class AuditLog {
   }
 
   /**
-   * Converts the audit log to API response format with proper timestamp handling
-   * Converts Firestore Timestamp to JavaScript Date for proper JSON serialization
+   * Converts the audit log to API response format
    */
   toApiResponse(): any {
     return {
@@ -84,7 +81,7 @@ export class AuditLog {
       diff: this.diff,
       ip: this.ip,
       userAgent: this.userAgent,
-      createdAt: this.createdAt.toDate() // Convert Firestore Timestamp to Date
+      createdAt: this.createdAt
     };
   }
 }

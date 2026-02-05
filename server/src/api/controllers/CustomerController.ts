@@ -5,6 +5,7 @@ import { UpdateCustomer } from '../../application/useCases/customer/UpdateCustom
 import { GetCustomers } from '../../application/useCases/customer/GetCustomers';
 import { DeleteCustomer } from '../../application/useCases/customer/DeleteCustomer';
 import { GetCustomerPendingPaymentsReport } from '../../application/useCases/customer/GetCustomerPendingPaymentsReport';
+import { BulkImportCustomers } from '../../application/useCases/customer/BulkImportCustomers';
 import { GetBookings } from '../../application/useCases/booking/GetBookings';
 import { GetAccount } from '../../application/useCases/account/GetAccount';
 import { shouldUnmask } from '../../utils/unmask';
@@ -372,6 +373,61 @@ export class CustomerController {
           end: endDate.toISOString()
         }
       });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        data: { message: error.message }
+      });
+    }
+  }
+
+  async bulkImport(req: Request, res: Response) {
+    try {
+      const useCase = container.resolve(BulkImportCustomers);
+      const orgId = req.user?.orgId!;
+      const createdBy = req.user?.id!;
+      const unmask = shouldUnmask(req);
+
+      // Check if file was uploaded
+      if (!req.file) {
+        return res.status(400).json({
+          status: 'error',
+          data: { message: 'No CSV file uploaded' }
+        });
+      }
+
+      // Read CSV content from uploaded file
+      const csvContent = req.file.buffer.toString('utf-8');
+
+      // Execute bulk import
+      const result = await useCase.execute(csvContent, orgId, createdBy);
+
+      // Return appropriate status based on result
+      if (result.success) {
+        res.status(201).json({
+          status: 'success',
+          data: {
+            message: `Successfully imported ${result.imported} customers`,
+            total: result.total,
+            imported: result.imported,
+            failed: result.failed,
+            customers: result.customers.map(c => c.toApiResponse(unmask)),
+            errors: result.errors
+          }
+        });
+      } else {
+        res.status(207).json({ // 207 Multi-Status for partial success
+          status: 'partial',
+          data: {
+            message: `Imported ${result.imported} of ${result.total} customers. ${result.failed} failed.`,
+            total: result.total,
+            imported: result.imported,
+            failed: result.failed,
+            customers: result.customers.map(c => c.toApiResponse(unmask)),
+            errors: result.errors
+          }
+        });
+      }
     } catch (error: any) {
       res.status(500).json({
         status: 'error',

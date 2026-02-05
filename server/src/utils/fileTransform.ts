@@ -24,9 +24,9 @@ export function transformFileForResponse(file: FileDocument): FileResponse {
     kind: file.kind,
     url: `https://drive.google.com/file/d/${file.gdrive_id}`,
     uploaded_by: file.uploaded_by,
-    uploaded_at: file.uploaded_at.toDate().toISOString(),
-    created_at: file.created_at.toDate().toISOString(),
-    updated_at: file.updated_at.toDate().toISOString()
+    uploaded_at: file.uploaded_at instanceof Date ? file.uploaded_at.toISOString() : String(file.uploaded_at),
+    created_at: file.created_at instanceof Date ? file.created_at.toISOString() : String(file.created_at),
+    updated_at: file.updated_at instanceof Date ? file.updated_at.toISOString() : String(file.updated_at)
   };
 }
 

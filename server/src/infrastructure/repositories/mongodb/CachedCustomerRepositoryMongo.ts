@@ -1,41 +1,81 @@
 import { injectable, inject } from 'tsyringe';
-import { ICustomerRepository, CustomerSearchParams } from '../../application/repositories/ICustomerRepository';
-import { Customer } from '../../domain/Customer';
-import { CustomerRepositoryFirestore } from './CustomerRepositoryFirestore';
-import { RedisService } from '../services/RedisService';
-import { rehydrateObject, COMMON_DATE_FIELDS } from '../../utils/cacheRehydration';
+import { ICustomerRepository, CustomerSearchParams } from '../../../application/repositories/ICustomerRepository';
+import { Customer } from '../../../domain/Customer';
+import { CustomerRepositoryMongo } from './CustomerRepositoryMongo';
+import { RedisService } from '../../services/RedisService';
+import { rehydrateObject, COMMON_DATE_FIELDS } from '../../../utils/cacheRehydration';
 
 const COLLECTION_NAME = 'customers';
 const ENTITY_TTL = 300; // 5 minutes
 const LIST_TTL = 900; // 15 minutes
 const STATS_TTL = 120; // 2 minutes
 
+interface CachedCustomer {
+  id: string;
+  orgId: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  passportNo?: string;
+  aadhaarNo?: string;
+  visaNo?: string;
+  gstin?: string;
+  accountId?: string;
+  totalBookings: number;
+  totalSpent: number;
+  createdBy: string;
+  updatedBy: string;
+  isDeleted: boolean;
+  archivedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 @injectable()
-export class CachedCustomerRepository implements ICustomerRepository {
+export class CachedCustomerRepositoryMongo implements ICustomerRepository {
   constructor(
-    @inject('CustomerRepositoryFirestore') private baseRepo: CustomerRepositoryFirestore,
+    @inject('CustomerRepositoryMongo') private baseRepo: CustomerRepositoryMongo,
     @inject('RedisService') private cache: RedisService
   ) {}
 
+  private rehydrateCustomer(cached: CachedCustomer): Customer {
+    const rehydrated = rehydrateObject(cached, COMMON_DATE_FIELDS) as CachedCustomer;
+    return new Customer(
+      rehydrated.id,
+      rehydrated.orgId,
+      rehydrated.name,
+      rehydrated.phone,
+      rehydrated.email,
+      rehydrated.passportNo,
+      rehydrated.aadhaarNo,
+      rehydrated.visaNo,
+      rehydrated.gstin,
+      rehydrated.accountId,
+      rehydrated.totalBookings,
+      rehydrated.totalSpent,
+      rehydrated.createdBy,
+      rehydrated.updatedBy,
+      rehydrated.isDeleted,
+      rehydrated.archivedAt,
+      rehydrated.createdAt,
+      rehydrated.updatedAt
+    );
+  }
+
   async create(customer: Customer, orgId: string): Promise<Customer> {
     const result = await this.baseRepo.create(customer, orgId);
-    
-    // Invalidate list caches
     await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:list*`);
-    
     return result;
   }
 
   async findById(id: string, orgId: string): Promise<Customer | null> {
     const cacheKey = this.cache.generateKey(COLLECTION_NAME, orgId, id);
     
-    // Try cache first
-    const cached = await this.cache.get<Customer>(cacheKey);
+    const cached = await this.cache.get<CachedCustomer>(cacheKey);
     if (cached) {
       return this.rehydrateCustomer(cached);
     }
 
-    // Cache miss - fetch from Firestore
     const customer = await this.baseRepo.findById(id, orgId);
     
     if (customer) {
@@ -114,87 +154,67 @@ export class CachedCustomerRepository implements ICustomerRepository {
   }
 
   async findAll(orgId: string, limit?: number): Promise<Customer[]> {
-    const cacheKey = this.cache.generateListKey(COLLECTION_NAME, orgId, { limit });
+    const cacheKey = `${COLLECTION_NAME}:${orgId}:list:all:${limit || 'all'}`;
     
     const cached = await this.cache.get<Customer[]>(cacheKey);
-    // Only return cached data if it's a non-empty array
-    if (cached && cached.length > 0) {
+    if (cached) {
       return cached.map(c => this.rehydrateCustomer(c));
     }
 
     const customers = await this.baseRepo.findAll(orgId, limit);
-    
-    if (customers.length > 0) {
-      await this.cache.set(cacheKey, customers, LIST_TTL);
-    }
+    await this.cache.set(cacheKey, customers, LIST_TTL);
     
     return customers;
   }
 
   async update(customer: Customer, orgId: string): Promise<Customer> {
-    // Invalidate caches BEFORE update to prevent race conditions
-    await this.invalidateCustomerCache(customer.id, orgId);
-    
     const result = await this.baseRepo.update(customer, orgId);
-    
+    await this.invalidateCacheForCustomer(customer.id, orgId);
     return result;
   }
 
   async softDelete(id: string, orgId: string, updatedBy: string): Promise<boolean> {
-    // Invalidate caches BEFORE delete to prevent race conditions
-    await this.invalidateCustomerCache(id, orgId);
-    
     const result = await this.baseRepo.softDelete(id, orgId, updatedBy);
-    
+    if (result) {
+      await this.invalidateCacheForCustomer(id, orgId);
+    }
     return result;
   }
 
   async delete(id: string, orgId: string): Promise<boolean> {
-    // Invalidate caches BEFORE delete to prevent race conditions
-    await this.invalidateCustomerCache(id, orgId);
-    
     const result = await this.baseRepo.delete(id, orgId);
-    
+    if (result) {
+      await this.invalidateCacheForCustomer(id, orgId);
+    }
     return result;
   }
 
   async archive(id: string, orgId: string, updatedBy: string): Promise<boolean> {
-    // Invalidate caches BEFORE archive to prevent race conditions
-    await this.invalidateCustomerCache(id, orgId);
-    
     const result = await this.baseRepo.archive(id, orgId, updatedBy);
-    
+    if (result) {
+      await this.invalidateCacheForCustomer(id, orgId);
+    }
     return result;
   }
 
   async search(query: string, orgId: string, limit?: number): Promise<Customer[]> {
-    // Search results are dynamic, don't cache
     return this.baseRepo.search(query, orgId, limit);
   }
 
   async advancedSearch(params: CustomerSearchParams, orgId: string): Promise<Customer[]> {
-    // Search results are dynamic, don't cache
     return this.baseRepo.advancedSearch(params, orgId);
   }
 
   async getActiveCustomers(orgId: string, limit?: number, offset?: number): Promise<Customer[]> {
-    const cacheKey = this.cache.generateListKey(COLLECTION_NAME, orgId, { 
-      active: true, 
-      limit, 
-      offset 
-    });
+    const cacheKey = `${COLLECTION_NAME}:${orgId}:list:active:${limit || 'all'}:${offset || 0}`;
     
     const cached = await this.cache.get<Customer[]>(cacheKey);
-    // Only return cached data if it's a non-empty array
-    if (cached && cached.length > 0) {
+    if (cached) {
       return cached.map(c => this.rehydrateCustomer(c));
     }
 
     const customers = await this.baseRepo.getActiveCustomers(orgId, limit, offset);
-    
-    if (customers.length > 0) {
-      await this.cache.set(cacheKey, customers, LIST_TTL);
-    }
+    await this.cache.set(cacheKey, customers, LIST_TTL);
     
     return customers;
   }
@@ -208,8 +228,7 @@ export class CachedCustomerRepository implements ICustomerRepository {
     }
 
     const count = await this.baseRepo.countActiveCustomers(orgId);
-    
-    await this.cache.set(cacheKey, count, LIST_TTL);
+    await this.cache.set(cacheKey, count, STATS_TTL);
     
     return count;
   }
@@ -230,45 +249,20 @@ export class CachedCustomerRepository implements ICustomerRepository {
     }
 
     const stats = await this.baseRepo.getCustomerBookingStats(customerId, orgId);
-    
-    await this.cache.set(cacheKey, stats, LIST_TTL);
+    await this.cache.set(cacheKey, stats, STATS_TTL);
     
     return stats;
   }
 
-  /**
-   * Public method to invalidate cache for a specific customer
-   * Used by use cases that need to ensure fresh data (e.g., refund creation)
-   */
   async invalidateCacheForCustomer(customerId: string, orgId: string): Promise<void> {
-    await this.invalidateCustomerCache(customerId, orgId);
-  }
-
-  /**
-   * Invalidate all caches related to a customer
-   */
-  private async invalidateCustomerCache(id: string, orgId: string): Promise<void> {
-    // Invalidate by ID
-    const idKey = this.cache.generateKey(COLLECTION_NAME, orgId, id);
-    await this.cache.delete(idKey);
-    
-    // Invalidate list caches
+    const entityKey = this.cache.generateKey(COLLECTION_NAME, orgId, customerId);
+    await this.cache.delete(entityKey);
     await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:list*`);
     await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:count*`);
-    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:stats:${id}`);
-    
-    // Invalidate lookup caches (email, phone, etc.) - could be optimized
-    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:email:*`);
-    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:phone:*`);
-    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:passport:*`);
-    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:account:*`);
-  }
-
-  /**
-   * Rehydrate Customer object from cached data
-   * IMPORTANT: Must restore prototype chain to retain toApiResponse() and other methods
-   */
-  private rehydrateCustomer(data: any): Customer {
-    return rehydrateObject<Customer>(data, Customer.prototype, COMMON_DATE_FIELDS.timestamps);
+    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:stats:${customerId}`);
+    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:email*`);
+    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:phone*`);
+    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:passport*`);
+    await this.cache.invalidatePattern(`${COLLECTION_NAME}:${orgId}:account*`);
   }
 }

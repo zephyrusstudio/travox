@@ -5,6 +5,7 @@ export interface IPaymentRepository {
   create(payment: Payment, orgId: string): Promise<Payment>;
   findById(id: string, orgId: string): Promise<Payment | null>;
   findByBookingId(bookingId: string, orgId: string): Promise<Payment[]>;
+  findByBookingIds(bookingIds: string[], orgId: string, paymentTypes?: PaymentType[]): Promise<Payment[]>;
   findByCustomerId(customerId: string, orgId: string): Promise<Payment[]>;
   findByVendorId(vendorId: string, orgId: string): Promise<Payment[]>;
   findByType(paymentType: PaymentType, orgId: string): Promise<Payment[]>;

@@ -69,9 +69,9 @@
  *     description: |
  *       Retrieve a report of customers with their bookings within a specified date interval.
  *       The interval is based on booking date. Results are cached in Redis for 5 minutes for efficiency.
- *       Use the `pending` parameter to filter for only bookings with pending payments.
- *       When pending=true, results are sorted by total due amount descending.
- *       When pending=false (default), results are sorted by total amount descending.
+ *       Use the `pendingOnly` parameter to filter for only bookings with pending payments.
+ *       When pendingOnly=true, results are sorted by total due amount descending.
+ *       When pendingOnly=false (default), results are sorted by total amount descending.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -84,7 +84,7 @@
  *         schema:
  *           type: string
  *           example: "2025-12-01 00:00,2025-12-31 23:59"
- *       - name: pending
+ *       - name: pendingOnly
  *         in: query
  *         required: false
  *         description: |
@@ -160,6 +160,54 @@
  *                             travelEndAt:
  *                               type: string
  *                               format: date-time
+ *                             payments:
+ *                               type: array
+ *                               items:
+ *                                 type: object
+ *                                 properties:
+ *                                   id:
+ *                                     type: string
+ *                                     example: "pay_123"
+ *                                   paymentType:
+ *                                     type: string
+ *                                     example: "RECEIVABLE"
+ *                                   direction:
+ *                                     type: string
+ *                                     enum: [IN, OUT]
+ *                                   amount:
+ *                                     type: number
+ *                                     example: 10000
+ *                                   paymentMode:
+ *                                     type: string
+ *                                     example: "CASH"
+ *                                   createdAt:
+ *                                     type: string
+ *                                     format: date-time
+ *                                   receiptNo:
+ *                                     type: string
+ *                                     example: "RCPT390125702"
+ *                                   notes:
+ *                                     type: string
+ *                                     example: "Partial payment"
+ *                             paymentCount:
+ *                               type: integer
+ *                               description: Count of incoming customer payments for the booking
+ *                               example: 2
+ *                             paymentModeBreakdown:
+ *                               type: array
+ *                               items:
+ *                                 type: object
+ *                                 properties:
+ *                                   paymentMode:
+ *                                     type: string
+ *                                     example: "CASH"
+ *                                   amount:
+ *                                     type: number
+ *                                     description: Net amount for mode (refunds reduce value)
+ *                                     example: 10000
+ *                                   count:
+ *                                     type: integer
+ *                                     example: 1
  *                       totalAmount:
  *                         type: number
  *                         description: Total amount across all bookings

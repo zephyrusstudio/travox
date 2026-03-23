@@ -36,6 +36,7 @@ export type CustomerFormModalProps = {
   selectedCustomer?: CustomerFormState | null;
   setSelectedCustomer: (customer: CustomerFormState | null) => void;
   setIsFormOpen: (isOpen: boolean) => void;
+  onCustomerSaved?: () => void | Promise<void>;
 };
 
 /* Constants */
@@ -60,6 +61,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
   selectedCustomer,
   setSelectedCustomer,
   setIsFormOpen,
+  onCustomerSaved,
 }) => {
   // State
   const [formData, setFormData] = useState<CustomerFormState>({
@@ -361,6 +363,19 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
       successToast(isEditing ? "Customer updated" : "Customer added");
       setSelectedCustomer(null);
       onClose();
+      if (onCustomerSaved) {
+        try {
+          await onCustomerSaved();
+        } catch (refreshError: unknown) {
+          if (refreshError instanceof Error) {
+            errorToast(
+              `Customer was saved, but list refresh failed: ${refreshError.message}`
+            );
+          } else {
+            errorToast("Customer was saved, but list refresh failed.");
+          }
+        }
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         errorToast(err.message);

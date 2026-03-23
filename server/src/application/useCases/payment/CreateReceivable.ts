@@ -4,6 +4,7 @@ import { IBookingRepository } from '../../repositories/IBookingRepository';
 import { ICustomerRepository } from '../../repositories/ICustomerRepository';
 import { Payment } from '../../../domain/Payment';
 import { PaymentMode } from '../../../models/FirestoreTypes';
+import { RedisService } from '../../../infrastructure/services/RedisService';
 
 interface CreateReceivableDTO {
   bookingId: string;
@@ -22,7 +23,8 @@ export class CreateReceivable {
   constructor(
     @inject('IPaymentRepository') private paymentRepo: IPaymentRepository,
     @inject('IBookingRepository') private bookingRepo: IBookingRepository,
-    @inject('ICustomerRepository') private customerRepo: ICustomerRepository
+    @inject('ICustomerRepository') private customerRepo: ICustomerRepository,
+    @inject('RedisService') private cache: RedisService
   ) {}
 
   async execute(data: CreateReceivableDTO, orgId: string, createdBy: string): Promise<Payment> {
@@ -94,6 +96,9 @@ export class CreateReceivable {
     // Update customer's total spent
     customer.addToTotalSpent(data.amount);
     await this.customerRepo.update(customer, orgId);
+
+    // Invalidate customer booking report caches for immediate report refresh
+    await this.cache.invalidatePattern(`report:customers:bookings:${orgId}:*`);
 
     return savedPayment;
   }

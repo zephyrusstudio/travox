@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CreditCard, Plus, IndianRupee, RefreshCw, Search } from "lucide-react";
+import { CreditCard, IndianRupee, Plus, RefreshCw, Search } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearch } from "../../hooks/useSearch";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
@@ -7,9 +7,9 @@ import { errorToast, successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Card, { CardContent } from "../ui/Card";
+import Loader from "../ui/Loader";
 import Pagination from "../ui/Pagination";
 import Spinner from "../ui/Spinner";
-import Loader from "../ui/Loader";
 import Table, {
   TableBody,
   TableCell,
@@ -65,6 +65,7 @@ type PaymentRow = {
   notes?: string;
   currency?: string;
   payment_type?: string;
+  pnrNo?: string;
 };
 
 const PaymentManagement: React.FC = () => {
@@ -149,8 +150,8 @@ const PaymentManagement: React.FC = () => {
   } = useSearch<any>({
     endpoint: "/payments?type=RECEIVABLE",
     searchFields: (payment) => [
-      String(payment.amount || ''),
-      String(payment.bookingId || payment.booking_id || ''),
+      String(payment.amount || ""),
+      String(payment.bookingId || payment.booking_id || ""),
     ],
     initialFetch: true,
     unmask: true,
@@ -199,12 +200,13 @@ const PaymentManagement: React.FC = () => {
       payment_date: ensureIsoString(paymentDate),
       amount: Number(record?.amount ?? 0) || 0,
       payment_mode: fromBackendPaymentMode(
-        record?.paymentMode ?? record?.payment_mode ?? record?.mode
+        record?.paymentMode ?? record?.payment_mode ?? record?.mode,
       ),
       receipt_number: receipt ? String(receipt) : "",
       notes: record?.notes ? String(record.notes) : undefined,
       currency: record?.currency ? String(record.currency) : undefined,
       payment_type: record?.paymentType ?? record?.payment_type,
+      pnrNo: record?.pnrNo ?? record?.pnr_no ?? undefined,
     };
   }, []);
 
@@ -222,8 +224,8 @@ const PaymentManagement: React.FC = () => {
           id: item?.id
             ? String(item.id)
             : item?.customerId
-            ? String(item.customerId)
-            : "",
+              ? String(item.customerId)
+              : "",
           name:
             item?.name ||
             item?.fullName ||
@@ -295,7 +297,7 @@ const PaymentManagement: React.FC = () => {
       mapped.sort(
         (a: PaymentRow, b: PaymentRow) =>
           new Date(b.payment_date).getTime() -
-          new Date(a.payment_date).getTime()
+          new Date(a.payment_date).getTime(),
       );
 
       setPayments(mapped);
@@ -329,7 +331,7 @@ const PaymentManagement: React.FC = () => {
 
       if (!booking.account_id) {
         errorToast(
-          "Link a customer account before recording a payment for this booking."
+          "Link a customer account before recording a payment for this booking.",
         );
         return false;
       }
@@ -382,7 +384,7 @@ const PaymentManagement: React.FC = () => {
         setSaveInFlight(false);
       }
     },
-    [bookingsMap, fetchBookings, fetchPayments, saveInFlight, invalidateCache]
+    [bookingsMap, fetchBookings, fetchPayments, saveInFlight, invalidateCache],
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<PaymentFormState>({
@@ -397,9 +399,9 @@ const PaymentManagement: React.FC = () => {
   const receivablePayments = useMemo(
     () =>
       payments.filter(
-        (payment) => payment.payment_type?.toUpperCase() === "RECEIVABLE"
+        (payment) => payment.payment_type?.toUpperCase() === "RECEIVABLE",
       ),
-    [payments]
+    [payments],
   );
 
   // Map search results to PaymentRow format
@@ -412,15 +414,19 @@ const PaymentManagement: React.FC = () => {
   // Use search results when searching, otherwise use receivable payments
   const filteredPayments = useMemo(() => {
     if (!searchTerm) return receivablePayments;
-    
+
     const term = searchTerm.toLowerCase().trim();
-    return mappedSearchResults.filter(payment => {
+    return mappedSearchResults.filter((payment) => {
       const booking = bookingsMap.get(payment.booking_id);
-      const amount = String(payment.amount || '');
-      const packageName = (booking?.package_name || '').toLowerCase();
-      const customerName = (booking?.customer_name || '').toLowerCase();
-      
-      return amount.includes(term) || packageName.includes(term) || customerName.includes(term);
+      const amount = String(payment.amount || "");
+      const packageName = (booking?.package_name || "").toLowerCase();
+      const customerName = (booking?.customer_name || "").toLowerCase();
+
+      return (
+        amount.includes(term) ||
+        packageName.includes(term) ||
+        customerName.includes(term)
+      );
     });
   }, [searchTerm, mappedSearchResults, receivablePayments, bookingsMap]);
 
@@ -474,6 +480,11 @@ const PaymentManagement: React.FC = () => {
     }));
   };
 
+  console.log(
+    "booking?.package_name",
+    bookingsMap.get(formData.booking_id)?.package_name,
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -515,17 +526,15 @@ const PaymentManagement: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      {!loadingPayments && (
-        filteredPayments.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalItems={totalItems}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={setItemsPerPage}
-            itemsPerPageOptions={[5, 10, 20, 50, 100]}
-          />
-        )
+      {!loadingPayments && filteredPayments.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+          itemsPerPageOptions={[5, 10, 20, 50, 100]}
+        />
       )}
 
       {/* Payments Table */}
@@ -544,9 +553,7 @@ const PaymentManagement: React.FC = () => {
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             No Payments Found
           </h3>
-          <p className="text-gray-500">
-            No payments found.
-          </p>
+          <p className="text-gray-500">No payments found.</p>
         </div>
       ) : (
         <Card>
@@ -578,7 +585,11 @@ const PaymentManagement: React.FC = () => {
                       <TableCell>
                         <div>
                           <p className="font-medium text-gray-900">
-                            {booking?.package_name || "---"}
+                            {booking?.package_name && booking.package_name !== "-"
+                              ? booking.package_name
+                              : p.pnrNo
+                              ? `PNR: ${p.pnrNo}`
+                              : "Untitled Booking"}
                           </p>
                           <p className="text-sm text-gray-500">
                             {booking?.customer_name || "---"}
@@ -610,12 +621,11 @@ const PaymentManagement: React.FC = () => {
                       </TableCell>
                     </TableRow>
                   );
-                })
-                }
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
 
       {/* Record Payment Modal */}

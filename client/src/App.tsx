@@ -10,6 +10,8 @@ import { routes } from "./routes/routeConfig";
 import { SESSION_EXPIRED_EVENT } from "./utils/apiConnector";
 import { canAccessModule, getAccessibleModules } from "./utils/roleAccess";
 
+const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY || "travox-at";
+
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = React.useState(() => {
     if (typeof window !== "undefined") {
@@ -40,7 +42,7 @@ const PageLoader: React.FC = () => (
 // Auth guard wrapper component
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
-  const token = localStorage.getItem("travox-at") ?? sessionStorage.getItem("travox-at");
+  const token = localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY);
 
   if (!token) {
     return <Navigate to="/" state={{ from: location }} replace />;
@@ -68,7 +70,7 @@ const RequireAccess: React.FC<{
 
 // Public route guard (redirects authenticated users away from auth page)
 const PublicOnly: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const token = localStorage.getItem("travox-at") ?? sessionStorage.getItem("travox-at");
+  const token = localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY);
   const { currentUser } = useApp();
   const accessibleModules = getAccessibleModules(currentUser?.role);
 

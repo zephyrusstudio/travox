@@ -3,6 +3,7 @@ import { IPaymentRepository } from '../../repositories/IPaymentRepository';
 import { ICustomerRepository } from '../../repositories/ICustomerRepository';
 import { IBookingRepository } from '../../repositories/IBookingRepository';
 import { Payment } from '../../../domain/Payment';
+import { RedisService } from '../../../infrastructure/services/RedisService';
 
 interface CreateOutboundRefundDTO {
   refundOfPaymentId: string;
@@ -17,7 +18,8 @@ export class CreateOutboundRefund {
   constructor(
     @inject('IPaymentRepository') private paymentRepo: IPaymentRepository,
     @inject('ICustomerRepository') private customerRepo: ICustomerRepository,
-    @inject('IBookingRepository') private bookingRepo: IBookingRepository
+    @inject('IBookingRepository') private bookingRepo: IBookingRepository,
+    @inject('RedisService') private cache: RedisService
   ) {}
 
   async execute(data: CreateOutboundRefundDTO, orgId: string, createdBy: string): Promise<Payment> {
@@ -90,6 +92,9 @@ export class CreateOutboundRefund {
         await this.bookingRepo.update(booking, orgId);
       }
     }
+
+    // Invalidate customer booking report caches for immediate report refresh
+    await this.cache.invalidatePattern(`report:customers:bookings:${orgId}:*`);
 
     return savedPayment;
   }

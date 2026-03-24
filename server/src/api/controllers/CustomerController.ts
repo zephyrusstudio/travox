@@ -314,7 +314,7 @@ export class CustomerController {
    * Get customers with bookings report
    * Query params:
    * - interval=startDate,endDate (both in ISO format or URL encoded)
-   * - pending=true/false (optional, defaults to false - if true, only include bookings with pending payments)
+   * - pendingOnly=true/false (optional, defaults to false - if true, only include bookings with pending payments)
    */
   async getBookingsReport(req: Request, res: Response) {
     try {

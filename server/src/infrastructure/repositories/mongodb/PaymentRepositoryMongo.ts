@@ -77,6 +77,27 @@ export class PaymentRepositoryMongo implements IPaymentRepository {
     return docs.map(doc => this.toDomain(doc));
   }
 
+  async findByBookingIds(
+    bookingIds: string[],
+    orgId: string,
+    paymentTypes?: PaymentType[]
+  ): Promise<Payment[]> {
+    if (!bookingIds.length) return [];
+
+    const filter: any = {
+      orgId,
+      bookingId: { $in: bookingIds },
+      isDeleted: false
+    };
+
+    if (paymentTypes?.length) {
+      filter.paymentType = { $in: paymentTypes };
+    }
+
+    const docs = await PaymentModel.find(filter).sort({ createdAt: -1 });
+    return docs.map(doc => this.toDomain(doc));
+  }
+
   async findByCustomerId(customerId: string, orgId: string): Promise<Payment[]> {
     const docs = await PaymentModel.find({ 
       orgId, 

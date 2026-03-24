@@ -38,6 +38,26 @@ interface CustomerBooking {
   status: string;
   travelStartAt?: string;
   travelEndAt?: string;
+  payments?: BookingPayment[];
+  paymentCount?: number;
+  paymentModeBreakdown?: BookingPaymentModeBreakdown[];
+}
+
+interface BookingPayment {
+  id: string;
+  paymentType: string;
+  direction: "IN" | "OUT";
+  amount: number;
+  paymentMode: string;
+  createdAt: string;
+  receiptNo?: string;
+  notes?: string;
+}
+
+interface BookingPaymentModeBreakdown {
+  paymentMode: string;
+  amount: number;
+  count: number;
 }
 
 interface CustomerReportItem {
@@ -112,6 +132,49 @@ const getExportFileName = (extension: string): string => {
   const year = now.getFullYear();
   const time = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }).replace(':', '');
   return `Travox - Customer Payment Report - ${day}-${month}-${year} ${time}.${extension}`;
+};
+
+const PAYMENT_MODE_LABELS: Record<string, string> = {
+  CASH: "Cash",
+  CARD: "Card",
+  UPI: "UPI",
+  BANK_TRANSFER: "Bank Transfer",
+  NETBANKING: "Net Banking",
+  CHEQUE: "Cheque",
+  WALLET: "Wallet",
+  OTHER: "Other",
+  CREDIT_CARD: "Credit Card",
+  DEBIT_CARD: "Debit Card",
+};
+
+const PAYMENT_MODE_BADGES: Record<
+  string,
+  "default" | "success" | "warning" | "danger" | "info"
+> = {
+  CASH: "success",
+  CARD: "warning",
+  UPI: "info",
+  BANK_TRANSFER: "default",
+  NETBANKING: "info",
+  CHEQUE: "default",
+  WALLET: "info",
+  OTHER: "default",
+  CREDIT_CARD: "danger",
+  DEBIT_CARD: "warning",
+};
+
+const getPaymentModeLabel = (paymentMode?: string): string => {
+  if (!paymentMode) return "Unknown";
+  const normalized = paymentMode.toUpperCase();
+  return PAYMENT_MODE_LABELS[normalized] || normalized;
+};
+
+const getPaymentModeBadgeVariant = (
+  paymentMode?: string
+): "default" | "success" | "warning" | "danger" | "info" => {
+  if (!paymentMode) return "default";
+  const normalized = paymentMode.toUpperCase();
+  return PAYMENT_MODE_BADGES[normalized] || "default";
 };
 
 const CustomerReport: React.FC = () => {
@@ -195,49 +258,136 @@ const CustomerReport: React.FC = () => {
     return { totalCustomers, totalAmount, totalPaid, totalDue, totalBookings };
   }, [filteredData]);
 
-  // Export to CSV
-  const exportToCSV = () => {
-    const rows: string[] = [];
-    rows.push(
-      "Customer Name,Email,Phone,Package,Primary Pax,Booking Date,Travel Start,Total Amount,Paid Amount,Due Amount,Status"
-    );
+  type ExportRow = {
+    customerName: string;
+    email: string;
+    phone: string;
+    packageName: string;
+    primaryPaxName: string;
+    bookingDate: string;
+    travelStartDate: string;
+    totalAmount: number;
+    paidAmount: number;
+    dueAmount: number;
+    status: string;
+    paymentDate: string;
+    paymentMode: string;
+    receiptNo: string;
+    paymentAmount: string;
+    paymentTypeDirection: string;
+    notes: string;
+  };
+
+  const getExportRows = useCallback((): ExportRow[] => {
+    const rows: ExportRow[] = [];
 
     filteredData.forEach((item) => {
-      if (item.bookings.length === 0) {
-        rows.push(
-          [
-            `"${item.customer.name}"`,
-            `"${item.customer.email || ""}"`,
-            `"${item.customer.phone || ""}"`,
-            "",
-            "",
-            "",
-            "",
-            "0",
-            "0",
-            "0",
-            "",
-          ].join(",")
-        );
-      } else {
-        item.bookings.forEach((booking) => {
-          rows.push(
-            [
-              `"${item.customer.name}"`,
-              `"${item.customer.email || ""}"`,
-              `"${item.customer.phone || ""}"`,
-              `"${booking.packageName || ""}"`,
-              `"${booking.primaryPaxName || ""}"`,
-              formatDate(booking.bookingDate),
-              formatDate(booking.travelStartAt),
-              booking.totalAmount,
-              booking.paidAmount,
-              booking.dueAmount,
-              booking.status,
-            ].join(",")
-          );
+      if (!item.bookings.length) {
+        rows.push({
+          customerName: item.customer.name,
+          email: item.customer.email || "",
+          phone: item.customer.phone || "",
+          packageName: "",
+          primaryPaxName: "",
+          bookingDate: "",
+          travelStartDate: "",
+          totalAmount: 0,
+          paidAmount: 0,
+          dueAmount: 0,
+          status: "",
+          paymentDate: "",
+          paymentMode: "",
+          receiptNo: "",
+          paymentAmount: "",
+          paymentTypeDirection: "",
+          notes: "",
         });
+        return;
       }
+
+      item.bookings.forEach((booking) => {
+        const payments = booking.payments || [];
+
+        if (!payments.length) {
+          rows.push({
+            customerName: item.customer.name,
+            email: item.customer.email || "",
+            phone: item.customer.phone || "",
+            packageName: booking.packageName || "",
+            primaryPaxName: booking.primaryPaxName || "",
+            bookingDate: formatDate(booking.bookingDate),
+            travelStartDate: formatDate(booking.travelStartAt),
+            totalAmount: booking.totalAmount,
+            paidAmount: booking.paidAmount,
+            dueAmount: booking.dueAmount,
+            status: booking.status,
+            paymentDate: "",
+            paymentMode: "",
+            receiptNo: "",
+            paymentAmount: "",
+            paymentTypeDirection: "",
+            notes: "",
+          });
+          return;
+        }
+
+        payments.forEach((payment) => {
+          rows.push({
+            customerName: item.customer.name,
+            email: item.customer.email || "",
+            phone: item.customer.phone || "",
+            packageName: booking.packageName || "",
+            primaryPaxName: booking.primaryPaxName || "",
+            bookingDate: formatDate(booking.bookingDate),
+            travelStartDate: formatDate(booking.travelStartAt),
+            totalAmount: booking.totalAmount,
+            paidAmount: booking.paidAmount,
+            dueAmount: booking.dueAmount,
+            status: booking.status,
+            paymentDate: formatDate(payment.createdAt),
+            paymentMode: getPaymentModeLabel(payment.paymentMode),
+            receiptNo: payment.receiptNo || "",
+            paymentAmount: `${payment.direction === "OUT" ? "-" : ""}${payment.amount}`,
+            paymentTypeDirection: `${payment.paymentType} (${payment.direction})`,
+            notes: payment.notes || "",
+          });
+        });
+      });
+    });
+
+    return rows;
+  }, [filteredData]);
+
+  // Export to CSV
+  const exportToCSV = () => {
+    const exportRows = getExportRows();
+    const rows: string[] = [];
+    rows.push(
+      "Customer Name,Email,Phone,Package,Primary Pax,Booking Date,Travel Start,Total Amount,Paid Amount,Due Amount,Status,Payment Date,Payment Mode,Receipt No,Payment Amount,Payment Type/Direction,Notes"
+    );
+
+    exportRows.forEach((row) => {
+      rows.push(
+        [
+          `"${row.customerName}"`,
+          `"${row.email}"`,
+          `"${row.phone}"`,
+          `"${row.packageName}"`,
+          `"${row.primaryPaxName}"`,
+          `"${row.bookingDate}"`,
+          `"${row.travelStartDate}"`,
+          row.totalAmount,
+          row.paidAmount,
+          row.dueAmount,
+          `"${row.status}"`,
+          `"${row.paymentDate}"`,
+          `"${row.paymentMode}"`,
+          `"${row.receiptNo}"`,
+          `"${row.paymentAmount}"`,
+          `"${row.paymentTypeDirection}"`,
+          `"${row.notes}"`,
+        ].join(",")
+      );
     });
 
     const csvContent = rows.join("\n");
@@ -255,6 +405,7 @@ const CustomerReport: React.FC = () => {
 
   // Export to Excel (XLSX format using XML)
   const exportToExcel = () => {
+    const exportRows = getExportRows();
     let xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
@@ -273,42 +424,35 @@ const CustomerReport: React.FC = () => {
         <Cell><Data ss:Type="String">Paid Amount</Data></Cell>
         <Cell><Data ss:Type="String">Due Amount</Data></Cell>
         <Cell><Data ss:Type="String">Status</Data></Cell>
+        <Cell><Data ss:Type="String">Payment Date</Data></Cell>
+        <Cell><Data ss:Type="String">Payment Mode</Data></Cell>
+        <Cell><Data ss:Type="String">Receipt No</Data></Cell>
+        <Cell><Data ss:Type="String">Payment Amount</Data></Cell>
+        <Cell><Data ss:Type="String">Payment Type/Direction</Data></Cell>
+        <Cell><Data ss:Type="String">Notes</Data></Cell>
       </Row>`;
 
-    filteredData.forEach((item) => {
-      if (item.bookings.length === 0) {
-        xmlContent += `
+    exportRows.forEach((row) => {
+      xmlContent += `
       <Row>
-        <Cell><Data ss:Type="String">${item.customer.name}</Data></Cell>
-        <Cell><Data ss:Type="String">${item.customer.email || ""}</Data></Cell>
-        <Cell><Data ss:Type="String">${item.customer.phone || ""}</Data></Cell>
-        <Cell><Data ss:Type="String"></Data></Cell>
-        <Cell><Data ss:Type="String"></Data></Cell>
-        <Cell><Data ss:Type="String"></Data></Cell>
-        <Cell><Data ss:Type="String"></Data></Cell>
-        <Cell><Data ss:Type="Number">0</Data></Cell>
-        <Cell><Data ss:Type="Number">0</Data></Cell>
-        <Cell><Data ss:Type="Number">0</Data></Cell>
-        <Cell><Data ss:Type="String"></Data></Cell>
+        <Cell><Data ss:Type="String">${row.customerName}</Data></Cell>
+        <Cell><Data ss:Type="String">${row.email}</Data></Cell>
+        <Cell><Data ss:Type="String">${row.phone}</Data></Cell>
+        <Cell><Data ss:Type="String">${row.packageName}</Data></Cell>
+        <Cell><Data ss:Type="String">${row.primaryPaxName}</Data></Cell>
+        <Cell><Data ss:Type="String">${row.bookingDate}</Data></Cell>
+        <Cell><Data ss:Type="String">${row.travelStartDate}</Data></Cell>
+        <Cell><Data ss:Type="Number">${row.totalAmount}</Data></Cell>
+        <Cell><Data ss:Type="Number">${row.paidAmount}</Data></Cell>
+        <Cell><Data ss:Type="Number">${row.dueAmount}</Data></Cell>
+        <Cell><Data ss:Type="String">${row.status}</Data></Cell>
+        <Cell><Data ss:Type="String">${row.paymentDate}</Data></Cell>
+        <Cell><Data ss:Type="String">${row.paymentMode}</Data></Cell>
+        <Cell><Data ss:Type="String">${row.receiptNo}</Data></Cell>
+        <Cell><Data ss:Type="String">${row.paymentAmount}</Data></Cell>
+        <Cell><Data ss:Type="String">${row.paymentTypeDirection}</Data></Cell>
+        <Cell><Data ss:Type="String">${row.notes}</Data></Cell>
       </Row>`;
-      } else {
-        item.bookings.forEach((booking) => {
-          xmlContent += `
-      <Row>
-        <Cell><Data ss:Type="String">${item.customer.name}</Data></Cell>
-        <Cell><Data ss:Type="String">${item.customer.email || ""}</Data></Cell>
-        <Cell><Data ss:Type="String">${item.customer.phone || ""}</Data></Cell>
-        <Cell><Data ss:Type="String">${booking.packageName || ""}</Data></Cell>
-        <Cell><Data ss:Type="String">${booking.primaryPaxName || ""}</Data></Cell>
-        <Cell><Data ss:Type="String">${formatDate(booking.bookingDate)}</Data></Cell>
-        <Cell><Data ss:Type="String">${formatDate(booking.travelStartAt)}</Data></Cell>
-        <Cell><Data ss:Type="Number">${booking.totalAmount}</Data></Cell>
-        <Cell><Data ss:Type="Number">${booking.paidAmount}</Data></Cell>
-        <Cell><Data ss:Type="Number">${booking.dueAmount}</Data></Cell>
-        <Cell><Data ss:Type="String">${booking.status}</Data></Cell>
-      </Row>`;
-        });
-      }
     });
 
     xmlContent += `
@@ -397,25 +541,50 @@ const CustomerReport: React.FC = () => {
               <th class="amount">Paid</th>
               <th class="amount">Due</th>
               <th>Status</th>
+              <th>Payment Date</th>
+              <th>Payment Mode</th>
+              <th>Receipt No</th>
+              <th class="amount">Payment Amount</th>
+              <th>Payment Type/Direction</th>
+              <th>Notes</th>
             </tr>
           </thead>
           <tbody>
             ${filteredData.flatMap((item) =>
               item.bookings.length === 0
-                ? [`<tr><td>${item.customer.name}</td><td>-</td><td>-</td><td>-</td><td>-</td><td class="amount">₹0</td><td class="amount paid">₹0</td><td class="amount">₹0</td><td>-</td></tr>`]
-                : item.bookings.map((booking) => `
-                <tr>
-                  <td>${item.customer.name}</td>
-                  <td>${booking.packageName || "-"}</td>
-                  <td>${booking.primaryPaxName || "-"}</td>
-                  <td>${formatDate(booking.bookingDate)}</td>
-                  <td>${formatDate(booking.travelStartAt)}</td>
-                  <td class="amount">${formatCurrency(booking.totalAmount)}</td>
-                  <td class="amount paid">${formatCurrency(booking.paidAmount)}</td>
-                  <td class="amount ${booking.dueAmount > 0 ? "due" : ""}">${formatCurrency(booking.dueAmount)}</td>
-                  <td>${booking.status}</td>
-                </tr>
-              `)
+                ? [
+                    `<tr><td>${item.customer.name}</td><td>-</td><td>-</td><td>-</td><td>-</td><td class="amount">${formatCurrency(0)}</td><td class="amount paid">${formatCurrency(0)}</td><td class="amount">${formatCurrency(0)}</td><td>-</td><td>-</td><td>-</td><td>-</td><td class="amount">-</td><td>-</td><td>-</td></tr>`,
+                  ]
+                : item.bookings.flatMap((booking) => {
+                    const payments = booking.payments || [];
+                    if (!payments.length) {
+                      return [
+                        `<tr><td>${item.customer.name}</td><td>${booking.packageName || "-"}</td><td>${booking.primaryPaxName || "-"}</td><td>${formatDate(booking.bookingDate)}</td><td>${formatDate(booking.travelStartAt)}</td><td class="amount">${formatCurrency(booking.totalAmount)}</td><td class="amount paid">${formatCurrency(booking.paidAmount)}</td><td class="amount ${booking.dueAmount > 0 ? "due" : ""}">${formatCurrency(booking.dueAmount)}</td><td>${booking.status}</td><td>-</td><td>-</td><td>-</td><td class="amount">-</td><td>-</td><td>-</td></tr>`,
+                      ];
+                    }
+
+                    return payments.map(
+                      (payment) => `
+                      <tr>
+                        <td>${item.customer.name}</td>
+                        <td>${booking.packageName || "-"}</td>
+                        <td>${booking.primaryPaxName || "-"}</td>
+                        <td>${formatDate(booking.bookingDate)}</td>
+                        <td>${formatDate(booking.travelStartAt)}</td>
+                        <td class="amount">${formatCurrency(booking.totalAmount)}</td>
+                        <td class="amount paid">${formatCurrency(booking.paidAmount)}</td>
+                        <td class="amount ${booking.dueAmount > 0 ? "due" : ""}">${formatCurrency(booking.dueAmount)}</td>
+                        <td>${booking.status}</td>
+                        <td>${formatDate(payment.createdAt)}</td>
+                        <td>${getPaymentModeLabel(payment.paymentMode)}</td>
+                        <td>${payment.receiptNo || "-"}</td>
+                        <td class="amount">${payment.direction === "OUT" ? "-" : ""}${formatCurrency(payment.amount)}</td>
+                        <td>${payment.paymentType} (${payment.direction})</td>
+                        <td>${payment.notes || "-"}</td>
+                      </tr>
+                    `
+                    );
+                  })
             ).join("")}
           </tbody>
         </table>
@@ -728,46 +897,123 @@ const CustomerReport: React.FC = () => {
                                   <th className="text-right py-2 px-2">Paid</th>
                                   <th className="text-right py-2 px-2">Due</th>
                                   <th className="text-center py-2 px-2">Status</th>
+                                  <th className="text-center py-2 px-2">Payments</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {item.bookings.map((booking) => (
-                                  <tr
-                                    key={booking.id}
-                                    className="border-t border-gray-200 dark:border-gray-700"
-                                  >
-                                    <td className="py-2 px-2 text-gray-900 dark:text-gray-100">
-                                      {booking.packageName || "-"}
-                                    </td>
-                                    <td className="py-2 px-2 text-gray-600 dark:text-gray-400">
-                                      {booking.primaryPaxName || "-"}
-                                    </td>
-                                    <td className="py-2 px-2 text-gray-600 dark:text-gray-400">
-                                      {formatDate(booking.bookingDate)}
-                                    </td>
-                                    <td className="py-2 px-2 text-gray-600 dark:text-gray-400">
-                                      {formatDate(booking.travelStartAt)}
-                                    </td>
-                                    <td className="py-2 px-2 text-right text-gray-900 dark:text-gray-100">
-                                      {formatCurrency(booking.totalAmount)}
-                                    </td>
-                                    <td className="py-2 px-2 text-right text-green-600 dark:text-green-400">
-                                      {formatCurrency(booking.paidAmount)}
-                                    </td>
-                                    <td
-                                      className={`py-2 px-2 text-right ${
-                                        booking.dueAmount > 0
-                                          ? "text-amber-600 dark:text-amber-400"
-                                          : "text-gray-500 dark:text-gray-400"
-                                      }`}
-                                    >
-                                      {formatCurrency(booking.dueAmount)}
-                                    </td>
-                                    <td className="py-2 px-2 text-center">
-                                      {getStatusBadge(booking.status)}
-                                    </td>
-                                  </tr>
-                                ))}
+                                {item.bookings.map((booking) => {
+                                  const bookingPayments = booking.payments || [];
+
+                                  return (
+                                    <React.Fragment key={booking.id}>
+                                      <tr className="border-t border-gray-200 dark:border-gray-700">
+                                        <td className="py-2 px-2 text-gray-900 dark:text-gray-100">
+                                          {booking.packageName || "-"}
+                                        </td>
+                                        <td className="py-2 px-2 text-gray-600 dark:text-gray-400">
+                                          {booking.primaryPaxName || "-"}
+                                        </td>
+                                        <td className="py-2 px-2 text-gray-600 dark:text-gray-400">
+                                          {formatDate(booking.bookingDate)}
+                                        </td>
+                                        <td className="py-2 px-2 text-gray-600 dark:text-gray-400">
+                                          {formatDate(booking.travelStartAt)}
+                                        </td>
+                                        <td className="py-2 px-2 text-right text-gray-900 dark:text-gray-100">
+                                          {formatCurrency(booking.totalAmount)}
+                                        </td>
+                                        <td className="py-2 px-2 text-right text-green-600 dark:text-green-400">
+                                          {formatCurrency(booking.paidAmount)}
+                                        </td>
+                                        <td
+                                          className={`py-2 px-2 text-right ${
+                                            booking.dueAmount > 0
+                                              ? "text-amber-600 dark:text-amber-400"
+                                              : "text-gray-500 dark:text-gray-400"
+                                          }`}
+                                        >
+                                          {formatCurrency(booking.dueAmount)}
+                                        </td>
+                                        <td className="py-2 px-2 text-center">
+                                          {getStatusBadge(booking.status)}
+                                        </td>
+                                        <td className="py-2 px-2 text-center">
+                                          <Badge variant="info">
+                                            {booking.paymentCount ?? bookingPayments.length} payments
+                                          </Badge>
+                                        </td>
+                                      </tr>
+                                      <tr className="border-t border-gray-200 dark:border-gray-700">
+                                        <td colSpan={9} className="py-3 px-2 bg-white/70 dark:bg-gray-950/40">
+                                          <div className="space-y-3">
+                                            {bookingPayments.length > 0 ? (
+                                              <div className="overflow-x-auto">
+                                                <table className="w-full text-xs">
+                                                  <thead>
+                                                    <tr className="text-gray-500 dark:text-gray-400 uppercase">
+                                                      <th className="text-left py-2 px-2">Date</th>
+                                                      <th className="text-left py-2 px-2">Mode</th>
+                                                      <th className="text-left py-2 px-2">Receipt</th>
+                                                      <th className="text-right py-2 px-2">Amount</th>
+                                                      <th className="text-center py-2 px-2">Type</th>
+                                                    </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                    {bookingPayments.map((payment) => (
+                                                      <tr
+                                                        key={`${booking.id}-${payment.id}`}
+                                                        className="border-t border-gray-200 dark:border-gray-700"
+                                                      >
+                                                        <td className="py-2 px-2 text-gray-600 dark:text-gray-400">
+                                                          {formatDate(payment.createdAt)}
+                                                        </td>
+                                                        <td className="py-2 px-2">
+                                                          <Badge
+                                                            variant={getPaymentModeBadgeVariant(payment.paymentMode)}
+                                                            size="sm"
+                                                          >
+                                                            {getPaymentModeLabel(payment.paymentMode)}
+                                                          </Badge>
+                                                        </td>
+                                                        <td className="py-2 px-2 text-gray-600 dark:text-gray-400">
+                                                          {payment.receiptNo || "-"}
+                                                        </td>
+                                                        <td
+                                                          className={`py-2 px-2 text-right font-semibold ${
+                                                            payment.direction === "OUT"
+                                                              ? "text-red-600 dark:text-red-400"
+                                                              : "text-green-600 dark:text-green-400"
+                                                          }`}
+                                                        >
+                                                          {payment.direction === "OUT" ? "-" : ""}
+                                                          {formatCurrency(payment.amount)}
+                                                        </td>
+                                                        <td className="py-2 px-2 text-center">
+                                                          <Badge
+                                                            variant={
+                                                              payment.direction === "OUT" ? "danger" : "success"
+                                                            }
+                                                            size="sm"
+                                                          >
+                                                            {payment.paymentType} ({payment.direction})
+                                                          </Badge>
+                                                        </td>
+                                                      </tr>
+                                                    ))}
+                                                  </tbody>
+                                                </table>
+                                              </div>
+                                            ) : (
+                                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                No payment transactions recorded for this booking.
+                                              </p>
+                                            )}
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    </React.Fragment>
+                                  );
+                                })}
                               </tbody>
                             </table>
                           </div>
@@ -786,3 +1032,4 @@ const CustomerReport: React.FC = () => {
 };
 
 export default CustomerReport;
+

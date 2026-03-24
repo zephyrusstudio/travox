@@ -206,6 +206,13 @@ const CustomerManagement: React.FC = () => {
     setExistingAccountData(null);
   };
 
+  const handleCustomerSaved = useCallback(async () => {
+    if (searchTerm) {
+      await performSearch(searchTerm);
+    }
+    await fetchCustomers();
+  }, [fetchCustomers, performSearch, searchTerm]);
+
   // ── Effects ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     fetchCustomers();
@@ -322,6 +329,7 @@ const CustomerManagement: React.FC = () => {
         isEditing={Boolean(selectedCustomer)}
         selectedCustomer={selectedCustomer}
         setSelectedCustomer={setSelectedCustomer}
+        onCustomerSaved={handleCustomerSaved}
       />
 
       {/* Account Management Modal */}

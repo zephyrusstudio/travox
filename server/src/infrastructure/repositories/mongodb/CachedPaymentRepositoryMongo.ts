@@ -43,6 +43,14 @@ export class CachedPaymentRepositoryMongo implements IPaymentRepository {
     return this.baseRepo.findByBookingId(bookingId, orgId);
   }
 
+  async findByBookingIds(
+    bookingIds: string[],
+    orgId: string,
+    paymentTypes?: PaymentType[]
+  ): Promise<Payment[]> {
+    return this.baseRepo.findByBookingIds(bookingIds, orgId, paymentTypes);
+  }
+
   async findByCustomerId(customerId: string, orgId: string): Promise<Payment[]> {
     return this.baseRepo.findByCustomerId(customerId, orgId);
   }

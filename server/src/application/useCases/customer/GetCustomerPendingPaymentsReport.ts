@@ -1,9 +1,12 @@
 import { injectable, inject } from 'tsyringe';
 import { IBookingRepository } from '../../repositories/IBookingRepository';
 import { ICustomerRepository } from '../../repositories/ICustomerRepository';
+import { IPaymentRepository } from '../../repositories/IPaymentRepository';
 import { RedisService } from '../../../infrastructure/services/RedisService';
 import { Booking } from '../../../domain/Booking';
-import { BookingStatus } from '../../../models/FirestoreTypes';
+import { BookingStatus, PaymentType } from '../../../models/FirestoreTypes';
+
+type PaymentDirection = 'IN' | 'OUT';
 
 export interface CustomerBookingsReport {
   customer: {
@@ -23,6 +26,22 @@ export interface CustomerBookingsReport {
     status: BookingStatus;
     travelStartAt?: Date;
     travelEndAt?: Date;
+    payments: {
+      id: string;
+      paymentType: PaymentType;
+      direction: PaymentDirection;
+      amount: number;
+      paymentMode: string;
+      createdAt: Date;
+      receiptNo?: string;
+      notes?: string;
+    }[];
+    paymentCount: number;
+    paymentModeBreakdown: {
+      paymentMode: string;
+      amount: number;
+      count: number;
+    }[];
   }[];
   totalAmount: number;
   totalPaid: number;
@@ -37,6 +56,7 @@ export class GetCustomerPendingPaymentsReport {
   constructor(
     @inject('IBookingRepository') private bookingRepo: IBookingRepository,
     @inject('ICustomerRepository') private customerRepo: ICustomerRepository,
+    @inject('IPaymentRepository') private paymentRepo: IPaymentRepository,
     @inject('RedisService') private cache: RedisService
   ) {}
 
@@ -52,7 +72,7 @@ export class GetCustomerPendingPaymentsReport {
     pendingOnly: boolean = false
   ): Promise<CustomerBookingsReport[]> {
     // Generate cache key based on date range and pending filter
-    const cacheKey = `report:customers:bookings:${orgId}:${startDate.toISOString()}:${endDate.toISOString()}:pending=${pendingOnly}`;
+    const cacheKey = `report:customers:bookings:${orgId}:${startDate.toISOString()}:${endDate.toISOString()}:pending=${pendingOnly}:v2`;
 
     // Try to get from cache first
     const cached = await this.cache.get<CustomerBookingsReport[]>(cacheKey);
@@ -64,7 +84,11 @@ export class GetCustomerPendingPaymentsReport {
           ...b,
           bookingDate: new Date(b.bookingDate),
           travelStartAt: b.travelStartAt ? new Date(b.travelStartAt) : undefined,
-          travelEndAt: b.travelEndAt ? new Date(b.travelEndAt) : undefined
+          travelEndAt: b.travelEndAt ? new Date(b.travelEndAt) : undefined,
+          payments: (b.payments || []).map(p => ({
+            ...p,
+            createdAt: new Date(p.createdAt)
+          }))
         }))
       }));
     }
@@ -95,9 +119,26 @@ export class GetCustomerPendingPaymentsReport {
 
     // Get unique customer IDs
     const customerIds = Array.from(bookingsByCustomer.keys());
+    const bookingIds = filteredBookings.map(b => b.id);
 
     if (customerIds.length === 0) {
       return [];
+    }
+
+    const relevantPayments = bookingIds.length
+      ? await this.paymentRepo.findByBookingIds(
+          bookingIds,
+          orgId,
+          [PaymentType.RECEIVABLE, PaymentType.REFUND_OUTBOUND]
+        )
+      : [];
+
+    const paymentsByBooking = new Map<string, typeof relevantPayments>();
+    for (const payment of relevantPayments) {
+      if (!payment.bookingId) continue;
+      const existing = paymentsByBooking.get(payment.bookingId) || [];
+      existing.push(payment);
+      paymentsByBooking.set(payment.bookingId, existing);
     }
 
     // Fetch all customers in parallel (will use cached data where available)
@@ -122,18 +163,53 @@ export class GetCustomerPendingPaymentsReport {
           phone: customer.phone,
           email: customer.email
         },
-        bookings: customerBookings.map(b => ({
-          id: b.id,
-          packageName: b.packageName,
-          primaryPaxName: b.primaryPaxName,
-          bookingDate: b.bookingDate,
-          totalAmount: b.totalAmount,
-          paidAmount: b.paidAmount,
-          dueAmount: b.dueAmount,
-          status: b.status,
-          travelStartAt: b.travelStartAt,
-          travelEndAt: b.travelEndAt
-        })),
+        bookings: customerBookings.map(b => {
+          const bookingPayments = (paymentsByBooking.get(b.id) || []).sort(
+            (left, right) => right.createdAt.getTime() - left.createdAt.getTime()
+          );
+
+          const paymentModeAccumulator = new Map<string, { paymentMode: string; amount: number; count: number }>();
+          for (const payment of bookingPayments) {
+            const paymentMode = payment.paymentMode;
+            const existing = paymentModeAccumulator.get(paymentMode) || {
+              paymentMode,
+              amount: 0,
+              count: 0
+            };
+            existing.count += 1;
+            existing.amount += payment.paymentType === PaymentType.RECEIVABLE
+              ? payment.amount
+              : -payment.amount;
+            paymentModeAccumulator.set(paymentMode, existing);
+          }
+
+          const payments = bookingPayments.map(payment => ({
+            id: payment.id,
+            paymentType: payment.paymentType,
+            direction: payment.paymentType === PaymentType.RECEIVABLE ? 'IN' as const : 'OUT' as const,
+            amount: payment.amount,
+            paymentMode: payment.paymentMode,
+            createdAt: payment.createdAt,
+            receiptNo: payment.receiptNo,
+            notes: payment.notes
+          }));
+
+          return {
+            id: b.id,
+            packageName: b.packageName,
+            primaryPaxName: b.primaryPaxName,
+            bookingDate: b.bookingDate,
+            totalAmount: b.totalAmount,
+            paidAmount: b.paidAmount,
+            dueAmount: b.dueAmount,
+            status: b.status,
+            travelStartAt: b.travelStartAt,
+            travelEndAt: b.travelEndAt,
+            payments,
+            paymentCount: payments.filter(p => p.direction === 'IN').length,
+            paymentModeBreakdown: Array.from(paymentModeAccumulator.values())
+          };
+        }),
         totalAmount,
         totalPaid,
         totalDue,

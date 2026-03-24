@@ -430,6 +430,11 @@ const options: swaggerJSDoc.Options = {
               type: 'string',
               example: 'booking_123456'
             },
+            pnrNo: {
+              type: 'string',
+              nullable: true,
+              example: 'PNR123'
+            },
             customerId: {
               type: 'string',
               example: 'cust_123456'

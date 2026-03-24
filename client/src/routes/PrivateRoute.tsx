@@ -1,6 +1,8 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 
+const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY || "travox-at";
+
 /**
  * Higher-order component (HOC) for private routes.
  * Redirects users to the login page if not authenticated.
@@ -13,7 +15,7 @@ const PrivateRoute = <P extends object>(
   Component: React.ComponentType<P>
 ): React.FC<P> => {
   const WrappedComponent: React.FC<P> = (props) => {
-    const token = localStorage.getItem("token") ?? sessionStorage.getItem("token");
+    const token = localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY);
 
     if (!token) {
       return <Navigate to="/" replace />;

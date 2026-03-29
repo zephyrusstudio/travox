@@ -1,14 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Building2,
   Calendar,
-  ChevronDown,
   Clock,
+  Command,
   CreditCard,
+  FileText,
   LogOut,
   Menu,
   Moon,
-  Plane,
   Receipt,
   RefreshCw,
   Shield,
@@ -16,11 +15,12 @@ import {
   Users,
   X,
 } from "lucide-react";
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../../contexts/AppContext";
 import { AppModule, canAccessModule } from "../../utils/roleAccess";
 import { successToast } from "../../utils/toasts";
+import { Breadcrumbs, CommandPalette, CommandItem, QuickActions } from "../../design-system/shell";
 import MaintenanceBanner from "./MaintenanceBanner";
 import Button from "./Button";
 
@@ -29,66 +29,143 @@ interface LayoutProps {
   currentPage: string;
 }
 
-type SidebarItem = {
-  id: AppModule;
+type NavItem = {
+  id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  submenu?: any[];
+  to: string;
+  module?: AppModule;
+  legacy?: boolean;
 };
 
-const sidebarItems: SidebarItem[] = [
-  // { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  // { id: "tickets", label: "Ticket Upload", icon: Upload },
-  // {
-  //   id: "ledgers",
-  //   label: "Ledgers & Reports",
-  //   icon: BookOpen,
-  //   submenu: [
-  //     { id: "customer-ledger", label: "Customer Ledger", icon: Users },
-  //     { id: "vendor-ledger", label: "Vendor Ledger", icon: Building2 },
-  //     {
-  //       id: "outstanding-payments",
-  //       label: "Outstanding Payments",
-  //       icon: AlertCircle,
-  //     },
-  //     { id: "monthly-summary", label: "Monthly Summary", icon: BarChart3 },
-  //     { id: "gst-tax", label: "GST & Tax View", icon: Calculator },
-  //   ],
-  // },
-  // { id: "calendar", label: "Calendar", icon: Calendar },
-  { id: "customers", label: "Customers", icon: Users },
-  { id: "vendors", label: "Vendors", icon: Building2 },
-  { id: "bookings", label: "Bookings", icon: Calendar },
-  { id: "payments", label: "Payments", icon: CreditCard },
-  { id: "expenses", label: "Expenses", icon: Receipt },
-  { id: "refunds", label: "Refunds", icon: RefreshCw },
-  // { id: "reports", label: "Reports", icon: FileText },
-  { id: "logs", label: "Audit Logs", icon: Clock },
-  { id: "users", label: "User Access", icon: Shield },
-  // { id: "settings", label: "Settings", icon: Settings },
+type NavGroup = {
+  title: string;
+  items: NavItem[];
+};
+
+const navGroups: NavGroup[] = [
+  {
+    title: "Operations",
+    items: [
+      { id: "customers", label: "Customers", icon: Users, to: "/customers", module: "customers" },
+      { id: "vendors", label: "Vendors", icon: Building2, to: "/vendors", module: "vendors" },
+      { id: "bookings", label: "Bookings", icon: Calendar, to: "/bookings", module: "bookings" },
+    ],
+  },
+  {
+    title: "Finance",
+    items: [
+      { id: "payments", label: "Payments", icon: CreditCard, to: "/payments", module: "payments" },
+      { id: "expenses", label: "Expenses", icon: Receipt, to: "/expenses", module: "expenses" },
+      { id: "refunds", label: "Refunds", icon: RefreshCw, to: "/refunds", module: "refunds" },
+    ],
+  },
+  {
+    title: "Reporting",
+    items: [
+      { id: "reports", label: "Reporting Center", icon: FileText, to: "/reports", module: "customers" },
+      { id: "customers-report", label: "Customer Report", icon: FileText, to: "/customers/report", module: "customers" },
+      { id: "vendors-report", label: "Vendor Report", icon: FileText, to: "/vendors/report", module: "vendors" },
+    ],
+  },
+  {
+    title: "Administration",
+    items: [
+      { id: "logs", label: "Audit Logs", icon: Clock, to: "/logs", module: "logs" },
+      { id: "users", label: "User Access", icon: Shield, to: "/users", module: "users" },
+    ],
+  },
+];
+
+const routeNameMap: Record<string, string> = {
+  customers: "Customers",
+  vendors: "Vendors",
+  bookings: "Bookings",
+  payments: "Payments",
+  expenses: "Expenses",
+  refunds: "Refunds",
+  logs: "Audit Logs",
+  users: "User Access",
+  reports: "Reporting Center",
+  report: "Report",
+  legacy: "Legacy",
+  dashboard: "Dashboard",
+  ledgers: "Ledgers",
+  calendar: "Calendar",
+  settings: "Settings",
+  tickets: "Tickets / OCR",
+};
+
+const quickActionsByPage: Record<string, { id: string; label: string; to: string }[]> = {
+  customers: [
+    { id: "customer.create", label: "New Customer", to: "/customers" },
+    { id: "customer.report", label: "Customer Report", to: "/customers/report" },
+  ],
+  vendors: [
+    { id: "vendor.create", label: "New Vendor", to: "/vendors" },
+    { id: "vendor.report", label: "Vendor Report", to: "/vendors/report" },
+  ],
+  bookings: [
+    { id: "booking.create", label: "New Booking", to: "/bookings" },
+    { id: "customer.create", label: "New Customer", to: "/customers" },
+  ],
+  payments: [
+    { id: "payment.create", label: "Record Payment", to: "/payments" },
+    { id: "expense.create", label: "Record Expense", to: "/expenses" },
+    { id: "refund.create", label: "Create Refund", to: "/refunds" },
+  ],
+  expenses: [
+    { id: "expense.create", label: "Record Expense", to: "/expenses" },
+    { id: "payment.create", label: "Record Payment", to: "/payments" },
+  ],
+  refunds: [
+    { id: "refund.create", label: "Create Refund", to: "/refunds" },
+    { id: "payment.create", label: "Record Payment", to: "/payments" },
+  ],
+  reports: [
+    { id: "report.center", label: "Reporting Center", to: "/reports" },
+    { id: "customer.report", label: "Customer Report", to: "/customers/report" },
+    { id: "vendor.report", label: "Vendor Report", to: "/vendors/report" },
+  ],
+};
+
+const commandItems: CommandItem[] = [
+  { id: "customers", label: "Open Customers", to: "/customers" },
+  { id: "bookings", label: "Open Bookings", to: "/bookings" },
+  { id: "vendors", label: "Open Vendors", to: "/vendors" },
+  { id: "payments", label: "Open Payments", to: "/payments" },
+  { id: "expenses", label: "Open Expenses", to: "/expenses" },
+  { id: "refunds", label: "Open Refunds", to: "/refunds" },
+  { id: "reports", label: "Open Reporting Center", to: "/reports" },
+  { id: "customer-report", label: "Open Customer Report", to: "/customers/report" },
+  { id: "vendor-report", label: "Open Vendor Report", to: "/vendors/report" },
+  { id: "audit-logs", label: "Open Audit Logs", to: "/logs" },
+  { id: "user-access", label: "Open User Access", to: "/users" },
 ];
 
 const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(["ledgers"]);
   const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('travox-theme') === 'true';
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("travox-theme") === "true";
     }
     return false;
   });
   const [planeClickCount, setPlaneClickCount] = useState(0);
   const [darkModeUnlocked, setDarkModeUnlocked] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
+
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useApp();
 
   React.useEffect(() => {
     if (darkMode) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
-    localStorage.setItem('travox-theme', String(darkMode));
+    localStorage.setItem("travox-theme", String(darkMode));
   }, [darkMode]);
 
   React.useEffect(() => {
@@ -97,29 +174,59 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
     }
   }, [planeClickCount]);
 
-  const accessibleSidebarItems = React.useMemo(
-    () =>
-      sidebarItems.filter((item) =>
-        canAccessModule(currentUser?.role, item.id)
-      ),
-    [currentUser?.role]
-  );
+  React.useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setCommandOpen((prev) => !prev);
+      }
+    };
 
-  const toggleSubmenu = (menuId: string) => {
-    setExpandedMenus((prev) =>
-      prev.includes(menuId)
-        ? prev.filter((id) => id !== menuId)
-        : [...prev, menuId]
-    );
-  };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
-  const isSubmenuActive = (submenuItems: any[]) => {
-    return submenuItems.some((item) => item.id === currentPage);
-  };
+  const accessibleGroups = useMemo(() => {
+    return navGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => {
+          if (!item.module) return true;
+          return canAccessModule(currentUser?.role, item.module);
+        }),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [currentUser?.role]);
+
+  const accessibleCommands = useMemo(() => {
+    return commandItems.filter((item) => {
+      const found = navGroups.flatMap((g) => g.items).find((gItem) => gItem.to === item.to);
+      if (!found?.module) return true;
+      return canAccessModule(currentUser?.role, found.module);
+    });
+  }, [currentUser?.role]);
+
+  const breadcrumbs = useMemo(() => {
+    const segments = location.pathname.split("/").filter(Boolean);
+    if (!segments.length) {
+      return [{ label: "Home", href: "/customers" }];
+    }
+
+    let pathAccumulator = "";
+    return segments.map((segment, index) => {
+      pathAccumulator += `/${segment}`;
+      const label = routeNameMap[segment] || segment.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      return {
+        label,
+        href: index < segments.length - 1 ? pathAccumulator : undefined,
+      };
+    });
+  }, [location.pathname]);
+
+  const quickActions = quickActionsByPage[currentPage] || [];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
@@ -127,141 +234,108 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
         />
       )}
 
-      {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between h-16 px-6 bg-gradient-to-t from-blue-600 to-blue-700 relative" >
-          <div className="relative z-10 flex items-center space-x-3">
-            <button
-              type="button"
-              aria-label="Travox Plane"
-              className="focus:outline-none"
-              onClick={() => {
-                setPlaneClickCount((prev) => prev + 1);
-              }}
-            >
-              <Plane className="w-6 h-6 text-white" />
-            </button>
-            <span className="text-xl font-bold text-white">Travox</span>
+        <div
+          className={`flex items-center justify-between h-16 px-6 relative ${
+            darkMode
+              ? "bg-gradient-to-t from-[var(--color-primary)] to-[var(--color-primary-strong)]"
+              : "bg-white border-b border-gray-200"
+          }`}
+        >
+          <button
+            type="button"
+            aria-label="Travox Logo"
+            className="focus:outline-none"
+            onClick={() => setPlaneClickCount((prev) => prev + 1)}
+          >
+            <img
+              src="/brand/travox-logo.png"
+              alt="Travox"
+              className="h-8 w-auto"
+            />
+          </button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={Command}
+              onClick={() => setCommandOpen(true)}
+              className={darkMode ? "!text-white !border-white/20" : "!text-gray-700"}
+              aria-label="Open command palette"
+            />
+            {darkModeUnlocked && (
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  darkMode
+                    ? "text-white/80 hover:text-white hover:bg-white/10"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                }`}
+                title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+            )}
           </div>
-          {darkModeUnlocked && (
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
-              title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-          )}
         </div>
 
-        <nav className="mt-6 pb-20 overflow-y-auto flex-1 min-h-0">
-          {accessibleSidebarItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentPage === item.id;
-            const hasSubmenu = item.submenu && item.submenu.length > 0;
-            const isExpanded = expandedMenus.includes(item.id);
-            const isSubmenuItemActive =
-              hasSubmenu && isSubmenuActive(item.submenu!);
+        <nav className="mt-4 overflow-y-auto flex-1 min-h-0 px-3 pb-4">
+          {accessibleGroups.map((group) => (
+            <div key={group.title} className="mb-5">
+              <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                {group.title}
+              </p>
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.to || currentPage === item.id;
 
-            return (
-              <div key={item.id} className="mb-2">
-                {hasSubmenu ? (
-                  <>
-                    <button
-                      onClick={() => toggleSubmenu(item.id)}
-                      className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium transition-all duration-200 group ${
-                        isSubmenuItemActive
-                          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
-                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+                  return (
+                    <Link
+                      key={item.id}
+                      to={item.to}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group ${
+                        isActive
+                          ? "bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-strong)] text-white shadow-lg"
+                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       }`}
                     >
-                      <div className="flex items-center">
-                        <Icon
-                          className={`w-5 h-5 mr-3 transition-transform duration-200 ${
-                            isSubmenuItemActive
-                              ? "text-white"
-                              : "text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200"
-                          }`}
-                        />
-                        {item.label}
-                      </div>
-                      <ChevronDown
-                        className={`w-4 h-4 transition-transform duration-200 ${
-                          isExpanded ? "rotate-180" : ""
-                        } ${
-                          isSubmenuItemActive ? "text-white" : "text-gray-500 dark:text-gray-400"
+                      <Icon
+                        className={`w-4 h-4 mr-3 ${
+                          isActive ? "text-white" : "text-gray-500 dark:text-gray-400"
                         }`}
                       />
-                    </button>
-
-                    {isExpanded && (
-                      <div className="mt-2 ml-4 space-y-1">
-                        {item.submenu!.map((subItem) => {
-                          const SubIcon = subItem.icon;
-                          const isSubActive = currentPage === subItem.id;
-
-                          return (
-                            <Link
-                              key={subItem.id}
-                              to={`/${subItem.id}`}
-                              onClick={() => setSidebarOpen(false)}
-                              className={`flex items-center px-4 py-2 text-sm font-medium transition-all duration-200 ${
-                                isSubActive
-                                  ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-l-2 border-blue-600"
-                                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
-                              }`}
-                            >
-                              <SubIcon className="w-4 h-4 mr-3" />
-                              {subItem.label}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <Link
-                    to={`/${item.id}`}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center px-4 py-3 mb-2 text-sm font-medium transition-all duration-200 group ${
-                      isActive
-                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
-                        : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
-                    }`}
-                  >
-                    <Icon
-                      className={`w-5 h-5 mr-3 transition-transform duration-200 ${
-                        isActive
-                          ? "text-white"
-                          : "text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200"
-                      }`}
-                    />
-                    {item.label}
-                  </Link>
-                )}
+                      <span>{item.label}</span>
+                      {item.legacy && (
+                        <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded ${isActive ? "bg-white/20" : "bg-gray-200 dark:bg-gray-700"}`}>
+                          Legacy
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+        <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-4 min-w-14 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-full flex items-center justify-center shadow-sm">
-                {currentUser?.username.split(" ").map((word: string) => word.charAt(0).toUpperCase()).join("")}
+              <div className="p-3 min-w-12 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-strong)] text-white font-bold rounded-full flex items-center justify-center shadow-sm">
+                {currentUser?.username
+                  .split(" ")
+                  .map((word: string) => word.charAt(0).toUpperCase())
+                  .join("")}
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {currentUser?.username}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                  {currentUser?.role}
-                </p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">{currentUser?.username}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{currentUser?.role}</p>
               </div>
             </div>
             <Button
@@ -278,35 +352,45 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage }) => {
               variant="ghost"
               icon={LogOut}
               size="vr"
-            >
-            </Button>
+            />
           </div>
         </div>
       </div>
 
-      {/* Floating hamburger button for mobile */}
       <Button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className={`lg:hidden fixed top-4 p-0 right-4 z-40 bg-blue-600 hover:bg-blue-700 text-white shadow-md ${sidebarOpen ? 'rotate-180' : ''} transition-transform duration-200`}
+        className={`lg:hidden fixed top-4 p-0 right-4 z-40 bg-[var(--color-primary)] hover:bg-[var(--color-primary-strong)] text-white shadow-md ${
+          sidebarOpen ? "rotate-180" : ""
+        } transition-transform duration-200`}
         icon={sidebarOpen ? X : Menu}
-        variant={sidebarOpen ? 'danger' : 'primary'}
+        variant={sidebarOpen ? "danger" : "primary"}
         size="md"
         aria-label="Toggle menu"
-      >
-      </Button>
+      />
 
-      {/* Main content */}
-      <div className="lg:pl-64 min-h-screen">
-        {/* Maintenance Banner */}
+      <div className="lg:pl-72 min-h-screen">
         <MaintenanceBanner
-          isEnabled={import.meta.env.VITE_MAINTENANCE_MODE === 'true'}
+          isEnabled={import.meta.env.VITE_MAINTENANCE_MODE === "true"}
           message={import.meta.env.VITE_MAINTENANCE_MESSAGE}
           details={import.meta.env.VITE_MAINTENANCE_DETAILS}
         />
-        
-        {/* Page content */}
-        <main className="p-4 sm:p-6 min-h-screen">{children}</main>
+
+        <main className="p-4 sm:p-6 min-h-screen">
+          <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <Breadcrumbs items={breadcrumbs} />
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                {routeNameMap[currentPage] || routeNameMap[location.pathname.split("/").filter(Boolean).pop() || ""] || "Workspace"}
+              </h1>
+            </div>
+            {quickActions.length > 0 && <QuickActions actions={quickActions} />}
+          </div>
+
+          {children}
+        </main>
       </div>
+
+      <CommandPalette open={commandOpen} onClose={() => setCommandOpen(false)} commands={accessibleCommands} />
     </div>
   );
 };

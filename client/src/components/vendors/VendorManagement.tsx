@@ -1,6 +1,7 @@
 import { Building2, FileText, Plus, RefreshCw } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PageHeader, StatCard } from "../../design-system/patterns";
 import { useSearch } from "../../hooks/useSearch";
 import { Vendor } from "../../types";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
@@ -83,6 +84,7 @@ const VendorManagement: React.FC = () => {
     const result = searchTerm ? searchResults : vendors;
     return Array.isArray(result) ? result : [];
   }, [searchTerm, searchResults, vendors]);
+  const linkedAccounts = filteredVendors.filter((vendor) => Boolean(vendor.accountId)).length;
 
   // Helpers
   const fetchVendors = useCallback(async () => {
@@ -192,49 +194,71 @@ const VendorManagement: React.FC = () => {
         .reduce((t, e) => t + (e.amount || 0), 0),
     [expenses]
   );
+  const totalVisibleExpense = filteredVendors.reduce(
+    (sum, vendor) => sum + getVendorExpenseTotal(vendor.id),
+    0
+  );
 
   useEffect(() => {
     fetchVendors();
   }, [fetchVendors]);
 
+  useEffect(() => {
+    const handleQuickAction = (event: Event) => {
+      const customEvent = event as CustomEvent<{ actionId?: string }>;
+      if (customEvent.detail?.actionId === "vendor.create") {
+        openForm();
+      }
+    };
+
+    window.addEventListener("travox:quick-action", handleQuickAction);
+    return () =>
+      window.removeEventListener("travox:quick-action", handleQuickAction);
+  }, []);
+
   // Render
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Vendor Management
-          </h1>
-          <p className="text-gray-600">
-            Manage your travel service providers and suppliers
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-          <Button
-            onClick={() => navigate("/vendors/report")}
-            icon={FileText}
-            variant="outline"
-          >
-            Report
-          </Button>
-          <Button
-            onClick={fetchVendors}
-            icon={RefreshCw}
-            variant="outline"
-            disabled={loading}
-          >
-            Refresh
-          </Button>
-          <Button onClick={() => openForm()} icon={Plus}>
-            Create Vendor
-          </Button>
-        </div>
+      <PageHeader
+        title="Vendor Management"
+        description="Manage service providers, contacts, and payout-linked account visibility."
+        actions={
+          <>
+            <Button
+              onClick={() => navigate("/vendors/report")}
+              icon={FileText}
+              variant="outline"
+            >
+              Report
+            </Button>
+            <Button
+              onClick={fetchVendors}
+              icon={RefreshCw}
+              variant="outline"
+              disabled={loading}
+            >
+              Refresh
+            </Button>
+            <Button onClick={() => openForm()} icon={Plus}>
+              Create Vendor
+            </Button>
+          </>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard
+          label={searchTerm ? "Search Results" : "Visible Vendors"}
+          value={filteredVendors.length.toString()}
+          tone="primary"
+        />
+        <StatCard label="Linked Accounts" value={linkedAccounts.toString()} />
+        <StatCard label="Visible Expense Volume" value={`₹${totalVisibleExpense.toLocaleString("en-IN")}`} />
       </div>
 
       {/* Inline error */}
       {errorMsg && (
-        <div className="border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+        <div className="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
           {errorMsg}
         </div>
       )}
@@ -252,7 +276,7 @@ const VendorManagement: React.FC = () => {
 
       {/* Pagination */}
       {!loading && (
-        filteredVendors.length > 0 && (
+        !searchTerm && filteredVendors.length > 0 && (
           <Pagination
             currentPage={currentPage}
             totalItems={totalItems}
@@ -266,7 +290,7 @@ const VendorManagement: React.FC = () => {
 
       {/* Table */}
       {loading ? (
-        <Card>
+        <Card className="rounded-2xl">
           <CardContent className="flex items-center justify-center py-16">
             <div className="flex items-center space-x-3">
               <Spinner size="md" />
@@ -274,11 +298,17 @@ const VendorManagement: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-      ) : vendors.length === 0 ? (
-        <div className="text-center py-12">
-          <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Vendors Found</h3>
-          <p className="text-gray-500">Get started by adding your first vendor.</p>
+      ) : filteredVendors.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white py-12 text-center dark:border-gray-700 dark:bg-gray-800">
+          <Building2 className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+          <h3 className="mb-2 text-lg font-medium text-gray-900">
+            {searchTerm ? "No Vendors Match Your Search" : "No Vendors Found"}
+          </h3>
+          <p className="text-gray-500">
+            {searchTerm
+              ? "Try another keyword or clear search to see all vendors."
+              : "Get started by adding your first vendor."}
+          </p>
         </div>
       ) : (
         <VendorTable

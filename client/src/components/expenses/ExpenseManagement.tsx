@@ -4,10 +4,11 @@ import {
   Plus,
   IndianRupee,
   RefreshCw,
-  Search,
   Wallet,
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { PageHeader, StatCard } from "../../design-system/patterns";
+import { SearchField } from "../../design-system/primitives";
 import { useSearch } from "../../hooks/useSearch";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
@@ -337,13 +338,26 @@ const ExpenseManagement: React.FC = () => {
     return `EXP${timestamp}${randomNum}`;
   };
 
-  const handleOpenModal = () => {
+  const handleOpenModal = useCallback(() => {
     setFormData({
       ...DEFAULT_FORM_STATE,
       receipt_number: generateReceiptNumber(),
     });
     setIsModalOpen(true);
-  };
+  }, []);
+
+  useEffect(() => {
+    const handleQuickAction = (event: Event) => {
+      const customEvent = event as CustomEvent<{ actionId?: string }>;
+      if (customEvent.detail?.actionId === "expense.create") {
+        handleOpenModal();
+      }
+    };
+
+    window.addEventListener("travox:quick-action", handleQuickAction);
+    return () =>
+      window.removeEventListener("travox:quick-action", handleQuickAction);
+  }, [handleOpenModal]);
 
   const addExpense = useCallback(
     async (data: ExpenseFormState): Promise<boolean> => {
@@ -419,46 +433,52 @@ const ExpenseManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Expense Management
-          </h1>
-          <p className="text-gray-600">
-            Record vendor payouts and track operating expenses
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-          <Button
-            onClick={fetchExpenses}
-            icon={RefreshCw}
-            variant="outline"
-            disabled={loadingExpenses}
-          >
-            Refresh
-          </Button>
-          <Button onClick={handleOpenModal} icon={Plus}>
-            Record Expense
-          </Button>
-        </div>
+      <PageHeader
+        title="Expense Management"
+        description="Record vendor payouts and track operating expenses with account-linked controls."
+        actions={
+          <>
+            <Button
+              onClick={fetchExpenses}
+              icon={RefreshCw}
+              variant="outline"
+              disabled={loadingExpenses}
+            >
+              Refresh
+            </Button>
+            <Button onClick={handleOpenModal} icon={Plus}>
+              Record Expense
+            </Button>
+          </>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard
+          label={searchTerm ? "Search Results" : "Visible Expenses"}
+          value={filteredExpenses.length.toString()}
+          tone="primary"
+        />
+        <StatCard
+          label="Visible Spend"
+          value={`₹${filteredExpenses.reduce((sum, item) => sum + item.amount, 0).toLocaleString("en-IN")}`}
+        />
+        <StatCard label="Vendors Available" value={vendors.length.toString()} />
       </div>
 
-      <div className="flex items-center space-x-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search expenses..."
+      <div className="flex items-center">
+        <div className="relative flex-1">
+          <SearchField
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 w-full border border-gray-300"
+            onChange={setSearchTerm}
+            placeholder="Search expenses by amount or vendor"
           />
           <Loader isLoading={isSearching} />
         </div>
       </div>
 
       {/* Pagination */}
-      {filteredExpenses.length > 0 && (
+      {!searchTerm && filteredExpenses.length > 0 && (
         <Pagination
           currentPage={currentPage}
           totalItems={totalItems}
@@ -471,7 +491,7 @@ const ExpenseManagement: React.FC = () => {
 
       {/* Expenses Table */}
       {isLoading ? (
-        <Card>
+        <Card className="rounded-2xl">
           <CardContent className="flex items-center justify-center py-16">
             <div className="flex items-center space-x-3">
               <Spinner size="md" />
@@ -480,22 +500,28 @@ const ExpenseManagement: React.FC = () => {
           </CardContent>
         </Card>
       ) : filteredExpenses.length === 0 ? (
-        <div className="text-center py-12">
-          <Wallet className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No Expenses Found
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white py-12 text-center dark:border-gray-700 dark:bg-gray-800">
+          <Wallet className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+          <h3 className="mb-2 text-lg font-medium text-gray-900">
+            {searchTerm ? "No Expenses Match Your Search" : "No Expenses Found"}
           </h3>
           <p className="text-gray-500">
-            No expenses recorded yet.
+            {searchTerm ? "Try another keyword or clear search." : "Record an expense to populate this list."}
           </p>
         </div>
       ) : (
-        <Card>
-          <CardContent>
+        <Card className="overflow-hidden rounded-2xl border-gray-200/80 shadow-sm dark:border-gray-700">
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50/80 px-4 py-2.5 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-300">
+              <span className="font-medium">
+                Showing {filteredExpenses.length} expense{filteredExpenses.length === 1 ? "" : "s"}
+              </span>
+              <span>Review vendor, amount, and mode quickly before opening transaction details.</span>
+            </div>
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableCell header>IndianRupee</TableCell>
+                <TableRow className="bg-gray-50/80 dark:bg-gray-900">
+                  <TableCell header>Receipt No.</TableCell>
                   <TableCell header>Vendor</TableCell>
                   <TableCell header>Date</TableCell>
                   <TableCell header>Amount</TableCell>

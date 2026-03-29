@@ -7,6 +7,7 @@ import { BookingStatus, ModeOfJourney, PAXType, Sex } from '../../../models/Fire
 import { BookingPax } from '../../../domain/BookingPax';
 import { BookingItinerary } from '../../../domain/BookingItinerary';
 import { BookingSegment } from '../../../domain/BookingSegment';
+import { RedisService } from '../../../infrastructure/services/RedisService';
 
 // DTOs for creation from raw request data
 interface PaxDTO {
@@ -66,7 +67,8 @@ export class CreateBooking {
   constructor(
     @inject('IBookingRepository') private bookingRepo: IBookingRepository,
     @inject('ICustomerRepository') private customerRepo: ICustomerRepository,
-    @inject('IVendorRepository') private vendorRepo: IVendorRepository
+    @inject('IVendorRepository') private vendorRepo: IVendorRepository,
+    @inject('RedisService') private cache: RedisService
   ) {}
 
   async execute(data: CreateBookingDTO, orgId: string, createdBy: string): Promise<Booking> {
@@ -166,6 +168,9 @@ export class CreateBooking {
         await this.vendorRepo.update(vendor, orgId);
       }
     }
+
+    await this.cache.invalidatePattern(`report:customers:bookings:${orgId}:*`);
+    await this.cache.invalidatePattern(`report:center:${orgId}:*`);
 
     return createdBooking;
   }

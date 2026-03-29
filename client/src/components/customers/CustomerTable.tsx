@@ -1,5 +1,6 @@
-import { Edit, FileText, Search, Trash2 } from "lucide-react";
+import { Edit, FileText, Trash2 } from "lucide-react";
 import React from "react";
+import { SearchField } from "../../design-system/primitives";
 import { CustomerTableProps } from "../../types";
 import { formatDate } from "../../utils/misc";
 import Badge from "../ui/Badge";
@@ -16,11 +17,17 @@ const CustomerTable: React.FC<CustomerTableProps> & {
   SearchBox: React.FC<SearchBoxProps>;
 } = ({ customers, onEdit, onDelete, onViewTickets }) => {
   return (
-    <Card>
-      <CardContent>
+    <Card className="overflow-hidden rounded-2xl border-gray-200/80 shadow-sm dark:border-gray-700">
+      <CardContent className="p-0">
+        <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50/80 px-4 py-2.5 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-300">
+          <span className="font-medium">
+            Showing {customers.length} customer{customers.length === 1 ? "" : "s"}
+          </span>
+          <span>Use actions to open bookings, edit, or delete.</span>
+        </div>
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-gray-50/80 dark:bg-gray-900">
               <TableCell header>Name</TableCell>
               <TableCell header>Contact</TableCell>
               <TableCell header>GSTIN</TableCell>
@@ -86,7 +93,7 @@ const CustomerTable: React.FC<CustomerTableProps> & {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -130,16 +137,11 @@ const CustomerTable: React.FC<CustomerTableProps> & {
 // Search box kept identical classes and structure
 export type SearchBoxProps = { value: string; onChange: (v: string) => void };
 const SearchBox: React.FC<SearchBoxProps> = ({ value, onChange }) => (
-  <div className="relative">
-    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
-    <input
-      type="text"
-      placeholder="Search customers..."
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
-    />
-  </div>
+  <SearchField
+    value={value}
+    onChange={onChange}
+    placeholder="Search customers by name, phone, email, or passport"
+  />
 );
 
 CustomerTable.SearchBox = SearchBox;

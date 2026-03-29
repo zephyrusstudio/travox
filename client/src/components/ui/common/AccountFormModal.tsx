@@ -153,10 +153,10 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
       size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-4">
+        <div className="form-section space-y-4">
           {/* Bank Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Bank Name *
             </label>
             <input
@@ -166,14 +166,14 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, bankName: e.target.value })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
               placeholder="Enter bank name"
             />
           </div>
 
           {/* IFSC Code */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               IFSC Code *
             </label>
             <input
@@ -186,7 +186,7 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
                   ifscCode: e.target.value.toUpperCase()
                 })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input uppercase"
               placeholder="Enter IFSC code"
               maxLength={11}
             />
@@ -194,7 +194,7 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
 
           {/* Branch Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Branch Name *
             </label>
             <input
@@ -204,14 +204,14 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, branchName: e.target.value })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
               placeholder="Enter branch name"
             />
           </div>
 
           {/* Account Number */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Account Number *
             </label>
             <input
@@ -224,14 +224,14 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
                   accountNo: e.target.value.replace(/\D/g, "")
                 })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
               placeholder="Enter account number"
             />
           </div>
 
           {/* UPI ID */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               UPI ID
             </label>
             <input
@@ -240,13 +240,13 @@ const AccountFormModal: React.FC<AccountFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, upiId: e.target.value })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
               placeholder="Enter UPI ID (optional)"
             />
           </div>
         </div>
 
-        <div className="flex items-center justify-end space-x-3 pt-4">
+        <div className="form-footer">
           <Button type="button" variant="outline" onClick={handleClose}>
             Cancel
           </Button>

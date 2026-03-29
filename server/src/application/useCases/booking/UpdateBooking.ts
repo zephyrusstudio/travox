@@ -6,6 +6,7 @@ import { BookingPax } from '../../../domain/BookingPax';
 import { BookingItinerary } from '../../../domain/BookingItinerary';
 import { BookingSegment } from '../../../domain/BookingSegment';
 import { getCurrentISTDate } from '../../../utils/timezone';
+import { RedisService } from '../../../infrastructure/services/RedisService';
 
 // Re-using DTOs from CreateBooking for consistency
 interface PaxDTO {
@@ -63,7 +64,8 @@ interface UpdateBookingDTO {
 @injectable()
 export class UpdateBooking {
   constructor(
-    @inject('IBookingRepository') private bookingRepo: IBookingRepository
+    @inject('IBookingRepository') private bookingRepo: IBookingRepository,
+    @inject('RedisService') private cache: RedisService
   ) {}
 
   async execute(bookingId: string, data: UpdateBookingDTO, orgId: string, updatedBy: string): Promise<Booking> {
@@ -76,12 +78,24 @@ export class UpdateBooking {
     }
 
     // Update top-level properties
-    booking.customerId = data.customerId || booking.customerId;
-    booking.currency = data.currency || booking.currency;
-    booking.packageName = data.packageName || booking.packageName;
-    booking.pnrNo = data.pnrNo || booking.pnrNo;
-    booking.modeOfJourney = data.modeOfJourney || booking.modeOfJourney;
-    booking.advanceAmount = data.advanceAmount || booking.advanceAmount;
+    if (data.customerId !== undefined) {
+      booking.customerId = data.customerId;
+    }
+    if (data.currency !== undefined) {
+      booking.currency = data.currency;
+    }
+    if (data.packageName !== undefined) {
+      booking.packageName = data.packageName;
+    }
+    if (data.pnrNo !== undefined) {
+      booking.pnrNo = data.pnrNo;
+    }
+    if (data.modeOfJourney !== undefined) {
+      booking.modeOfJourney = data.modeOfJourney;
+    }
+    if (data.advanceAmount !== undefined) {
+      booking.advanceAmount = data.advanceAmount;
+    }
     
     // Update bookingDate if provided
     if (data.bookingDate !== undefined) {
@@ -121,7 +135,9 @@ export class UpdateBooking {
     booking.updatedBy = updatedBy;
     booking.updatedAt = getCurrentISTDate();
 
-    return await this.bookingRepo.update(booking, orgId);
+    const updated = await this.bookingRepo.update(booking, orgId);
+    await this.invalidateReportCaches(orgId);
+    return updated;
   }
 
   async updatePayment(bookingId: string, paidAmount: number, orgId: string, updatedBy: string): Promise<boolean> {
@@ -133,7 +149,11 @@ export class UpdateBooking {
       throw new Error('Paid amount cannot exceed total amount');
     }
     // This directly updates the field in the DB, bypassing the domain object for this specific case.
-    return await this.bookingRepo.updatePayment(bookingId, paidAmount, orgId, updatedBy);
+    const updated = await this.bookingRepo.updatePayment(bookingId, paidAmount, orgId, updatedBy);
+    if (updated) {
+      await this.invalidateReportCaches(orgId);
+    }
+    return updated;
   }
 
   async updateStatus(bookingId: string, status: BookingStatus, orgId: string, updatedBy: string): Promise<Booking> {
@@ -142,7 +162,9 @@ export class UpdateBooking {
       throw new Error('Booking not found');
     }
     booking.updateStatus(status, updatedBy);
-    return await this.bookingRepo.update(booking, orgId);
+    const updated = await this.bookingRepo.update(booking, orgId);
+    await this.invalidateReportCaches(orgId);
+    return updated;
   }
 
   async cancel(bookingId: string, orgId: string, updatedBy: string): Promise<Booking> {
@@ -155,7 +177,9 @@ export class UpdateBooking {
       throw new Error('Booking not found');
     }
     booking.confirm(updatedBy);
-    return await this.bookingRepo.update(booking, orgId);
+    const updated = await this.bookingRepo.update(booking, orgId);
+    await this.invalidateReportCaches(orgId);
+    return updated;
   }
 
   async ticket(bookingId: string, orgId: string, updatedBy: string): Promise<Booking> {
@@ -164,7 +188,9 @@ export class UpdateBooking {
       throw new Error('Booking not found');
     }
     booking.ticket(updatedBy);
-    return await this.bookingRepo.update(booking, orgId);
+    const updated = await this.bookingRepo.update(booking, orgId);
+    await this.invalidateReportCaches(orgId);
+    return updated;
   }
 
   async complete(bookingId: string, orgId: string, updatedBy: string, adminOverride: boolean = false): Promise<Booking> {
@@ -173,6 +199,13 @@ export class UpdateBooking {
       throw new Error('Booking not found');
     }
     booking.complete(updatedBy, adminOverride);
-    return await this.bookingRepo.update(booking, orgId);
+    const updated = await this.bookingRepo.update(booking, orgId);
+    await this.invalidateReportCaches(orgId);
+    return updated;
+  }
+
+  private async invalidateReportCaches(orgId: string): Promise<void> {
+    await this.cache.invalidatePattern(`report:customers:bookings:${orgId}:*`);
+    await this.cache.invalidatePattern(`report:center:${orgId}:*`);
   }
 }

@@ -142,16 +142,16 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Process Refund" size="lg">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-4">
+        <div className="form-section space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Payment to Refund *
             </label>
             <select
               required
               value={formData.payment_id}
               onChange={(e) => handlePaymentSelect(e.target.value)}
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-select"
             >
               <option value="">Select a payment to refund</option>
               {receivablePayments.map(payment => {
@@ -171,15 +171,15 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
               })}
             </select>
             {receivablePayments.length === 0 && (
-              <p className="text-sm text-amber-600 mt-1">
+              <p className="mt-1 text-sm text-amber-600 dark:text-amber-400">
                 No payments available for refund
               </p>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="form-grid">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="form-label">
                 Refund Date *
               </label>
               <input
@@ -187,19 +187,19 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
                 required
                 value={formData.refund_date}
                 onChange={(e) => setFormData({ ...formData, refund_date: e.target.value })}
-                className="w-full border border-gray-300 px-3 py-2"
+                className="form-input"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="form-label">
                 Refund Mode *
               </label>
               <select
                 required
                 value={formData.refund_mode}
                 onChange={(e) => setFormData({ ...formData, refund_mode: e.target.value })}
-                className="w-full border border-gray-300 px-3 py-2"
+                className="form-select"
               >
                 {REFUND_MODES.map(mode => (
                   <option key={mode} value={mode}>{mode}</option>
@@ -209,7 +209,7 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Refund Amount *
             </label>
             <input
@@ -222,17 +222,17 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
                 const value = parseFloat(e.target.value);
                 setFormData({ ...formData, refund_amount: value ? Math.ceil(value) : 0 });
               }}
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
             />
             {selectedPayment && (
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="form-help">
                 Original payment: ₹{selectedPayment.amount.toLocaleString()}
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Refund Reason
             </label>
             <textarea
@@ -240,12 +240,12 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
               value={formData.refund_reason}
               onChange={(e) => setFormData({ ...formData, refund_reason: e.target.value })}
               placeholder="Explain why the refund is being processed (optional)..."
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-textarea"
             />
           </div>
         </div>
 
-        <div className="flex items-center justify-end space-x-3 pt-4 border-t">
+        <div className="form-footer">
           <Button type="button" variant="outline" onClick={handleClose}>
             Cancel
           </Button>

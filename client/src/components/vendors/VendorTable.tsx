@@ -1,5 +1,6 @@
-import { Edit, Search, Trash2, Wallet } from "lucide-react";
+import { Edit, Trash2, Wallet } from "lucide-react";
 import React from "react";
+import { SearchField } from "../../design-system/primitives";
 import { Vendor } from "../../types";
 import { formatDate } from "../../utils/misc";
 import Badge from "../ui/Badge";
@@ -38,11 +39,17 @@ const VendorTable: React.FC<VendorTableProps> & {
 } = ({ vendors, onEdit, onDelete, onManageAccount, getVendorExpenseTotal }) => {
   const safeVendors = Array.isArray(vendors) ? vendors : [];
   return (
-    <Card>
-      <CardContent>
+    <Card className="overflow-hidden rounded-2xl border-gray-200/80 shadow-sm dark:border-gray-700">
+      <CardContent className="p-0">
+        <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50/80 px-4 py-2.5 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-300">
+          <span className="font-medium">
+            Showing {safeVendors.length} vendor{safeVendors.length === 1 ? "" : "s"}
+          </span>
+          <span>Manage account linkage and vendor profile actions from this table.</span>
+        </div>
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-gray-50/80 dark:bg-gray-900">
               <TableCell header>Name</TableCell>
               <TableCell header>Service Type</TableCell>
               <TableCell header>Contact</TableCell>
@@ -119,7 +126,7 @@ const VendorTable: React.FC<VendorTableProps> & {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -162,16 +169,11 @@ const VendorTable: React.FC<VendorTableProps> & {
 // Search box component
 export type SearchBoxProps = { value: string; onChange: (v: string) => void };
 const SearchBox: React.FC<SearchBoxProps> = ({ value, onChange }) => (
-  <div className="relative">
-    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-    <input
-      type="text"
-      placeholder="Search vendors..."
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="pl-10 pr-4 py-2 w-full border border-gray-300"
-    />
-  </div>
+  <SearchField
+    value={value}
+    onChange={onChange}
+    placeholder="Search vendors by name, type, or contact"
+  />
 );
 
 VendorTable.SearchBox = SearchBox;

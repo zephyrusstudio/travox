@@ -1,4 +1,5 @@
 import React from "react";
+import { AlertTriangle } from "lucide-react";
 import Modal from "../Modal";
 import Button from "../Button";
 
@@ -36,17 +37,25 @@ const ConfirmDestructionModal: React.FC<ConfirmDestructionModalProps> = ({
       title={title}
       size="sm"
     >
-      <div className="space-y-4">
-        <p className="text-sm text-gray-700">{message}</p>
+      <div className="space-y-5">
+        <div className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 dark:border-rose-900/40 dark:bg-rose-900/20">
+          <div className="rounded-lg bg-rose-100 p-2 dark:bg-rose-900/40">
+            <AlertTriangle className="h-4 w-4 text-rose-700 dark:text-rose-300" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-rose-900 dark:text-rose-200">This action is permanent.</p>
+            <p className="mt-1 text-sm text-rose-800 dark:text-rose-300">{message}</p>
+          </div>
+        </div>
         {error && (
-          <div className="border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          <div className="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-900/40 dark:bg-rose-900/20 dark:text-rose-300">
             {error}
           </div>
         )}
-        <div className="flex justify-end gap-3">
+        <div className="form-footer !pt-0">
           <Button
             type="button"
-            className="px-3 py-2"
+            variant="outline"
             onClick={onClose}
             disabled={loading}
           >
@@ -54,7 +63,7 @@ const ConfirmDestructionModal: React.FC<ConfirmDestructionModalProps> = ({
           </Button>
           <Button
             type="button"
-            className="px-3 py-2 disabled:opacity-60"
+            className="disabled:opacity-60"
             onClick={onConfirm}
             disabled={loading}
             variant="danger"

@@ -1,5 +1,7 @@
 import { Express } from 'express';
 import { MetricsController } from '../controllers/MetricsController';
+import { requireAuth } from '../../middleware/requireAuth';
+import { UserRole } from '../../models/FirestoreTypes';
 
 export function registerMetricsRoutes(app: Express) {
   /**
@@ -45,7 +47,7 @@ export function registerMetricsRoutes(app: Express) {
    *       500:
    *         description: Failed to retrieve metrics
    */
-  app.get('/metrics', MetricsController.getCacheMetrics);
+  app.get('/metrics', requireAuth([UserRole.OWNER]), MetricsController.getCacheMetrics);
 
   /**
    * @swagger
@@ -61,5 +63,5 @@ export function registerMetricsRoutes(app: Express) {
    *       500:
    *         description: Failed to reset metrics
    */
-  app.post('/metrics/reset', MetricsController.resetCacheMetrics);
+  app.post('/metrics/reset', requireAuth([UserRole.OWNER]), MetricsController.resetCacheMetrics);
 }

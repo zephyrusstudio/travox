@@ -2,16 +2,15 @@
 // components/bookings/BookingManagement.tsx
 import {
   Calendar,
-  IndianRupee,
   Edit,
   Eye,
   Plus,
   RefreshCw,
-  Search,
   Trash2,
-  Users,
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PageHeader, StatCard } from "../../design-system/patterns";
+import { SearchField } from "../../design-system/primitives";
 import { Booking, Customer } from "../../types";
 import { ApiError, apiRequest, parseApiError } from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
@@ -847,8 +846,6 @@ const BookingManagement: React.FC = () => {
     });
   }, [searchTerm, searchResults, activeFilters, filterResults, hydratedBookings, customersMap]);
 
-  console.log(filteredBookings);
-
   const resetAndClose = () => {
     setIsModalOpen(false);
     setSelectedBooking(null);
@@ -857,7 +854,7 @@ const BookingManagement: React.FC = () => {
     setFormMode("create");
   };
 
-  const handleOpenModal = (
+  const handleOpenModal = useCallback((
     booking?: BookingRow,
     mode: "create" | "edit" | "view" = "create"
   ) => {
@@ -875,7 +872,20 @@ const BookingManagement: React.FC = () => {
     setSelectedBookingError(null);
     setIsModalOpen(true);
     loadBookingDetails(booking.booking_id);
-  };
+  }, [loadBookingDetails]);
+
+  useEffect(() => {
+    const handleQuickAction = (event: Event) => {
+      const customEvent = event as CustomEvent<{ actionId?: string }>;
+      if (customEvent.detail?.actionId === "booking.create") {
+        handleOpenModal(undefined, "create");
+      }
+    };
+
+    window.addEventListener("travox:quick-action", handleQuickAction);
+    return () =>
+      window.removeEventListener("travox:quick-action", handleQuickAction);
+  }, [handleOpenModal]);
 
   const handleDelete = (bookingId: string) => {
     setDeleteTargetId(bookingId);
@@ -1024,93 +1034,51 @@ const BookingManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Booking Management
-          </h1>
-          <p className="text-gray-600">
-            Manage travel bookings and customer reservations
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-          <Button
-            onClick={() => {
-              fetchBookings();
-              fetchStats();
-            }}
-            icon={RefreshCw}
-            variant="outline"
-            disabled={bookingsLoading || statsLoading}
-          >
-            Refresh
-          </Button>
-          <Button
-            onClick={() => handleOpenModal(undefined, "create")}
-            icon={Plus}
-          >
-            Create Booking
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Booking Management"
+        description="Manage bookings, OCR-prefill records, and status-driven reservation workflows."
+        actions={
+          <>
+            <Button
+              onClick={() => {
+                fetchBookings();
+                fetchStats();
+              }}
+              icon={RefreshCw}
+              variant="outline"
+              disabled={bookingsLoading || statsLoading}
+            >
+              Refresh
+            </Button>
+            <Button
+              onClick={() => handleOpenModal(undefined, "create")}
+              icon={Plus}
+            >
+              Create Booking
+            </Button>
+          </>
+        }
+      />
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Bookings</p>
-            <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">{stats.totalBookings}</p>
-          </div>
-          <div className="rounded-full p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-            <Calendar className="h-5 w-5" />
-          </div>
-        </div>
-        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Confirmed</p>
-            <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">{stats.confirmedBookings}</p>
-          </div>
-          <div className="rounded-full p-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
-            <Users className="h-5 w-5" />
-          </div>
-        </div>
-        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Revenue</p>
-            <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">₹{stats.totalRevenue.toLocaleString()}</p>
-          </div>
-          <div className="rounded-full p-3 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-            <IndianRupee className="h-5 w-5" />
-          </div>
-        </div>
-        <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Pending</p>
-            <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">₹{stats.pendingAmount.toLocaleString()}</p>
-          </div>
-          <div className="rounded-full p-3 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
-            <IndianRupee className="h-5 w-5" />
-          </div>
-        </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Total Bookings" value={stats.totalBookings.toString()} tone="primary" />
+        <StatCard label="Confirmed" value={stats.confirmedBookings.toString()} />
+        <StatCard label="Revenue" value={`₹${stats.totalRevenue.toLocaleString("en-IN")}`} />
+        <StatCard label="Pending" value={`₹${stats.pendingAmount.toLocaleString("en-IN")}`} />
       </div>
 
       {/* Search and Filters */}
-      <div className="flex items-center space-x-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search bookings..."
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1">
+          <SearchField
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              // Clear filters when searching
-              if (e.target.value && activeFilters) {
+            onChange={(value) => {
+              setSearchTerm(value);
+              if (value && activeFilters) {
                 clearFilters();
               }
             }}
-            className="pl-10 pr-4 py-2 w-full border border-gray-300"
+            placeholder="Search bookings by package, customer, or amount"
           />
           <Loader isLoading={isSearching} />
         </div>
@@ -1129,7 +1097,7 @@ const BookingManagement: React.FC = () => {
       </div>
 
       {bookingsError && (
-        <div className="border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+        <div className="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
           {bookingsError}
         </div>
       )}
@@ -1151,7 +1119,7 @@ const BookingManagement: React.FC = () => {
       {/* Table */}
       {/* Bookings Table */}
       {bookingsLoading || isSearching || isFiltering ? (
-        <Card>
+        <Card className="rounded-2xl">
           <CardContent className="flex items-center justify-center py-16">
             <div className="flex items-center space-x-3">
               <Spinner size="md" />
@@ -1162,21 +1130,29 @@ const BookingManagement: React.FC = () => {
           </CardContent>
         </Card>
       ) : filteredBookings.length === 0 ? (
-        <div className="text-center py-12">
-          <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No Bookings Found
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white py-12 text-center dark:border-gray-700 dark:bg-gray-800">
+          <Calendar className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+          <h3 className="mb-2 text-lg font-medium text-gray-900">
+            {searchTerm ? "No Bookings Match Your Search" : activeFilters ? "No Bookings Match Current Filters" : "No Bookings Found"}
           </h3>
           <p className="text-gray-500">
-            No bookings found.
+            {searchTerm || activeFilters
+              ? "Try refining search or clearing filters."
+              : "Create your first booking to get started."}
           </p>
         </div>
       ) : (
-        <Card>
-          <CardContent>
+        <Card className="overflow-hidden rounded-2xl border-gray-200/80 shadow-sm dark:border-gray-700">
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50/80 px-4 py-2.5 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-300">
+              <span className="font-medium">
+                Showing {filteredBookings.length} booking{filteredBookings.length === 1 ? "" : "s"}
+              </span>
+              <span>Tip: use filters to narrow by status, payment state, date, or due amount.</span>
+            </div>
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-gray-50/80 dark:bg-gray-900">
                   <TableCell header>Package</TableCell>
                   <TableCell header>Customer</TableCell>
                   <TableCell header>Booking Date</TableCell>
@@ -1250,7 +1226,7 @@ const BookingManagement: React.FC = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Button
                           variant="outline"
                           size="sm"

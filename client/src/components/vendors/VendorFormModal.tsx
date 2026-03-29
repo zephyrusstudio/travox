@@ -393,10 +393,11 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="lg">
       <form onSubmit={submitForm} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-section">
+        <div className="form-grid">
           {/* Vendor Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Vendor Name *
             </label>
             <input
@@ -406,14 +407,14 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
               placeholder="Enter vendor name"
             />
           </div>
 
           {/* Service Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Service Type *
             </label>
             <select
@@ -422,7 +423,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, serviceType: e.target.value })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-select"
             >
               <option value="">Select Service Type</option>
               {serviceTypes.map((type) => (
@@ -435,7 +436,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
 
           {/* Contact Person */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Contact Person
             </label>
             <input
@@ -444,14 +445,14 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, pocName: e.target.value })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
               placeholder="Enter contact person name"
             />
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Email *
             </label>
             <input
@@ -461,17 +462,17 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
               placeholder="Enter email address"
             />
             {!isEmailValid && (
-              <p className="mt-1 text-xs text-rose-600">Enter a valid email.</p>
+              <p className="form-error">Enter a valid email.</p>
             )}
           </div>
 
           {/* Phone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Phone *
             </label>
             <div className="flex">
@@ -492,7 +493,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
                 }}
                 placeholder="+91"
                 maxLength={5}
-                className="w-20 border border-gray-300 rounded-l-lg px-3 py-2 bg-gray-50 text-center"
+                className="form-input !w-20 !rounded-r-none !border-r-0 !bg-gray-50 dark:!bg-gray-800 !text-center !font-medium"
               />
               <input
                 type="tel"
@@ -501,12 +502,12 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
                 required
                 value={formData.phone ? formData.phone.replace(/^\+\d{1,4}-/, "") : ""}
                 onChange={(e) => setPhone(e.target.value)}
-                className="flex-1 border border-l-0 border-gray-300 rounded-r-lg px-3 py-2"
+                className="form-input flex-1 !rounded-l-none !border-l-0"
                 placeholder="Enter phone number"
               />
             </div>
             {!isPhoneValid && (
-              <p className="mt-1 text-xs text-rose-600">
+              <p className="form-error">
                 Enter exactly 10 digits.
               </p>
             )}
@@ -514,7 +515,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
 
           {/* GSTIN */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               GSTIN
             </label>
             <input
@@ -522,28 +523,29 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
               value={formData.gstin || ""}
               maxLength={GSTIN_LEN}
               onChange={(e) => setGstin(e.target.value)}
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
               placeholder="Enter 15-character GSTIN"
             />
             {!isGstinValid && (
-              <p className="mt-1 text-xs text-rose-600">
+              <p className="form-error">
                 GSTIN must be 15 characters (A–Z, 0–9).
               </p>
             )}
           </div>
         </div>
+        </div>
 
-        <div className="border border-gray-200">
+        <div className="form-section border border-gray-200">
           <button
             type="button"
             onClick={toggleBankSection}
             className="flex w-full items-center justify-between px-4 py-3 text-left"
           >
             <div>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 Bank Account
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {isLinkingAccount
                   ? "Bank details will be linked when you save this vendor."
                   : "Add bank account details for this vendor."}
@@ -557,23 +559,23 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
           </button>
 
           {isLinkingAccount && (
-            <div className="space-y-4 border-t border-gray-200 bg-gray-50 px-4 py-4">
+            <div className="space-y-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 px-4 py-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="form-label">
                   Bank Name *
                 </label>
                 <input
                   type="text"
                   value={accountForm.bankName}
                   onChange={(e) => setAccountField("bankName", e.target.value)}
-                  className="w-full border border-gray-300 px-3 py-2"
+                  className="form-input"
                   placeholder="Enter bank name"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="form-grid">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     IFSC Code *
                   </label>
                   <input
@@ -582,14 +584,14 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
                     onChange={(e) =>
                       setAccountField("ifscCode", e.target.value)
                     }
-                    className="w-full border border-gray-300 px-3 py-2 uppercase"
+                    className="form-input uppercase"
                     placeholder="Enter IFSC code"
                     maxLength={11}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     Branch Name *
                   </label>
                   <input
@@ -598,15 +600,15 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
                     onChange={(e) =>
                       setAccountField("branchName", e.target.value)
                     }
-                    className="w-full border border-gray-300 px-3 py-2"
+                    className="form-input"
                     placeholder="Enter branch name"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="form-grid">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     Account Number *
                   </label>
                   <input
@@ -615,27 +617,27 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
                     onChange={(e) =>
                       setAccountField("accountNo", e.target.value)
                     }
-                    className="w-full border border-gray-300 px-3 py-2"
+                    className="form-input"
                     placeholder="Enter account number"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     UPI ID
                   </label>
                   <input
                     type="text"
                     value={accountForm.upiId}
                     onChange={(e) => setAccountField("upiId", e.target.value)}
-                    className="w-full border border-gray-300 px-3 py-2"
+                    className="form-input"
                     placeholder="Enter UPI ID (optional)"
                   />
                 </div>
               </div>
 
               {!isAccountDetailsValid && (
-                <p className="text-xs text-rose-600">
+                <p className="form-error">
                   Please fill all required bank account fields.
                 </p>
               )}
@@ -653,7 +655,7 @@ const VendorFormModal: React.FC<VendorFormModalProps> = ({
           )}
         </div>
 
-        <div className="flex items-center justify-end space-x-3 pt-4">
+        <div className="form-footer">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>

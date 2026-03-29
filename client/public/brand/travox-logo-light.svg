@@ -1,0 +1,10 @@
+<svg width="720" height="180" viewBox="0 0 720 180" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Travox light logo">
+  <title>Travox Light Logo</title>
+  <g transform="translate(0,10)">
+    <rect x="0" y="0" width="54" height="54" rx="12" fill="#FFFFFF"/>
+    <rect x="108" y="0" width="54" height="54" rx="12" fill="#FFFFFF"/>
+    <rect x="54" y="54" width="54" height="108" rx="12" fill="#FFFFFF"/>
+    <rect x="162" y="54" width="54" height="54" rx="12" fill="#FFFFFF"/>
+  </g>
+  <text x="255" y="112" fill="#FFFFFF" font-family="'Plus Jakarta Sans', 'Inter', 'Segoe UI', sans-serif" font-size="72" font-weight="700" letter-spacing="0.5">Travox</text>
+</svg>

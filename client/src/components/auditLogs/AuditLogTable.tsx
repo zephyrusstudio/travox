@@ -21,11 +21,11 @@ const AuditLogTable: React.FC<AuditLogTableProps> = ({
   onViewDetails,
 }) => {
   return (
-    <Card>
-      <CardContent>
+    <Card className="overflow-hidden rounded-2xl border-gray-200/80 shadow-sm dark:border-gray-700">
+      <CardContent className="p-0">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-gray-50/80 dark:bg-gray-900">
               <TableCell header>Timestamp</TableCell>
               <TableCell header>Action</TableCell>
               <TableCell header>Entity</TableCell>

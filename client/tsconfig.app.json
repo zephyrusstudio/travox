@@ -20,5 +20,14 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "src/components/dashboard/**/*",
+    "src/components/ledgers/**/*",
+    "src/components/calendar/**/*",
+    "src/components/settings/**/*",
+    "src/components/tickets/**/*",
+    "src/firebaseconfig.ts",
+    "src/components/ui/Loader.tsx"
+  ]
 }

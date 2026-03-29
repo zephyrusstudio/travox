@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Plane } from "lucide-react";
+import { CheckCircle2, Lock, Plane, ShieldCheck } from "lucide-react";
 import { apiRequest } from "../../utils/apiConnector";
 import Spinner from "../ui/Spinner";
-
-// src/pages/AuthPage.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -33,135 +31,183 @@ const USER_KEY = import.meta.env.VITE_USER_KEY || "travox-ua";
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const btnRef = useRef<HTMLDivElement>(null);
-  const [err, setErr] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGisReady, setIsGisReady] = useState(false);
 
-  // Load GIS and init
-  useEffect(() => {
-    if ((window as any).google?.accounts?.id) return; // already present
-    const s = document.createElement("script");
-    s.src = "https://accounts.google.com/gsi/client";
-    s.async = true;
-    s.defer = true;
-    s.onload = () => {
-      if (!(window as any).google?.accounts?.id) {
-        setErr("Google Sign-In unavailable");
-        return;
-      }
-      initGis();
-    };
-    s.onerror = () => setErr("Failed to load Google Sign-In");
-    document.head.appendChild(s);
-    return () => {
-      // optional cleanup
-      (window as any).google?.accounts?.id?.cancel();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Initialize and render the button
   const initGis = () => {
     const google = (window as any).google;
+    if (!google?.accounts?.id) {
+      setErrorMessage("Google Sign-In is currently unavailable.");
+      return;
+    }
+
     google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
       callback: onGoogleCredential,
       ux_mode: "popup",
     });
+
     if (btnRef.current) {
+      btnRef.current.innerHTML = "";
       google.accounts.id.renderButton(btnRef.current, {
         theme: "outline",
         size: "large",
         shape: "pill",
         text: "continue_with",
+        width: 320,
       });
+      setIsGisReady(true);
+      setErrorMessage(null);
     }
   };
 
-  // Handle Google ID token -> backend
-  const onGoogleCredential = async (resp: { credential?: string }) => {
-    const idToken = resp?.credential;
-    if (!idToken) {
-      setErr("Missing Google credential");
+  useEffect(() => {
+    if ((window as any).google?.accounts?.id) {
+      initGis();
       return;
     }
+
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => initGis();
+    script.onerror = () => setErrorMessage("Failed to load Google Sign-In.");
+    document.head.appendChild(script);
+
+    return () => {
+      (window as any).google?.accounts?.id?.cancel();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onGoogleCredential = async (response: { credential?: string }) => {
+    const idToken = response?.credential;
+
+    if (!idToken) {
+      setErrorMessage("Google authentication did not return a valid token.");
+      return;
+    }
+
     try {
-      setLoading(true);
-      setErr(null);
-      const data = await apiRequest<AuthResponse>({
+      setIsLoading(true);
+      setErrorMessage(null);
+
+      const apiResponse = await apiRequest<AuthResponse>({
         url: "/auth/google",
         method: "POST",
         data: { idToken },
       });
-      const accessToken = data?.data?.accessToken;
-      const user = data?.data?.user;
 
-      if (!accessToken) throw new Error("No access token returned");
+      const accessToken = apiResponse?.data?.accessToken;
+      const user = apiResponse?.data?.user;
 
-      // persist token for guards and API
+      if (!accessToken) {
+        throw new Error("No access token returned");
+      }
+
       localStorage.setItem(TOKEN_KEY, accessToken);
       sessionStorage.setItem(TOKEN_KEY, accessToken);
       localStorage.setItem(USER_KEY, JSON.stringify(user));
       sessionStorage.setItem(USER_KEY, JSON.stringify(user));
 
       navigate("/customers", { replace: true });
-    } catch (e: any) {
-      setErr(e?.message || "Login failed");
+    } catch (error: any) {
+      setErrorMessage(error?.message || "Sign-in failed. Please try again.");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  // If the script was already present when mounted
-  useEffect(() => {
-    if ((window as any).google?.accounts?.id) initGis();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [btnRef.current]);
-
   return (
-    <div
-      className="min-h-dvh bg-cover bg-left md:bg-center flex items-center justify-center"
-      style={{
-        backgroundImage: "url('https://images.unsplash.com/photo-1582457493468-1cd9a3b48e79?auto=format&fit=crop&q=85&w=2560')",
-      }}
-    >
-      <div className="bg-black bg-opacity-70 backdrop-blur-sm px-8 py-24 rounded-lg max-w-md w-full mx-4">
-        <div className="text-center">
-          {/* Travel Icon */}
-          <Plane className="mx-auto mb-4 text-white" size={100} />
+    <div className="relative min-h-dvh overflow-hidden bg-slate-950 text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-20 top-16 h-72 w-72 rounded-full bg-cyan-500/20 blur-3xl" />
+        <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-[#3730A3]/25 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-[#2F288E]/25 blur-3xl" />
+      </div>
 
-          {/* App Name */}
-          <h1 className="text-5xl font-bold text-white mb-3 tracking-tight">
-            Travox
-          </h1>
-
-          {/* Tagline */}
-          <p className="text-base font-medium text-white/90 mb-10">
-            B2B Travel Management Platform
-          </p>
-
-          <h2 className="text-lg font-semibold text-white mb-5">
-            Sign up / Sign in
-          </h2>
-
-          {err && (
-            <div className="mb-4 px-3.5 py-3 bg-red-50/95 text-red-800 border border-red-200/50 text-sm font-medium rounded">
-              {err}
+      <div className="relative mx-auto flex min-h-dvh w-full max-w-6xl items-center px-4 py-10 sm:px-8">
+        <div className="grid w-full gap-10 lg:grid-cols-2 lg:gap-16">
+          <section className="flex flex-col justify-center space-y-6">
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-slate-200">
+              <Plane className="h-4 w-4" />
+              Travox
             </div>
-          )}
 
-          {/* Google Sign-In Button Container */}
-          <div className="relative flex justify-center mb-4">
-            <div ref={btnRef} className={loading ? 'opacity-0' : 'opacity-100'} />
-            {loading && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Spinner size="md" color="white" />
+            <h1 className="text-4xl font-semibold leading-tight sm:text-5xl">
+              Travel operations,
+              <br />
+              streamlined with one secure sign-in.
+            </h1>
+
+            <p className="max-w-xl text-base text-slate-300 sm:text-lg">
+              Access bookings, customers, vendors, payments, and reports instantly with your Google account.
+            </p>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <div className="mb-2 inline-flex rounded-lg bg-emerald-400/15 p-1.5">
+                  <ShieldCheck className="h-4 w-4 text-emerald-300" />
+                </div>
+                <p className="text-sm text-slate-200">Role-based secure access for owners and admins.</p>
               </div>
-            )}
-          </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <div className="mb-2 inline-flex rounded-lg bg-sky-400/15 p-1.5">
+                  <Lock className="h-4 w-4 text-sky-300" />
+                </div>
+                <p className="text-sm text-slate-200">Fast session handling with automatic refresh.</p>
+              </div>
+            </div>
+          </section>
 
-          <p className="mt-4 text-xs text-white text-center">
-            By continuing, you agree to the <span className="underline">Terms of Service</span> and <span className="underline">Privacy Policy</span>.
-          </p>
+          <section className="flex items-center justify-center">
+            <div className="w-full max-w-md rounded-3xl border border-white/15 bg-white/10 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+              <h2 className="text-2xl font-semibold">Welcome back</h2>
+              <p className="mt-2 text-sm text-slate-200">
+                Continue with Google to access your Travox workspace.
+              </p>
+
+              <div className="mt-6 rounded-2xl border border-white/15 bg-slate-950/40 p-4">
+                <div className="mb-4 flex items-start gap-3">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-300" />
+                  <p className="text-sm text-slate-200">
+                    One-click authentication. No passwords. No setup friction.
+                  </p>
+                </div>
+
+                {errorMessage && (
+                  <div className="mb-4 rounded-xl border border-rose-300/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
+                    {errorMessage}
+                  </div>
+                )}
+
+                <div className="relative min-h-[44px]">
+                  <div
+                    ref={btnRef}
+                    className={`flex justify-center transition-opacity ${isLoading ? "opacity-0" : "opacity-100"}`}
+                  />
+
+                  {isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Spinner size="md" color="white" />
+                    </div>
+                  )}
+                </div>
+
+                {!isGisReady && !isLoading && (
+                  <p className="mt-3 text-center text-xs text-slate-300">
+                    Preparing secure Google sign-in...
+                  </p>
+                )}
+              </div>
+
+              <p className="mt-5 text-center text-xs text-slate-300">
+                By continuing, you agree to the Terms of Service and Privacy Policy.
+              </p>
+            </div>
+          </section>
         </div>
       </div>
     </div>

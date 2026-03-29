@@ -6,6 +6,7 @@ import SessionExpiredModal from "./components/ui/common/SessionExpiredModal";
 import Spinner from "./components/ui/Spinner";
 import UnsupportedDevice from "./components/ui/UnsupportedDevice";
 import { useApp } from "./contexts/AppContext";
+import LegacySurfacePage from "./pages/LegacySurfacePage";
 import { routes } from "./routes/routeConfig";
 import { SESSION_EXPIRED_EVENT } from "./utils/apiConnector";
 import { canAccessModule, getAccessibleModules } from "./utils/roleAccess";
@@ -167,6 +168,15 @@ export default function App() {
               }
             />
           ))}
+
+          <Route
+            path="/legacy/:surface"
+            element={
+              <RequireAuth>
+                <LegacySurfacePage />
+              </RequireAuth>
+            }
+          />
 
           {/* Catch-all redirect to first accessible module */}
           <Route path="*" element={<DefaultRedirect />} />

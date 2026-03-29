@@ -41,25 +41,25 @@ const MaintenanceBanner: React.FC<MaintenanceBannerProps> = ({
       {/* Overlay Modal */}
       {showOverlay && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] px-4"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/45 px-4 backdrop-blur-[2px]"
           onClick={() => setShowOverlay(false)}
         >
           <div
-            className="bg-white dark:bg-gray-800 border border-amber-500 shadow-xl max-w-md w-full p-6 relative animate-in fade-in zoom-in duration-200"
+            className="relative w-full max-w-md overflow-hidden rounded-2xl border border-amber-300 bg-white shadow-2xl dark:border-amber-800/50 dark:bg-gray-900"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
             <button
               onClick={() => setShowOverlay(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              className="absolute right-4 top-4 rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
               aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
 
             {/* Icon and Title */}
-            <div className="flex items-start mb-4">
-              <div className="bg-amber-100 dark:bg-amber-900/30 p-2 mr-3 flex-shrink-0">
+            <div className="mb-4 flex items-start border-b border-amber-100 bg-gradient-to-r from-amber-50 via-white to-white p-6 dark:border-amber-900/30 dark:from-gray-800 dark:via-gray-900 dark:to-gray-900">
+              <div className="mr-3 flex-shrink-0 rounded-xl bg-amber-100 p-2 dark:bg-amber-900/30">
                 <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
@@ -73,14 +73,14 @@ const MaintenanceBanner: React.FC<MaintenanceBannerProps> = ({
             </div>
 
             {/* Details */}
-            <div className="mb-6">
-              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed text-pretty">
+            <div className="mb-6 px-6">
+              <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">
                 {details}
               </p>
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end">
+            <div className="form-footer px-6 pb-6 pt-0">
                 <Button variant="danger" onClick={() => setShowOverlay(false)}>
                   Close
                 </Button>

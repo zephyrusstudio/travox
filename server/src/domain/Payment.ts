@@ -155,11 +155,11 @@ export class Payment {
       false,
       now,
       now,
-      undefined,          // bookingId
-      vendorId,           // customerId (stores vendorId for inbound refunds)
-      undefined,          // vendorId
+      undefined,
+      undefined,
+      vendorId,
       undefined,          // relatedInvoiceId
-      refundOfPaymentId,  // refundOfPaymentId - FIXED: was incorrectly at position 14
+      refundOfPaymentId,
       options?.category,
       options?.notes,
       options?.receiptNo,

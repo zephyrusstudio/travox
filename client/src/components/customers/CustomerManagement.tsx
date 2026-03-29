@@ -3,6 +3,7 @@
 import { FileText, Plus, RefreshCw, Users } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PageHeader, StatCard } from "../../design-system/patterns";
 import { Customer } from "../../types";
 
 import { ApiError, apiRequest } from "../../utils/apiConnector";
@@ -53,6 +54,8 @@ const CustomerManagement: React.FC = () => {
 
   // Use search results if searching, otherwise use paginated customers
   const displayCustomers = searchTerm ? searchResults : customers;
+  const totalSpend = displayCustomers.reduce((sum, customer) => sum + (customer.totalSpent || 0), 0);
+  const linkedAccounts = displayCustomers.filter((customer) => Boolean(customer.accountId)).length;
 
   // ── Search function using /customers/search endpoint ────────────────────────
   const performSearch = useCallback(async (term: string) => {
@@ -218,44 +221,62 @@ const CustomerManagement: React.FC = () => {
     fetchCustomers();
   }, [fetchCustomers]);
 
+  useEffect(() => {
+    const handleQuickAction = (event: Event) => {
+      const customEvent = event as CustomEvent<{ actionId?: string }>;
+      if (customEvent.detail?.actionId === "customer.create") {
+        openForm();
+      }
+    };
+
+    window.addEventListener("travox:quick-action", handleQuickAction);
+    return () =>
+      window.removeEventListener("travox:quick-action", handleQuickAction);
+  }, []);
+
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Customer Management
-          </h1>
-          <p className="text-gray-600">
-            Manage your travel customers and their information
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-          <Button
-            onClick={() => navigate("/customers/report")}
-            icon={FileText}
-            variant="outline"
-          >
-            Report
-          </Button>
-          <Button
-            onClick={fetchCustomers}
-            icon={RefreshCw}
-            variant="outline"
-            disabled={loading}
-          >
-            Refresh
-          </Button>
-          <Button onClick={() => openForm()} icon={Plus}>
-            Create Customer
-          </Button>
-        </div>
+      <PageHeader
+        title="Customer Management"
+        description="Manage customer records, linked bookings, and account visibility from one place."
+        actions={
+          <>
+            <Button
+              onClick={() => navigate("/customers/report")}
+              icon={FileText}
+              variant="outline"
+            >
+              Report
+            </Button>
+            <Button
+              onClick={fetchCustomers}
+              icon={RefreshCw}
+              variant="outline"
+              disabled={loading}
+            >
+              Refresh
+            </Button>
+            <Button onClick={() => openForm()} icon={Plus}>
+              Create Customer
+            </Button>
+          </>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard
+          label={searchTerm ? "Search Results" : "Visible Customers"}
+          value={displayCustomers.length.toString()}
+          tone="primary"
+        />
+        <StatCard label="Total Visible Spend" value={`₹${totalSpend.toLocaleString("en-IN")}`} />
+        <StatCard label="Linked Accounts" value={linkedAccounts.toString()} />
       </div>
 
       {/* Inline error */}
       {errorMsg && (
-        <div className="border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+        <div className="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800">
           {errorMsg}
         </div>
       )}
@@ -287,7 +308,7 @@ const CustomerManagement: React.FC = () => {
 
       {/* Table */}
       {loading ? (
-        <Card>
+        <Card className="rounded-2xl">
           <CardContent className="flex items-center justify-center py-16">
             <div className="flex items-center space-x-3">
               <Spinner size="md" />
@@ -295,14 +316,16 @@ const CustomerManagement: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-      ) : customers.length === 0 ? (
-        <div className="text-center py-12">
-          <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No Customers Found
+      ) : displayCustomers.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white py-12 text-center dark:border-gray-700 dark:bg-gray-800">
+          <Users className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+          <h3 className="mb-2 text-lg font-medium text-gray-900">
+            {searchTerm ? "No Customers Match Your Search" : "No Customers Found"}
           </h3>
           <p className="text-gray-500">
-            Get started by adding your first customer.
+            {searchTerm
+              ? "Try another keyword or clear search to see all customers."
+              : "Get started by adding your first customer."}
           </p>
         </div>
       ) : (

@@ -1,18 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  Calendar,
   Download,
-  IndianRupee,
   RefreshCw,
-  Search,
   Users,
   Filter,
-  AlertCircle,
-  CheckCircle,
   FileSpreadsheet,
   FileText,
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { PageHeader, StatCard } from "../../design-system/patterns";
+import { SearchField } from "../../design-system/primitives";
 import { apiRequest } from "../../utils/apiConnector";
 import { errorToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
@@ -483,53 +480,71 @@ const CustomerReport: React.FC = () => {
       <head>
         <title>Customer Bookings Report - Travox</title>
         <style>
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px 20px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+          @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap');
+          :root {
+            --primary: #3730A3;
+            --primary-soft: #E8E7FF;
+            --border: #E5E7EB;
+            --muted: #6B7280;
+            --bg-soft: #F8FAFC;
+            --ink: #111827;
+          }
+          * { box-sizing: border-box; }
+          body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; color: var(--ink); background: white; }
+          .page { padding: 24px; }
+          .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding: 16px 20px; border: 1px solid var(--border); border-radius: 14px; background: linear-gradient(135deg, var(--primary-soft) 0%, #ffffff 100%); }
           .brand { display: flex; align-items: center; gap: 12px; }
-          .brand-logo { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
-          .brand-logo svg { width: 36px; height: 36px; color: white; }
-          .brand-name { font-size: 24px; font-weight: bold; color: white; }
-          .brand-tagline { font-size: 11px; color: rgba(255,255,255,0.8); }
-          h1 { color: #1f2937; margin-bottom: 5px; margin-top: 0; }
-          .subtitle { color: #6b7280; margin-bottom: 20px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-          th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
-          th { background-color: #3b82f6; color: white; font-weight: 600; }
+          .brand-logo { width: 34px; height: 34px; border-radius: 10px; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; }
+          .brand-name { font-size: 20px; font-weight: 800; color: #1F2937; line-height: 1; }
+          .brand-tagline { margin-top: 4px; font-size: 11px; color: var(--muted); }
+          .meta-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+          .meta-value { margin-top: 2px; font-size: 13px; font-weight: 600; color: #111827; }
+          h1 { color: #111827; margin: 0 0 4px; font-size: 20px; }
+          .subtitle { color: var(--muted); margin-bottom: 16px; font-size: 12px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 11px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+          th, td { border: 1px solid var(--border); padding: 7px 8px; text-align: left; vertical-align: top; }
+          th { background-color: var(--primary); color: white; font-weight: 700; letter-spacing: .02em; }
+          tbody tr:nth-child(even) { background: var(--bg-soft); }
           .amount { text-align: right; }
-          .due { color: #d97706; }
-          .paid { color: #059669; }
-          .stats { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-          .stat-card { background: #f9fafb; padding: 15px 20px; text-align: center; border: 1px solid #e5e7eb; }
-          .stat-value { font-size: 22px; font-weight: bold; color: #1f2937; }
-          .stat-label { font-size: 11px; color: #6b7280; text-transform: uppercase; }
-          .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 11px; color: #9ca3af; }
-          @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+          .due { color: #B45309; }
+          .paid { color: #047857; }
+          .stats { display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap: 10px; margin-bottom: 14px; }
+          .stat-card { background: #fff; padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
+          .stat-value { font-size: 16px; font-weight: 800; color: #111827; }
+          .stat-label { margin-top: 2px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+          .footer { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--border); text-align: center; font-size: 10px; color: #9CA3AF; }
+          @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .page { padding: 12px; }
+            tr { page-break-inside: avoid; }
+          }
         </style>
       </head>
       <body>
-        <div class="header">
-          <div class="brand">
-            <div class="brand-logo"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div>
-            <div>
-              <div class="brand-name">Travox</div>
-              <div class="brand-tagline">B2B Travel Management Platform</div>
+        <div class="page">
+          <div class="header">
+            <div class="brand">
+              <div class="brand-logo">T</div>
+              <div>
+                <div class="brand-name">Travox</div>
+                <div class="brand-tagline">B2B Travel Management Platform</div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div class="meta-label">Generated on</div>
+              <div class="meta-value">${new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</div>
             </div>
           </div>
-          <div style="text-align: right;">
-            <div style="font-size: 12px; color: rgba(255,255,255,0.8);">Generated on</div>
-            <div style="font-weight: 600; color: white;">${new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</div>
+          <h1>Customer Bookings Report</h1>
+          <p class="subtitle">Showing ${stats.totalBookings} bookings from ${stats.totalCustomers} customers</p>
+          <div class="stats">
+            <div class="stat-card"><div class="stat-value">${stats.totalCustomers}</div><div class="stat-label">Customers</div></div>
+            <div class="stat-card"><div class="stat-value">${stats.totalBookings}</div><div class="stat-label">Bookings</div></div>
+            <div class="stat-card"><div class="stat-value">${formatCurrency(stats.totalAmount)}</div><div class="stat-label">Total Amount</div></div>
+            <div class="stat-card"><div class="stat-value paid">${formatCurrency(stats.totalPaid)}</div><div class="stat-label">Total Paid</div></div>
+            <div class="stat-card"><div class="stat-value due">${formatCurrency(stats.totalDue)}</div><div class="stat-label">Total Due</div></div>
           </div>
-        </div>
-        <h1>Customer Bookings Report</h1>
-        <p class="subtitle">Showing ${stats.totalBookings} bookings from ${stats.totalCustomers} customers</p>
-        <div class="stats">
-          <div class="stat-card"><div class="stat-value">${stats.totalCustomers}</div><div class="stat-label">Customers</div></div>
-          <div class="stat-card"><div class="stat-value">${stats.totalBookings}</div><div class="stat-label">Bookings</div></div>
-          <div class="stat-card"><div class="stat-value">${formatCurrency(stats.totalAmount)}</div><div class="stat-label">Total Amount</div></div>
-          <div class="stat-card"><div class="stat-value paid">${formatCurrency(stats.totalPaid)}</div><div class="stat-label">Total Paid</div></div>
-          <div class="stat-card"><div class="stat-value due">${formatCurrency(stats.totalDue)}</div><div class="stat-label">Total Due</div></div>
-        </div>
-        <table>
+          <table>
           <thead>
             <tr>
               <th>Customer</th>
@@ -587,10 +602,11 @@ const CustomerReport: React.FC = () => {
                   })
             ).join("")}
           </tbody>
-        </table>
-        <div class="footer">
-          <p>This report was generated by Travox - B2B Travel Management Platform</p>
-          <p>© ${new Date().getFullYear()} Zephyrus. All rights reserved.</p>
+          </table>
+          <div class="footer">
+            <p>This report was generated by Travox - B2B Travel Management Platform</p>
+            <p>© ${new Date().getFullYear()} Zephyrus. All rights reserved.</p>
+          </div>
         </div>
       </body>
       </html>
@@ -615,90 +631,85 @@ const CustomerReport: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Customer Bookings Report
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            View customer bookings and payment status within a date range
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-          <Button onClick={fetchReport} icon={RefreshCw} variant="outline" disabled={loading}>
-            Refresh
-          </Button>
-          <div className="relative">
-            <Button
-              onClick={() => setShowExportMenu(!showExportMenu)}
-              icon={Download}
-              disabled={loading || filteredData.length === 0}
-            >
-              Export
+      <PageHeader
+        title="Customer Bookings Report"
+        description="Analyze customer bookings, payment progress, and pending dues by date interval."
+        actions={
+          <>
+            <Button onClick={fetchReport} icon={RefreshCw} variant="outline" disabled={loading}>
+              Refresh
             </Button>
-            {showExportMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-10">
-                <button
-                  onClick={exportToCSV}
-                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <FileText className="w-4 h-4 mr-2" /> Export as CSV
-                </button>
-                <button
-                  onClick={exportToExcel}
-                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <FileSpreadsheet className="w-4 h-4 mr-2" /> Export as Excel
-                </button>
-                <button
-                  onClick={exportToPDF}
-                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <Download className="w-4 h-4 mr-2" /> Export as PDF
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+            <div className="relative">
+              <Button
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                icon={Download}
+                disabled={loading || filteredData.length === 0}
+              >
+                Export
+              </Button>
+              {showExportMenu && (
+                <div className="absolute right-0 z-10 mt-2 w-52 rounded-2xl border border-gray-200 bg-white/95 p-1 shadow-xl backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
+                  <button
+                    onClick={exportToCSV}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-[var(--color-primary-soft)] dark:text-gray-200 dark:hover:bg-gray-800"
+                  >
+                    <FileText className="h-4 w-4" /> Export as CSV
+                  </button>
+                  <button
+                    onClick={exportToExcel}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-[var(--color-primary-soft)] dark:text-gray-200 dark:hover:bg-gray-800"
+                  >
+                    <FileSpreadsheet className="h-4 w-4" /> Export as Excel
+                  </button>
+                  <button
+                    onClick={exportToPDF}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-[var(--color-primary-soft)] dark:text-gray-200 dark:hover:bg-gray-800"
+                  >
+                    <Download className="h-4 w-4" /> Export as PDF
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        }
+      />
 
       {/* Filters */}
-      <Card>
+      <Card className="rounded-2xl">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="form-label">
                 Booking Date <span className="text-blue-600 dark:text-blue-400 text-xs">Range From</span>
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                className="form-input"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="form-label">
                 Booking Date <span className="text-blue-600 dark:text-blue-400 text-xs">Range To</span>
               </label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                className="form-input"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="form-label">
                 Filter
               </label>
               <button
                 onClick={() => setPendingOnly(!pendingOnly)}
-                className={`w-full flex items-center justify-center space-x-2 border rounded-md px-3 py-2 transition-colors ${
+                className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-3 text-sm font-medium transition-colors ${
                   pendingOnly
                     ? "bg-amber-100 dark:bg-amber-900/30 border-amber-400 dark:border-amber-600 text-amber-700 dark:text-amber-300"
-                    : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+                    : "bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-[var(--color-primary-soft)] dark:hover:bg-gray-800"
                 }`}
               >
                 <Filter className="w-4 h-4" />
@@ -706,7 +717,7 @@ const CustomerReport: React.FC = () => {
               </button>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="form-label">
                 {calculateWeeksBetween(startDate, endDate)} weeks selected
               </label>
               <Button
@@ -719,17 +730,14 @@ const CustomerReport: React.FC = () => {
               </Button>
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="form-label">
                 Search
               </label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search by customer name, email, phone, package..."
+                <SearchField
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  onChange={setSearchTerm}
+                  placeholder="Search by customer name, email, phone, or package"
                 />
               </div>
             </div>
@@ -738,57 +746,17 @@ const CustomerReport: React.FC = () => {
       </Card>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Users className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {stats.totalCustomers}
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Customers</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Calendar className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {stats.totalBookings}
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Bookings</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <IndianRupee className="w-8 h-8 text-green-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {formatCurrency(stats.totalAmount)}
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Total Amount</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <CheckCircle className="w-8 h-8 text-teal-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {formatCurrency(stats.totalPaid)}
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Total Paid</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <AlertCircle className="w-8 h-8 text-amber-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {formatCurrency(stats.totalDue)}
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Total Due</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+        <StatCard label="Customers" value={stats.totalCustomers.toString()} tone="primary" />
+        <StatCard label="Bookings" value={stats.totalBookings.toString()} />
+        <StatCard label="Total Amount" value={formatCurrency(stats.totalAmount)} />
+        <StatCard label="Total Paid" value={formatCurrency(stats.totalPaid)} />
+        <StatCard label="Total Due" value={formatCurrency(stats.totalDue)} />
       </div>
 
       {/* Report Table */}
       {loading ? (
-        <Card>
+        <Card className="rounded-2xl">
           <CardContent className="flex items-center justify-center py-16">
             <div className="flex items-center space-x-3">
               <Spinner size="md" />
@@ -797,7 +765,7 @@ const CustomerReport: React.FC = () => {
           </CardContent>
         </Card>
       ) : filteredData.length === 0 ? (
-        <Card>
+        <Card className="rounded-2xl">
           <CardContent className="text-center py-12">
             <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
@@ -811,11 +779,11 @@ const CustomerReport: React.FC = () => {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent>
+        <Card className="overflow-hidden rounded-2xl border-gray-200/80 shadow-sm dark:border-gray-700">
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-gray-50/80 dark:bg-gray-900">
                   <TableCell header>Customer</TableCell>
                   <TableCell header>Contact</TableCell>
                   <TableCell header>Bookings</TableCell>
@@ -1032,4 +1000,3 @@ const CustomerReport: React.FC = () => {
 };
 
 export default CustomerReport;
-

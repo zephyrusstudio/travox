@@ -8,11 +8,11 @@ export function registerUserRoutes(app: Express) {
     const userCtrl = new UserController();
 
     // User Management routes (protected)
-    app.get('/users', requireAuth([UserRole.ADMIN, UserRole.OWNER]), userCtrl.getAll);
+    app.get('/users', requireAuth([UserRole.OWNER]), userCtrl.getAll);
     app.get('/users/me', requireAuth(), userCtrl.getCurrentUser);
     app.put('/users/me', requireAuth(), auditLogger('users'), userCtrl.updateProfile);
-    app.get('/users/:id', requireAuth([UserRole.ADMIN, UserRole.OWNER]), userCtrl.getById);
-    app.patch('/users/change-role', requireAuth([UserRole.ADMIN, UserRole.OWNER]), auditLogger('users'), userCtrl.changeRole);
-    app.patch('/users/:id/activate', requireAuth([UserRole.ADMIN, UserRole.OWNER]), auditLogger('users'), userCtrl.activate);
-    app.patch('/users/:id/deactivate', requireAuth([UserRole.ADMIN, UserRole.OWNER]), auditLogger('users'), userCtrl.deactivate);
+    app.get('/users/:id', requireAuth([UserRole.OWNER]), userCtrl.getById);
+    app.patch('/users/change-role', requireAuth([UserRole.OWNER]), auditLogger('users'), userCtrl.changeRole);
+    app.patch('/users/:id/activate', requireAuth([UserRole.OWNER]), auditLogger('users'), userCtrl.activate);
+    app.patch('/users/:id/deactivate', requireAuth([UserRole.OWNER]), auditLogger('users'), userCtrl.deactivate);
 }

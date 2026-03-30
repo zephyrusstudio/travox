@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Download, Calendar, Users, IndianRupee, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../ui/Card';
 import Button from '../ui/Button';
@@ -7,7 +8,8 @@ import Table, { TableHeader, TableBody, TableRow, TableCell } from '../ui/Table'
 import Badge from '../ui/Badge';
 
 const DetailedBookingsView: React.FC = () => {
-  const { bookings, customers } = useApp();
+  const { bookings } = useApp();
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState({
     startDate: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
@@ -59,6 +61,51 @@ const DetailedBookingsView: React.FC = () => {
     }
   };
 
+  const handleExportReport = () => {
+    const escapeCsv = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
+    const header = [
+      'Booking Ref',
+      'Package',
+      'Customer',
+      'Booking Date',
+      'Travel Start',
+      'Travel End',
+      'Pax',
+      'Status',
+      'Total Amount',
+      'Paid Amount',
+      'Due Amount',
+    ];
+
+    const rows = filteredBookings.map((booking) => [
+      booking.booking_id,
+      booking.package_name,
+      booking.customer_name,
+      booking.booking_date,
+      booking.travel_start_date,
+      booking.travel_end_date,
+      booking.pax_count,
+      booking.status,
+      booking.total_amount,
+      booking.advance_received,
+      booking.balance_amount,
+    ]);
+
+    const csv = [
+      header.map(escapeCsv).join(','),
+      ...rows.map((row) => row.map(escapeCsv).join(',')),
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `bookings-analysis-${dateRange.startDate}-to-${dateRange.endDate}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -67,7 +114,7 @@ const DetailedBookingsView: React.FC = () => {
           <Button
             variant="outline"
             icon={ArrowLeft}
-            onClick={() => window.location.hash = '#dashboard'}
+            onClick={() => navigate('/legacy/dashboard')}
           >
             Back to Dashboard
           </Button>
@@ -76,7 +123,7 @@ const DetailedBookingsView: React.FC = () => {
             <p className="text-gray-600">Comprehensive booking performance and trends</p>
           </div>
         </div>
-        <Button icon={Download}>
+        <Button icon={Download} onClick={handleExportReport}>
           Export Report
         </Button>
       </div>

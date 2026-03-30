@@ -1,5 +1,6 @@
 import React from 'react';
 import { Clock, User, Plus, Edit, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { LogEntry } from '../../types';
 import Badge from '../ui/Badge';
 
@@ -8,6 +9,8 @@ interface RecentActivityProps {
 }
 
 const RecentActivity: React.FC<RecentActivityProps> = ({ logs }) => {
+  const navigate = useNavigate();
+
   const getActionIcon = (action: string) => {
     switch (action) {
       case 'CREATE':
@@ -124,7 +127,10 @@ const RecentActivity: React.FC<RecentActivityProps> = ({ logs }) => {
       
       {logs.length >= 8 && (
         <div className="text-center pt-4 border-t border-gray-100">
-          <button className="text-blue-600 hover:text-blue-700 text-sm font-semibold hover:underline transition-colors duration-200">
+          <button
+            onClick={() => navigate('/logs')}
+            className="text-blue-600 hover:text-blue-700 text-sm font-semibold hover:underline transition-colors duration-200"
+          >
             View all activity →
           </button>
         </div>

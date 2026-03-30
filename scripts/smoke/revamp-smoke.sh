@@ -51,6 +51,18 @@ require_not_public() {
   echo "[smoke][ok] ${name}: blocked without auth (${code})"
 }
 
+require_not_public_post() {
+  local url="$1"
+  local name="$2"
+  local code
+  code="$(curl -s -o /dev/null -w "%{http_code}" -X POST "$url")"
+  if [[ "$code" =~ ^2 ]]; then
+    echo "[smoke][fail] ${name}: POST endpoint is publicly accessible (${url})"
+    exit 1
+  fi
+  echo "[smoke][ok] ${name}: blocked without auth (${code})"
+}
+
 require_with_token() {
   local url="$1"
   local name="$2"
@@ -59,6 +71,19 @@ require_with_token() {
   code="$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${token}" "$url")"
   if [[ "$code" -lt 200 || "$code" -ge 400 ]]; then
     echo "[smoke][fail] ${name}: token check failed with ${code} (${url})"
+    exit 1
+  fi
+  echo "[smoke][ok] ${name}: ${code}"
+}
+
+require_with_token_post() {
+  local url="$1"
+  local name="$2"
+  local token="$3"
+  local code
+  code="$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Bearer ${token}" "$url")"
+  if [[ "$code" -lt 200 || "$code" -ge 400 ]]; then
+    echo "[smoke][fail] ${name}: token POST check failed with ${code} (${url})"
     exit 1
   fi
   echo "[smoke][ok] ${name}: ${code}"
@@ -77,7 +102,7 @@ done
 
 echo "[smoke] checking security parity for metrics endpoints"
 require_not_public "$BASE_URL/metrics" "metrics GET auth"
-require_not_public "$BASE_URL/metrics/reset" "metrics reset auth"
+require_not_public_post "$BASE_URL/metrics/reset" "metrics reset POST auth"
 
 if [[ -n "$AUTH_TOKEN" ]]; then
   echo "[smoke] checking protected active API endpoints using AUTH_TOKEN"
@@ -93,6 +118,7 @@ fi
 if [[ -n "$OWNER_TOKEN" ]]; then
   echo "[smoke] checking owner-only metrics endpoint using OWNER_TOKEN"
   require_with_token "$BASE_URL/metrics" "metrics owner access" "$OWNER_TOKEN"
+  require_with_token_post "$BASE_URL/metrics/reset" "metrics reset owner access" "$OWNER_TOKEN"
 else
   echo "[smoke][note] OWNER_TOKEN not set; skipping owner-only metrics positive check"
 fi

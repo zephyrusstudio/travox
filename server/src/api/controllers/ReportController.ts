@@ -2,8 +2,11 @@ import { Request, Response } from 'express';
 import { container } from '../../config/container';
 import { GetReportCatalog } from '../../application/useCases/reporting/GetReportCatalog';
 import { GetReportData } from '../../application/useCases/reporting/GetReportData';
+import { GetCustomerPendingPaymentsReport } from '../../application/useCases/customer/GetCustomerPendingPaymentsReport';
+import { GetVendorBookingsReport } from '../../application/useCases/vendor/GetVendorBookingsReport';
 import {
   ReportId,
+  ReportColumn,
   ReportQueryFilters,
   ReportResponseEnvelope,
   SUPPORTED_REPORT_IDS,
@@ -32,7 +35,16 @@ export class ReportController {
 
   async getReportById(req: Request, res: Response) {
     try {
-      const reportId = req.params.reportId as ReportId;
+      const reportIdParam = String(req.params.reportId || '').trim();
+      if (reportIdParam === 'customer-report-existing') {
+        return this.getExistingCustomerReport(req, res);
+      }
+
+      if (reportIdParam === 'vendor-report-existing') {
+        return this.getExistingVendorReport(req, res);
+      }
+
+      const reportId = reportIdParam as ReportId;
       if (!SUPPORTED_REPORT_IDS.includes(reportId)) {
         return res.status(404).json({
           status: 'error',
@@ -65,6 +77,168 @@ export class ReportController {
         data: { message: error.message || 'Failed to generate report' },
       });
     }
+  }
+
+  private async getExistingCustomerReport(req: Request, res: Response) {
+    const orgId = req.user?.orgId;
+    if (!orgId) {
+      return res.status(401).json({
+        status: 'error',
+        data: { message: 'Organization context missing' },
+      });
+    }
+
+    const { startDate, endDate } = this.parseInterval(req.query.interval as string | undefined);
+    const pendingOnly = this.parseBoolean(req.query.pendingOnly, false);
+    const useCase = container.resolve(GetCustomerPendingPaymentsReport);
+    const report = await useCase.execute(startDate, endDate, orgId, pendingOnly);
+
+    const rows: Array<Record<string, string | number | boolean | null>> = [];
+    let bookingCount = 0;
+    let totalAmount = 0;
+    let totalPaid = 0;
+    let totalDue = 0;
+
+    for (const customerReport of report) {
+      totalAmount += customerReport.totalAmount;
+      totalPaid += customerReport.totalPaid;
+      totalDue += customerReport.totalDue;
+
+      for (const booking of customerReport.bookings) {
+        bookingCount += 1;
+        rows.push({
+          customer: customerReport.customer.name,
+          bookingRef: booking.id,
+          packageName: booking.packageName || '',
+          primaryPax: booking.primaryPaxName || '',
+          bookingDate: booking.bookingDate.toISOString(),
+          travelStart: booking.travelStartAt ? booking.travelStartAt.toISOString() : null,
+          travelEnd: booking.travelEndAt ? booking.travelEndAt.toISOString() : null,
+          status: booking.status,
+          paymentCount: booking.paymentCount,
+          paymentModes: booking.paymentModeBreakdown.map((item) => item.paymentMode).join(', '),
+          totalAmount: booking.totalAmount,
+          paidAmount: booking.paidAmount,
+          dueAmount: booking.dueAmount,
+        });
+      }
+    }
+
+    const columns: ReportColumn[] = [
+      { key: 'customer', label: 'Customer', type: 'text' },
+      { key: 'bookingRef', label: 'Booking Ref', type: 'text' },
+      { key: 'packageName', label: 'Package', type: 'text' },
+      { key: 'primaryPax', label: 'Primary Pax', type: 'text' },
+      { key: 'bookingDate', label: 'Booking Date', type: 'date' },
+      { key: 'travelStart', label: 'Travel Start', type: 'date' },
+      { key: 'travelEnd', label: 'Travel End', type: 'date' },
+      { key: 'status', label: 'Status', type: 'badge' },
+      { key: 'paymentCount', label: 'Payments', type: 'number', align: 'right' },
+      { key: 'paymentModes', label: 'Payment Modes', type: 'text' },
+      { key: 'totalAmount', label: 'Total Amount', type: 'currency', align: 'right' },
+      { key: 'paidAmount', label: 'Paid Amount', type: 'currency', align: 'right' },
+      { key: 'dueAmount', label: 'Due Amount', type: 'currency', align: 'right' },
+    ];
+
+    const payload: ReportResponseEnvelope = {
+      status: 'success',
+      data: rows,
+      count: rows.length,
+      columns,
+      meta: {
+        reportId: 'customer-report-existing',
+        title: 'Customer Report (Existing)',
+        generatedAt: new Date().toISOString(),
+        interval: {
+          start: startDate.toISOString(),
+          end: endDate.toISOString(),
+        },
+        totals: {
+          customerCount: report.length,
+          bookingCount,
+          totalAmount: Number(totalAmount.toFixed(2)),
+          totalPaid: Number(totalPaid.toFixed(2)),
+          totalDue: Number(totalDue.toFixed(2)),
+        },
+        notes: ['Compatibility adapter for existing /customers/report route semantics.'],
+      },
+    };
+
+    return res.json(payload);
+  }
+
+  private async getExistingVendorReport(req: Request, res: Response) {
+    const orgId = req.user?.orgId;
+    if (!orgId) {
+      return res.status(401).json({
+        status: 'error',
+        data: { message: 'Organization context missing' },
+      });
+    }
+
+    const { startDate, endDate } = this.parseInterval(req.query.interval as string | undefined);
+    const useCase = container.resolve(GetVendorBookingsReport);
+    const report = await useCase.execute(startDate, endDate, orgId);
+
+    const rows: Array<Record<string, string | number | boolean | null>> = [];
+    let paymentCount = 0;
+    let totalPaid = 0;
+
+    for (const vendorReport of report) {
+      totalPaid += vendorReport.totalPaid;
+      for (const payment of vendorReport.payments) {
+        paymentCount += 1;
+        rows.push({
+          vendor: vendorReport.vendor.name,
+          serviceType: vendorReport.vendor.serviceType,
+          paymentDate: payment.createdAt.toISOString(),
+          paymentRef: payment.id,
+          bookingRef: payment.bookingId || '',
+          paymentMode: payment.paymentMode,
+          category: payment.category || '',
+          notes: payment.notes || '',
+          amount: payment.amount,
+          currency: payment.currency,
+        });
+      }
+    }
+
+    const columns: ReportColumn[] = [
+      { key: 'vendor', label: 'Vendor', type: 'text' },
+      { key: 'serviceType', label: 'Service Type', type: 'text' },
+      { key: 'paymentDate', label: 'Payment Date', type: 'date' },
+      { key: 'paymentRef', label: 'Payment Ref', type: 'text' },
+      { key: 'bookingRef', label: 'Booking Ref', type: 'text' },
+      { key: 'paymentMode', label: 'Payment Mode', type: 'text' },
+      { key: 'category', label: 'Category', type: 'text' },
+      { key: 'notes', label: 'Notes', type: 'text' },
+      { key: 'amount', label: 'Amount', type: 'currency', align: 'right' },
+      { key: 'currency', label: 'Currency', type: 'text' },
+    ];
+
+    const payload: ReportResponseEnvelope = {
+      status: 'success',
+      data: rows,
+      count: rows.length,
+      columns,
+      meta: {
+        reportId: 'vendor-report-existing',
+        title: 'Vendor Report (Existing)',
+        generatedAt: new Date().toISOString(),
+        interval: {
+          start: startDate.toISOString(),
+          end: endDate.toISOString(),
+        },
+        totals: {
+          vendorCount: report.length,
+          paymentCount,
+          totalPaid: Number(totalPaid.toFixed(2)),
+        },
+        notes: ['Compatibility adapter for existing /vendors/report route semantics.'],
+      },
+    };
+
+    return res.json(payload);
   }
 
   private parseFilters(req: Request): ReportQueryFilters {

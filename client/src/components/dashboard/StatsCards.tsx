@@ -1,5 +1,6 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, IndianRupee, Calendar, AlertCircle, CreditCard, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Card, { CardContent } from '../ui/Card';
 import { DashboardStats } from '../../types';
 
@@ -8,6 +9,7 @@ interface StatsCardsProps {
 }
 
 const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => {
+  const navigate = useNavigate();
   const statsData = [
     {
       title: 'Total Revenue',
@@ -64,7 +66,18 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => {
   ];
 
   const handleCardClick = (link: string) => {
-    window.location.hash = link;
+    const routeMap: Record<string, string> = {
+      '#dashboard': '/legacy/dashboard',
+      '#bookings': '/bookings',
+      '#payments': '/payments',
+      '#customers': '/customers',
+      '#reports': '/reports',
+      '#monthly-summary': '/reports/monthly-income-expense',
+      '#outstanding-payments': '/reports/outstanding-payments',
+      '#expenses': '/expenses',
+    };
+
+    navigate(routeMap[link] ?? '/reports');
   };
 
   return (

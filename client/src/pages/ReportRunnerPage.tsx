@@ -10,6 +10,14 @@ const ReportRunnerPage: React.FC = () => {
     return <Navigate to="/reports" replace />;
   }
 
+  if (reportId === "customer-report-existing") {
+    return <Navigate to="/customers/report" replace />;
+  }
+
+  if (reportId === "vendor-report-existing") {
+    return <Navigate to="/vendors/report" replace />;
+  }
+
   return (
     <Layout currentPage="reports">
       <ReportRunner reportId={reportId} />
@@ -18,4 +26,3 @@ const ReportRunnerPage: React.FC = () => {
 };
 
 export default ReportRunnerPage;
-

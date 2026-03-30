@@ -1,0 +1,12 @@
+# macOS and filesystem metadata
+.DS_Store
+**/.DS_Store
+
+# TypeScript incremental artifacts
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# Local audit/reference artifacts that should not ship in PRs
+/tmp-ocr/
+/Group 1321314854.png
+/travox-logo.png

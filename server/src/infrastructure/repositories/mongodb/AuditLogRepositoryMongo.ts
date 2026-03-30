@@ -120,7 +120,7 @@ export class AuditLogRepositoryMongo implements IAuditLogRepository {
     
     const csvHeaders = 'ID,OrgID,ActorID,Entity,EntityID,Action,IP,UserAgent,CreatedAt,Diff\n';
     const csvRows = logs.map(log => {
-      const escapedDiff = JSON.stringify(log.diff).replace(/"/g, '""');
+      const escapedDiff = this.serializeDiff(log.diff).replace(/"/g, '""');
       const createdAt = log.createdAt instanceof Date 
         ? log.createdAt.toISOString() 
         : log.createdAt;
@@ -128,5 +128,17 @@ export class AuditLogRepositoryMongo implements IAuditLogRepository {
     }).join('\n');
 
     return csvHeaders + csvRows;
+  }
+
+  private serializeDiff(diff: unknown): string {
+    if (diff === undefined) {
+      return '';
+    }
+
+    try {
+      return JSON.stringify(diff) ?? '';
+    } catch {
+      return '[Unserializable diff]';
+    }
   }
 }

@@ -17,7 +17,7 @@ export type ExpenseFormProps = {
   vendors: VendorOption[];
   accounts: AccountOption[];
   formData: ExpenseFormState;
-  setFormData: (next: ExpenseFormState) => void;
+  setFormData: React.Dispatch<React.SetStateAction<ExpenseFormState>>;
   onSubmit: (data: ExpenseFormState) => void;
   isSubmitting?: boolean;
 };
@@ -27,7 +27,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
   onClose,
   title = "Record New Expense",
   vendors,
-  accounts,
+  accounts: _accounts,
   formData,
   setFormData,
   onSubmit,
@@ -57,9 +57,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="lg">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-section">
+        <div className="form-grid">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Vendor *
             </label>
             <select
@@ -67,7 +68,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
               value={formData.vendor_id}
               disabled={isSubmitting}
               onChange={(e) => handleVendorChange(e.target.value)}
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-select"
             >
               <option value="">Select Vendor</option>
               {vendors.map((vendor) => (
@@ -78,7 +79,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
               ))}
             </select>
             {selectedVendor && !vendorHasAccount && (
-              <p className="text-xs text-amber-600 mt-1">
+              <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
                 This vendor does not have a linked payout account yet. Link an
                 account from the Vendor module before recording an expense.
               </p>
@@ -86,7 +87,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Amount *
             </label>
             <input
@@ -103,12 +104,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   amount: value ? Math.ceil(value) : 0,
                 }));
               }}
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Currency *
             </label>
             <input
@@ -122,12 +123,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   currency: e.target.value.toUpperCase(),
                 }))
               }
-              className="w-full border border-gray-300 px-3 py-2 uppercase"
+              className="form-input uppercase"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Payment Mode *
             </label>
             <select
@@ -140,7 +141,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   payment_mode: e.target.value as PaymentMode,
                 }))
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-select"
             >
               {Object.values(PaymentMode).map((mode) => (
                 <option key={mode} value={mode}>
@@ -151,7 +152,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Receipt Number
             </label>
             <input
@@ -164,13 +165,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   receipt_number: e.target.value,
                 }))
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
               placeholder="Optional receipt reference"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Category
             </label>
             <input
@@ -183,14 +184,15 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   category: e.target.value,
                 }))
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
               placeholder="e.g. Vendor payment, Logistics"
             />
           </div>
         </div>
+        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="form-section">
+          <label className="form-label">
             Notes
           </label>
           <textarea
@@ -204,16 +206,17 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
               }))
             }
             placeholder="Add any additional notes..."
-            className="w-full border border-gray-300 px-3 py-2"
+            className="form-textarea"
           />
         </div>
 
-        <div className="flex items-center justify-between pt-4 flex-wrap gap-3">
-          <div className="text-xs text-gray-500">
+        <div className="form-footer !justify-between flex-wrap">
+          <div className="text-xs text-gray-500 dark:text-gray-400">
             All expenses will be logged against the selected vendor. Make sure
-            the vendor has a linked bank/UPI account.
+            the vendor has a linked bank/UPI account. Available internal
+            accounts: {_accounts.length}.
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <Button
               type="button"
               variant="outline"

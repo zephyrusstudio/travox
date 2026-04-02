@@ -48,7 +48,7 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get selected customer display name
   const selectedCustomer = customers.find((c) => c.customer_id === value);
@@ -246,11 +246,11 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
-          className={`w-full border border-gray-300 px-3 py-2 text-left flex items-center justify-between ${
-            disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer hover:border-gray-400'
+          className={`form-input text-left flex items-center justify-between ${
+            disabled ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : 'bg-white dark:bg-gray-800 cursor-pointer hover:border-gray-400'
           }`}
         >
-          <span className={displayValue ? 'text-gray-900' : 'text-gray-500'}>
+          <span className={displayValue ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}>
             {displayValue || 'Search or select customer...'}
           </span>
           <div className="flex items-center gap-1">
@@ -258,7 +258,7 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
               <button
                 type="button"
                 onClick={handleClear}
-                className="p-1 hover:bg-gray-100 rounded"
+                className="rounded-md p-1 text-gray-400 transition-colors hover:bg-[var(--color-primary-soft)] hover:text-[var(--color-primary-700)] dark:hover:bg-gray-700 dark:hover:text-gray-200"
               >
                 <X className="w-4 h-4 text-gray-400" />
               </button>
@@ -269,9 +269,9 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
 
         {/* Dropdown */}
         {isOpen && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 shadow-lg max-h-80 overflow-hidden">
+          <div className="absolute z-50 mt-1 max-h-80 w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900">
             {/* Search Input */}
-            <div className="p-2 border-b border-gray-100">
+            <div className="p-2 border-b border-gray-100 dark:border-gray-700">
               <div className="relative items-center">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -280,7 +280,7 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
                   value={searchQuery}
                   onChange={handleSearchChange}
                   placeholder="Search by name, phone, email, or GSTIN..."
-                  className="w-full pl-9 pr-3 py-2 border border-gray-200 text-sm"
+                  className="form-input !h-10 !pl-9"
                 />
                 <Loader isLoading={isSearching} />
               </div>
@@ -291,7 +291,7 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
               {/* Search Results */}
               {hasSearched && searchResults.length > 0 && (
                 <div className="py-1">
-                  <div className="px-3 py-1 text-xs font-medium text-gray-500 uppercase">
+                  <div className="px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     Search Results
                   </div>
                   {searchResults.map((customer) => (
@@ -299,14 +299,14 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
                       key={customer.id}
                       type="button"
                       onClick={() => handleSelect(customer.id)}
-                      className={`w-full px-3 py-2 text-left hover:bg-blue-50 flex items-start gap-3 ${
-                        value === customer.id ? 'bg-blue-50' : ''
+                      className={`w-full px-3 py-2 text-left hover:bg-[var(--color-primary-soft)] dark:hover:bg-gray-700 flex items-start gap-3 ${
+                        value === customer.id ? 'bg-[var(--color-primary-soft)] dark:bg-gray-700' : ''
                       }`}
                     >
                       <User className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
-                        <div className="font-medium text-gray-900 truncate">{customer.name}</div>
-                        <div className="text-xs text-gray-500 truncate">
+                        <div className="font-medium text-gray-900 dark:text-gray-100 truncate">{customer.name}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                           {[customer.phone, customer.email, customer.gstin].filter(Boolean).join(' • ')}
                         </div>
                       </div>
@@ -318,7 +318,7 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
               {/* No Results - Show message only */}
               {hasSearched && searchResults.length === 0 && searchQuery.trim() && (
                 <div className="py-4 px-3 text-center">
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     No customers found for "{searchQuery}"
                   </p>
                 </div>
@@ -327,7 +327,7 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
               {/* Default: Show existing customers from props when no search */}
               {!hasSearched && customers.length > 0 && (
                 <div className="py-1">
-                  <div className="px-3 py-1 text-xs font-medium text-gray-500 uppercase">
+                  <div className="px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     Recent Customers
                   </div>
                   {customers.slice(0, 10).map((customer) => (
@@ -335,14 +335,14 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
                       key={customer.customer_id}
                       type="button"
                       onClick={() => handleSelect(customer.customer_id)}
-                      className={`w-full px-3 py-2 text-left hover:bg-blue-50 flex items-start gap-3 ${
-                        value === customer.customer_id ? 'bg-blue-50' : ''
+                      className={`w-full px-3 py-2 text-left hover:bg-[var(--color-primary-soft)] dark:hover:bg-gray-700 flex items-start gap-3 ${
+                        value === customer.customer_id ? 'bg-[var(--color-primary-soft)] dark:bg-gray-700' : ''
                       }`}
                     >
                       <User className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
-                        <div className="font-medium text-gray-900 truncate">{customer.full_name}</div>
-                        <div className="text-xs text-gray-500 truncate">
+                        <div className="font-medium text-gray-900 dark:text-gray-100 truncate">{customer.full_name}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                           {[customer.phone, customer.email, customer.gstin].filter(Boolean).join(' • ')}
                         </div>
                       </div>
@@ -354,18 +354,18 @@ const CustomerSearchDropdown: React.FC<CustomerSearchDropdownProps> = ({
               {/* Empty state */}
               {!hasSearched && customers.length === 0 && !searchQuery && (
                 <div className="py-4 px-3 text-center">
-                  <p className="text-sm text-gray-500">No customers available</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No customers available</p>
                 </div>
               )}
             </div>
 
             {/* Create New Customer Option - Always visible at bottom */}
-            <div className="border-t border-gray-100 p-2">
+            <div className="border-t border-gray-100 dark:border-gray-700 p-2">
               <button
                 type="button"
                 onClick={handleCreateCustomer}
                 disabled={isCreating}
-                className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-[var(--color-primary-600)] transition-colors hover:bg-[var(--color-primary-soft)] disabled:cursor-not-allowed disabled:opacity-50 dark:text-[var(--color-primary-300)] dark:hover:bg-gray-800"
               >
                 {isCreating ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

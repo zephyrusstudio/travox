@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Download, TrendingUp, IndianRupee, Calendar, CreditCard } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../ui/Card';
 import Button from '../ui/Button';
@@ -7,7 +8,8 @@ import Table, { TableHeader, TableBody, TableRow, TableCell } from '../ui/Table'
 import Badge from '../ui/Badge';
 
 const DetailedRevenueView: React.FC = () => {
-  const { payments, bookings, customers } = useApp();
+  const { payments, bookings } = useApp();
+  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState({
     startDate: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
     endDate: (() => {
@@ -72,6 +74,48 @@ const DetailedRevenueView: React.FC = () => {
     }
   };
 
+  const handleExportReport = () => {
+    const escapeCsv = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
+    const header = [
+      'Payment Ref',
+      'Date',
+      'Receipt No',
+      'Booking Ref',
+      'Customer',
+      'Package',
+      'Payment Mode',
+      'Amount',
+    ];
+
+    const rows = filteredPayments.map((payment) => {
+      const booking = bookings.find((item) => item.booking_id === payment.booking_id);
+      return [
+        payment.payment_id,
+        payment.payment_date,
+        payment.receipt_number || payment.payment_id,
+        payment.booking_id,
+        booking?.customer_name || '',
+        booking?.package_name || '',
+        payment.payment_mode,
+        payment.amount,
+      ];
+    });
+
+    const csv = [
+      header.map(escapeCsv).join(','),
+      ...rows.map((row) => row.map(escapeCsv).join(',')),
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `revenue-analysis-${dateRange.startDate}-to-${dateRange.endDate}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -80,7 +124,7 @@ const DetailedRevenueView: React.FC = () => {
           <Button
             variant="outline"
             icon={ArrowLeft}
-            onClick={() => window.location.hash = '#dashboard'}
+            onClick={() => navigate('/legacy/dashboard')}
           >
             Back to Dashboard
           </Button>
@@ -89,7 +133,7 @@ const DetailedRevenueView: React.FC = () => {
             <p className="text-gray-600">Detailed revenue breakdown and payment insights</p>
           </div>
         </div>
-        <Button icon={Download}>
+        <Button icon={Download} onClick={handleExportReport}>
           Export Report
         </Button>
       </div>

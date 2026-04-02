@@ -24,9 +24,6 @@ export const warnToast = (message: string) => {
     id,
     icon: "⚠️",
     duration: 5000,
-    style: {
-      borderLeft: "4px solid #f59e0b",
-    },
   });
 };
 
@@ -36,8 +33,5 @@ export const infoToast = (message: string) => {
     id,
     icon: "ℹ️",
     duration: 4000,
-    style: {
-      borderLeft: "4px solid #3b82f6",
-    },
   });
 };

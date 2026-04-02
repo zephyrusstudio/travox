@@ -1,10 +1,12 @@
 import React from 'react';
 import { Calendar, Clock, AlertCircle, MapPin, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import Badge from '../ui/Badge';
 
 const ReminderCalendar: React.FC = () => {
   const { bookings } = useApp();
+  const navigate = useNavigate();
   
   // Get events within next 48 hours
   const now = new Date();
@@ -149,6 +151,7 @@ const ReminderCalendar: React.FC = () => {
           <div 
             key={event.id} 
             className={`${colors.bg} border p-4 hover:shadow-md transition-all duration-200 cursor-pointer`}
+            onClick={() => navigate('/bookings')}
           >
             <div className="flex items-start space-x-4">
               <div className={`${colors.icon} p-3 flex-shrink-0`}>
@@ -196,7 +199,10 @@ const ReminderCalendar: React.FC = () => {
       
       {upcomingEvents.length > 5 && (
         <div className="text-center pt-4">
-          <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+          <button
+            onClick={() => navigate('/bookings')}
+            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+          >
             View all upcoming events →
           </button>
         </div>

@@ -110,10 +110,10 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center space-x-2 px-4 py-2 border transition-colors ${
+        className={`flex h-11 items-center space-x-2 rounded-xl px-4 border transition-colors ${
           activeFilterCount > 0
-            ? "bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100"
-            : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+            ? "bg-[var(--color-primary-soft)] border-[var(--color-primary-border)] text-[var(--color-primary-text)]"
+            : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
         }`}
       >
         <Filter className="w-4 h-4" />
@@ -127,12 +127,12 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
 
       {/* Filter Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-[480px] bg-white border border-gray-200 shadow-lg z-50">
-          <div className="p-4">
-            <div className="grid grid-cols-2 gap-4">
+        <div className="absolute right-0 mt-2 w-[min(92vw,480px)] rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-50">
+          <div className="p-4 form-section !border-0 !p-0 !bg-transparent">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Booking Status */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="form-label">
                   Booking Status
                 </label>
                 <select
@@ -140,7 +140,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange("status", e.target.value || undefined)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-sm"
+                  className="form-select"
                 >
                   <option value="">All</option>
                   <option value="Draft">Draft</option>
@@ -155,7 +155,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
 
               {/* Payment Status */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="form-label">
                   Payment Status
                 </label>
                 <select
@@ -170,7 +170,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                         | undefined
                     )
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-sm"
+                  className="form-select"
                 >
                   <option value="">All</option>
                   <option value="paid">Paid</option>
@@ -181,7 +181,7 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
 
               {/* Due Amount Range */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="form-label">
                   Due Amount <span className="text-blue-500 text-xs">Minimum</span>
                 </label>
                 <input
@@ -195,11 +195,11 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                       e.target.value ? parseFloat(e.target.value) : undefined
                     )
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-sm"
+                  className="form-input"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="form-label">
                   Due Amount <span className="text-blue-500 text-xs">Maximum</span>
                 </label>
                 <input
@@ -213,13 +213,13 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                       e.target.value ? parseFloat(e.target.value) : undefined
                     )
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-sm"
+                  className="form-input"
                 />
               </div>
 
               {/* Booking Date Range */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="form-label">
                   Booking Date <span className="text-blue-500 text-xs">Range From</span>
                 </label>
                 <input
@@ -228,12 +228,12 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange("bookingDateFrom", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-sm"
+                  className="form-input"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="form-label">
                   Booking Date <span className="text-blue-500 text-xs">Range To</span>
                 </label>
                 <input
@@ -242,13 +242,13 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange("bookingDateTo", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-sm"
+                  className="form-input"
                 />
               </div>
 
               {/* Travel Start Date Range */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="form-label">
                   Travel Start <span className="text-blue-500 text-xs">Range From</span>
                 </label>
                 <input
@@ -257,12 +257,12 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange("travelStartFrom", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-sm"
+                  className="form-input"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="form-label">
                   Travel Start <span className="text-blue-500 text-xs">Range To</span>
                 </label>
                 <input
@@ -271,13 +271,13 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange("travelStartTo", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-sm"
+                  className="form-input"
                 />
               </div>
 
               {/* Travel End Date Range */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="form-label">
                   Travel End <span className="text-blue-500 text-xs">Range From</span>
                 </label>
                 <input
@@ -286,12 +286,12 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange("travelEndFrom", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-sm"
+                  className="form-input"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="form-label">
                   Travel End <span className="text-blue-500 text-xs">Range To</span>
                 </label>
                 <input
@@ -300,13 +300,13 @@ const BookingFilter: React.FC<BookingFilterProps> = ({
                   onChange={(e) =>
                     handleInputChange("travelEndTo", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-sm"
+                  className="form-input"
                 />
               </div>
             </div>
 
             {/* Filter Actions */}
-            <div className="flex items-center justify-end space-x-3 mt-4 pt-4 border-t border-gray-200">
+            <div className="form-footer mt-4">
               {activeFilterCount > 0 && (
                 <Button
                   variant="outline"

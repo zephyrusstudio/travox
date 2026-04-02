@@ -1,5 +1,6 @@
 import { Download, RefreshCw } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
+import { PageHeader, StatCard } from "../../design-system/patterns";
 import {
   auditLogService,
   userService,
@@ -74,27 +75,30 @@ const AuditLogsManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Audit Logs</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Track and monitor all system activities and changes
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-          <Button
-            onClick={fetchAuditLogs}
-            icon={RefreshCw}
-            variant="outline"
-            disabled={loading}
-          >
-            Refresh
-          </Button>
-          <Button variant="outline" onClick={exportToCSV} icon={Download}>
-            Export CSV
-          </Button>
-        </div>
+      <PageHeader
+        title="Audit Logs"
+        description="Track mutating operations and access history across the workspace."
+        actions={
+          <>
+            <Button
+              onClick={fetchAuditLogs}
+              icon={RefreshCw}
+              variant="outline"
+              disabled={loading}
+            >
+              Refresh
+            </Button>
+            <Button variant="outline" onClick={exportToCSV} icon={Download}>
+              Export CSV
+            </Button>
+          </>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard label="Visible Logs" value={auditLogs.length.toString()} tone="primary" />
+        <StatCard label="Total Logs" value={total.toString()} />
+        <StatCard label="Actors In Page" value={users.size.toString()} />
       </div>
 
       {/* Pagination */}
@@ -111,7 +115,7 @@ const AuditLogsManagement: React.FC = () => {
 
       {/* Content */}
       {loading ? (
-        <Card>
+        <Card className="rounded-2xl">
           <CardContent className="flex items-center justify-center py-16">
             <div className="flex items-center space-x-3">
               <Spinner size="md" />

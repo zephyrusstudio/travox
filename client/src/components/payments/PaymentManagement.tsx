@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CreditCard, IndianRupee, Plus, RefreshCw, Search } from "lucide-react";
+import { CreditCard, IndianRupee, Plus, RefreshCw } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { PageHeader, StatCard } from "../../design-system/patterns";
+import { SearchField } from "../../design-system/primitives";
 import { useSearch } from "../../hooks/useSearch";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import { errorToast, successToast } from "../../utils/toasts";
@@ -432,7 +434,7 @@ const PaymentManagement: React.FC = () => {
 
   const isLoading = loadingPayments || loadingBookings || loadingCustomers;
 
-  const handleOpenModal = () => {
+  const handleOpenModal = useCallback(() => {
     setFormData({
       booking_id: "",
       payment_date: todayISO(),
@@ -442,7 +444,20 @@ const PaymentManagement: React.FC = () => {
       notes: "",
     });
     setIsModalOpen(true);
-  };
+  }, []);
+
+  useEffect(() => {
+    const handleQuickAction = (event: Event) => {
+      const customEvent = event as CustomEvent<{ actionId?: string }>;
+      if (customEvent.detail?.actionId === "payment.create") {
+        handleOpenModal();
+      }
+    };
+
+    window.addEventListener("travox:quick-action", handleQuickAction);
+    return () =>
+      window.removeEventListener("travox:quick-action", handleQuickAction);
+  }, [handleOpenModal]);
 
   const handleSubmit = async (data: PaymentFormState) => {
     const created = await addPayment(data);
@@ -480,53 +495,55 @@ const PaymentManagement: React.FC = () => {
     }));
   };
 
-  console.log(
-    "booking?.package_name",
-    bookingsMap.get(formData.booking_id)?.package_name,
-  );
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Payment Management
-          </h1>
-          <p className="text-gray-600">Track and manage customer payments</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-          <Button
-            onClick={fetchPayments}
-            icon={RefreshCw}
-            variant="outline"
-            disabled={loadingPayments}
-          >
-            Refresh
-          </Button>
-          <Button onClick={handleOpenModal} icon={Plus}>
-            Record Payment
-          </Button>
-        </div>
+      <PageHeader
+        title="Payment Management"
+        description="Track receivable payments, booking balances, and receipt-backed collections."
+        actions={
+          <>
+            <Button
+              onClick={fetchPayments}
+              icon={RefreshCw}
+              variant="outline"
+              disabled={loadingPayments}
+            >
+              Refresh
+            </Button>
+            <Button onClick={handleOpenModal} icon={Plus}>
+              Record Payment
+            </Button>
+          </>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard
+          label={searchTerm ? "Search Results" : "Visible Payments"}
+          value={filteredPayments.length.toString()}
+          tone="primary"
+        />
+        <StatCard
+          label="Visible Amount"
+          value={`₹${filteredPayments.reduce((sum, item) => sum + item.amount, 0).toLocaleString("en-IN")}`}
+        />
+        <StatCard label="Receivable Records" value={receivablePayments.length.toString()} />
       </div>
 
       {/* Search */}
-      <div className="flex items-center space-x-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search payments..."
+      <div className="flex items-center">
+        <div className="relative flex-1">
+          <SearchField
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 w-full border border-gray-300"
+            onChange={setSearchTerm}
+            placeholder="Search payments by amount, customer, or package"
           />
           <Loader isLoading={isSearching} />
         </div>
       </div>
 
       {/* Pagination */}
-      {!loadingPayments && filteredPayments.length > 0 && (
+      {!loadingPayments && !searchTerm && filteredPayments.length > 0 && (
         <Pagination
           currentPage={currentPage}
           totalItems={totalItems}
@@ -539,7 +556,7 @@ const PaymentManagement: React.FC = () => {
 
       {/* Payments Table */}
       {isLoading ? (
-        <Card>
+        <Card className="rounded-2xl">
           <CardContent className="flex items-center justify-center py-16">
             <div className="flex items-center space-x-3">
               <Spinner size="md" />
@@ -548,19 +565,27 @@ const PaymentManagement: React.FC = () => {
           </CardContent>
         </Card>
       ) : filteredPayments.length === 0 ? (
-        <div className="text-center py-12">
-          <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No Payments Found
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white py-12 text-center dark:border-gray-700 dark:bg-gray-800">
+          <CreditCard className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+          <h3 className="mb-2 text-lg font-medium text-gray-900">
+            {searchTerm ? "No Payments Match Your Search" : "No Payments Found"}
           </h3>
-          <p className="text-gray-500">No payments found.</p>
+          <p className="text-gray-500">
+            {searchTerm ? "Try another keyword or clear search." : "Record a payment to populate this list."}
+          </p>
         </div>
       ) : (
-        <Card>
-          <CardContent>
+        <Card className="overflow-hidden rounded-2xl border-gray-200/80 shadow-sm dark:border-gray-700">
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50/80 px-4 py-2.5 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-300">
+              <span className="font-medium">
+                Showing {filteredPayments.length} payment{filteredPayments.length === 1 ? "" : "s"}
+              </span>
+              <span>Scan receipt, booking, mode, and notes in one row before drilling down.</span>
+            </div>
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-gray-50/80 dark:bg-gray-900">
                   <TableCell header>Receipt No.</TableCell>
                   <TableCell header>Booking Details</TableCell>
                   <TableCell header>Date</TableCell>

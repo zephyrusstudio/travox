@@ -1,12 +1,10 @@
 import {
   Loader2,
   RefreshCw,
-  ShieldCheck,
-  ShieldOff,
   Users,
-  Users as UsersIcon,
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
+import { PageHeader, StatCard } from "../../design-system/patterns";
 import { useApp } from "../../contexts/AppContext";
 import { User, userService } from "../../services/userService";
 import { USER_ROLES, UserRole } from "../../utils/roleAccess";
@@ -29,30 +27,6 @@ const formatDateTime = (value?: string) => {
     return "Never";
   }
   return parsed.toLocaleString();
-};
-
-const StatCard: React.FC<{
-  label: string;
-  value: number | string;
-  accent?: "primary" | "success" | "warning";
-  icon: React.ReactNode;
-}> = ({ label, value, accent = "primary", icon }) => {
-  const accentClasses =
-    accent === "success"
-      ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-      : accent === "warning"
-      ? "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
-      : "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400";
-
-  return (
-    <div className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-      <div>
-        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</p>
-        <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">{value}</p>
-      </div>
-      <div className={`rounded-full p-3 ${accentClasses}`}>{icon}</div>
-    </div>
-  );
 };
 
 const UserManagement: React.FC = () => {
@@ -144,17 +118,10 @@ const UserManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            User Management
-          </h1>
-          <p className="text-sm text-gray-500">
-            Control who can access different parts of your workspace and adjust
-            their privileges in real time.
-          </p>
-        </div>
-        <div className="flex items-center space-x-4">
+      <PageHeader
+        title="User Management"
+        description="Manage member roles and activation status while preserving owner safety rules."
+        actions={
           <Button
             onClick={() => void loadUsers()}
             icon={RefreshCw}
@@ -163,11 +130,11 @@ const UserManagement: React.FC = () => {
           >
             Refresh
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="grid grid-cols-0 md:grid-cols-3 gap-4">
-        <div className="flex col-span-1 items-center justify-between border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+        <div className="flex col-span-1 items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
           <div className="truncate">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Signed in as</p>
             <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100 truncate max-w-fit" title={currentUser?.username || currentUser?.name}>
@@ -179,23 +146,9 @@ const UserManagement: React.FC = () => {
           </div>
         </div>
         <div className="hidden col-span-2 grid-cols-3 gap-4 md:grid">
-        <StatCard
-          label="Total members"
-          value={totalUsers}
-          icon={<UsersIcon className="h-5 w-5" />}
-        />
-        <StatCard
-          label="Active users"
-          value={activeUsers}
-          accent="success"
-          icon={<ShieldCheck className="h-5 w-5" />}
-        />
-        <StatCard
-          label="Inactive users"
-          value={inactiveUsers}
-          accent="warning"
-          icon={<ShieldOff className="h-5 w-5" />}
-        />
+        <StatCard label="Total Members" value={totalUsers.toString()} tone="primary" />
+        <StatCard label="Active Users" value={activeUsers.toString()} />
+        <StatCard label="Inactive Users" value={inactiveUsers.toString()} />
         </div>
       </div>
 
@@ -213,7 +166,7 @@ const UserManagement: React.FC = () => {
 
       {/* Users Table */}
       {loading ? (
-        <Card>
+        <Card className="rounded-2xl">
           <CardContent className="flex items-center justify-center py-16">
             <div className="flex items-center space-x-3">
               <Spinner size="md" />
@@ -222,7 +175,7 @@ const UserManagement: React.FC = () => {
           </CardContent>
         </Card>
       ) : users.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white py-12 text-center dark:border-gray-700 dark:bg-gray-800">
           <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             No Users Found
@@ -232,11 +185,17 @@ const UserManagement: React.FC = () => {
           </p>
         </div>
       ) : (
-        <Card>
-          <CardContent>
+        <Card className="overflow-hidden rounded-2xl border-gray-200/80 shadow-sm dark:border-gray-700">
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50/80 px-4 py-2.5 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-300">
+              <span className="font-medium">
+                Showing {users.length} user{users.length === 1 ? "" : "s"}
+              </span>
+              <span>Role and activation changes apply immediately with owner protections enforced.</span>
+            </div>
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-gray-50/80 dark:bg-gray-900">
                   <TableCell header>Member</TableCell>
                   <TableCell header>Role</TableCell>
                   <TableCell header>Created At</TableCell>
@@ -278,10 +237,10 @@ const UserManagement: React.FC = () => {
                             )
                           }
                           disabled={isUpdatingRole || isCurrentUser}
-                          className={`w-40 border px-3 py-2 text-sm font-medium shadow-sm disabled:cursor-not-allowed disabled:opacity-60 ${
+                          className={`form-select !h-10 !w-40 !py-0 !font-medium disabled:cursor-not-allowed disabled:opacity-60 ${
                             isCurrentUser
-                              ? "border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
-                              : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                              ? "!border-gray-200 dark:!border-gray-700 !bg-gray-50 dark:!bg-gray-800 !text-gray-400 dark:!text-gray-500"
+                              : "!text-gray-700 dark:!text-gray-200"
                           }`}
                         >
                           {USER_ROLES.map((role) => (

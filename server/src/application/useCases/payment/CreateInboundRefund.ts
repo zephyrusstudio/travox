@@ -2,6 +2,7 @@ import { injectable, inject } from 'tsyringe';
 import { IPaymentRepository } from '../../repositories/IPaymentRepository';
 import { IVendorRepository } from '../../repositories/IVendorRepository';
 import { Payment } from '../../../domain/Payment';
+import { RedisService } from '../../../infrastructure/services/RedisService';
 
 interface CreateInboundRefundDTO {
   refundOfPaymentId: string; 
@@ -15,7 +16,8 @@ interface CreateInboundRefundDTO {
 export class CreateInboundRefund {
   constructor(
     @inject('IPaymentRepository') private paymentRepo: IPaymentRepository,
-    @inject('IVendorRepository') private vendorRepo: IVendorRepository
+    @inject('IVendorRepository') private vendorRepo: IVendorRepository,
+    @inject('RedisService') private cache: RedisService
   ) {}
 
   async execute(data: CreateInboundRefundDTO, orgId: string, createdBy: string): Promise<Payment> {
@@ -67,6 +69,8 @@ export class CreateInboundRefund {
 
     vendor.deductExpense(amount);
     await this.vendorRepo.update(vendor, orgId);
+    await this.cache.invalidatePattern(`report:vendors:expenses:${orgId}:*`);
+    await this.cache.invalidatePattern(`report:center:${orgId}:*`);
 
     return savedPayment;
   }

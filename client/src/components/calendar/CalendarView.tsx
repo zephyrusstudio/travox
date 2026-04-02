@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Clock, AlertCircle, MapPin, Users, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../ui/Card';
 import Button from '../ui/Button';
@@ -8,6 +9,7 @@ import Modal from '../ui/Modal';
 
 const CalendarView: React.FC = () => {
   const { bookings } = useApp();
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -210,7 +212,7 @@ const CalendarView: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
           <p className="text-gray-600">Track travel schedules and important reminders</p>
         </div>
-        <Button icon={Plus}>
+        <Button icon={Plus} onClick={() => navigate('/bookings')}>
           Add Event
         </Button>
       </div>

@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CreditCard, Plus, Search, RefreshCw } from "lucide-react";
+import { CreditCard, Plus, RefreshCw } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { PageHeader, StatCard } from "../../design-system/patterns";
+import { SearchField } from "../../design-system/primitives";
 import { useSearch } from "../../hooks/useSearch";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
 import { successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
-import Card, { CardContent, CardHeader } from "../ui/Card";
+import Card, { CardContent } from "../ui/Card";
 import Pagination from "../ui/Pagination";
 import Spinner from "../ui/Spinner";
 import Loader from "../ui/Loader";
@@ -58,7 +60,6 @@ const RefundManagement: React.FC = () => {
   const [customers, setCustomers] = useState<ApiCustomer[]>([]);
   
   const [loadingRefunds, setLoadingRefunds] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loadingData, setLoadingData] = useState(false);
   
   const [currentPage, setCurrentPage] = useState(1);
@@ -230,42 +231,64 @@ const RefundManagement: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const handleQuickAction = (event: Event) => {
+      const customEvent = event as CustomEvent<{ actionId?: string }>;
+      if (customEvent.detail?.actionId === "refund.create") {
+        setIsModalOpen(true);
+      }
+    };
+
+    window.addEventListener("travox:quick-action", handleQuickAction);
+    return () =>
+      window.removeEventListener("travox:quick-action", handleQuickAction);
+  }, []);
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">Refund Management</h1>
-          <p className="text-gray-600">Process and track customer refunds</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-          <Button
-            onClick={() => {
-              fetchRefunds();
-              fetchData();
-            }}
-            icon={RefreshCw}
-            variant="outline"
-            disabled={loadingRefunds || loadingData}
-          >
-            Refresh
-          </Button>
-          <Button onClick={() => setIsModalOpen(true)} icon={Plus}>
-            Process Refund
-          </Button>
-        </div>
+      <PageHeader
+        title="Refund Management"
+        description="Process outbound refunds and track booking-linked refund history."
+        actions={
+          <>
+            <Button
+              onClick={() => {
+                fetchRefunds();
+                fetchData();
+              }}
+              icon={RefreshCw}
+              variant="outline"
+              disabled={loadingRefunds || loadingData}
+            >
+              Refresh
+            </Button>
+            <Button onClick={() => setIsModalOpen(true)} icon={Plus}>
+              Process Refund
+            </Button>
+          </>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard
+          label={searchTerm ? "Search Results" : "Visible Refunds"}
+          value={filteredRefunds.length.toString()}
+          tone="primary"
+        />
+        <StatCard
+          label="Visible Refund Value"
+          value={`₹${filteredRefunds.reduce((sum, item) => sum + item.refund_amount, 0).toLocaleString("en-IN")}`}
+        />
+        <StatCard label="Eligible Receivable Payments" value={receivablePayments.length.toString()} />
       </div>
 
       {/* Search */}
-      <div className="flex items-center space-x-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search refunds..."
+      <div className="flex items-center">
+        <div className="relative flex-1">
+          <SearchField
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 w-full border border-gray-300"
+            onChange={setSearchTerm}
+            placeholder="Search refunds by booking, customer, or amount"
           />
           <Loader isLoading={isSearching} />
         </div>
@@ -273,7 +296,7 @@ const RefundManagement: React.FC = () => {
 
       {/* Pagination */}
       {!loadingRefunds && (
-        filteredRefunds.length > 0 && (
+        !searchTerm && filteredRefunds.length > 0 && (
           <Pagination
             currentPage={currentPage}
             totalItems={totalItems}
@@ -287,7 +310,7 @@ const RefundManagement: React.FC = () => {
 
       {/* Refunds Table */}
       {loadingRefunds ? (
-        <Card>
+        <Card className="rounded-2xl">
           <CardContent className="flex items-center justify-center py-16">
             <div className="flex items-center space-x-3">
               <Spinner size="md" />
@@ -296,24 +319,27 @@ const RefundManagement: React.FC = () => {
           </CardContent>
         </Card>
       ) : filteredRefunds.length === 0 ? (
-        <div className="text-center py-12">
-          <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No Refunds Found
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white py-12 text-center dark:border-gray-700 dark:bg-gray-800">
+          <CreditCard className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+          <h3 className="mb-2 text-lg font-medium text-gray-900">
+            {searchTerm ? "No Refunds Match Your Search" : "No Refunds Found"}
           </h3>
           <p className="text-gray-500">
-            No refunds found.
+            {searchTerm ? "Try another keyword or clear search." : "Process a refund to populate this list."}
           </p>
         </div>
       ) : (
-        <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold text-gray-900">Refund History</h3>
-          </CardHeader>
-          <CardContent>
+        <Card className="overflow-hidden rounded-2xl border-gray-200/80 shadow-sm dark:border-gray-700">
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50/80 px-4 py-2.5 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-300">
+              <span className="font-medium">
+                Showing {filteredRefunds.length} refund{filteredRefunds.length === 1 ? "" : "s"}
+              </span>
+              <span>Each entry maps to a booking payment and keeps audit-ready refund context.</span>
+            </div>
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-gray-50/80 dark:bg-gray-900">
                   <TableCell header>Booking Details</TableCell>
                   <TableCell header>Refund Date</TableCell>
                   <TableCell header>Amount</TableCell>

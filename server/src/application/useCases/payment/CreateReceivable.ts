@@ -99,6 +99,7 @@ export class CreateReceivable {
 
     // Invalidate customer booking report caches for immediate report refresh
     await this.cache.invalidatePattern(`report:customers:bookings:${orgId}:*`);
+    await this.cache.invalidatePattern(`report:center:${orgId}:*`);
 
     return savedPayment;
   }

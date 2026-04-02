@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import Card, { CardHeader, CardContent } from '../ui/Card';
 import StatsCards from './StatsCards';
@@ -24,6 +25,7 @@ import {
 
 const Dashboard: React.FC = () => {
   const { getDashboardStats, logs, bookings, customers, payments, expenses } = useApp();
+  const navigate = useNavigate();
   const stats = getDashboardStats();
 
   // Calculate additional metrics
@@ -98,7 +100,18 @@ const Dashboard: React.FC = () => {
   ];
 
   const handleCardClick = (link: string) => {
-    window.location.hash = link;
+    const routeMap: Record<string, string> = {
+      '#dashboard': '/legacy/dashboard',
+      '#bookings': '/bookings',
+      '#payments': '/payments',
+      '#customers': '/customers',
+      '#reports': '/reports',
+      '#monthly-summary': '/reports/monthly-income-expense',
+      '#outstanding-payments': '/reports/outstanding-payments',
+      '#expenses': '/expenses',
+    };
+
+    navigate(routeMap[link] ?? '/reports');
   };
 
   return (

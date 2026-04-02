@@ -73,7 +73,8 @@ export enum PaymentMode {
   NETBANKING = 'NETBANKING',
   BANK_TRANSFER = 'BANK_TRANSFER',
   CHEQUE = 'CHEQUE',
-  WALLET = 'WALLET'
+  WALLET = 'WALLET',
+  OTHER = 'OTHER'
 }
 
 export enum FileKind {

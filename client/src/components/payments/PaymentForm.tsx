@@ -41,9 +41,10 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="lg">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-section">
+        <div className="form-grid">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Booking *
             </label>
             <select
@@ -55,7 +56,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                 setFormData({ ...formData, booking_id: id });
                 onBookingSelect?.(id);
               }}
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-select"
             >
               <option value="">Select Booking</option>
               {bookings
@@ -68,7 +69,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                 ))}
             </select>
             {formData.booking_id && (
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="form-help">
                 Outstanding balance: ₹
                 {
                   bookings.find((b) => b.booking_id === formData.booking_id)
@@ -79,7 +80,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Payment Date *
             </label>
             <input
@@ -90,12 +91,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, payment_date: e.target.value })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Amount *
             </label>
             <input
@@ -112,12 +113,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                   amount: value ? Math.ceil(value) : 0,
                 });
               }}
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Payment Mode *
             </label>
             <select
@@ -130,7 +131,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                   payment_mode: e.target.value as PaymentMode,
                 })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-select"
             >
               {Object.values(PaymentMode).map((mode) => (
                 <option key={mode} value={mode}>
@@ -141,7 +142,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Receipt Number *
             </label>
             <input
@@ -152,13 +153,14 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, receipt_number: e.target.value })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
             />
           </div>
         </div>
+        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="form-section">
+          <label className="form-label">
             Notes
           </label>
           <textarea
@@ -169,11 +171,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
               setFormData({ ...formData, notes: e.target.value })
             }
             placeholder="Add any additional notes..."
-            className="w-full border border-gray-300 px-3 py-2"
+            className="form-textarea"
           />
         </div>
 
-        <div className="flex items-center justify-end space-x-3 pt-4">
+        <div className="form-footer">
           <Button
             type="button"
             variant="outline"

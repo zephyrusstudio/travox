@@ -510,10 +510,11 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="lg">
       <form onSubmit={submitForm} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-section">
+        <div className="form-grid">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Full Name <span className="text-rose-600">*</span>
             </label>
             <input
@@ -523,13 +524,13 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
             />
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Email
             </label>
             <input
@@ -538,17 +539,17 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
               placeholder="Enter email address"
             />
             {emailError && (
-              <p className="mt-1 text-xs text-rose-600">{emailError}</p>
+              <p className="form-error">{emailError}</p>
             )}
           </div>
 
           {/* Phone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Phone
             </label>
             <div className="flex">
@@ -572,7 +573,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                 }}
                 placeholder="+91"
                 maxLength={5}
-                className="w-20 border border-gray-300 rounded-l-lg px-3 py-2 bg-gray-50 text-center"
+                className="form-input !w-20 !rounded-r-none !border-r-0 !bg-gray-50 dark:!bg-gray-800 !text-center !font-medium"
               />
               <input
                 type="tel"
@@ -584,18 +585,18 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                     : ""
                 }
                 onChange={(e) => setPhone(e.target.value)}
-                className="flex-1 border border-l-0 border-gray-300 rounded-r-lg px-3 py-2"
+                className="form-input flex-1 !rounded-l-none !border-l-0"
                 placeholder="Enter phone number"
               />
             </div>
             {phoneError && (
-              <p className="mt-1 text-xs text-rose-600">{phoneError}</p>
+              <p className="form-error">{phoneError}</p>
             )}
           </div>
 
           {/* Passport */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Passport Number
             </label>
             <input
@@ -603,10 +604,10 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               value={formData.passportNo || ""}
               maxLength={PASSPORT_LEN}
               onChange={(e) => setPassport(e.target.value)}
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
             />
             {!isPassportValid && (
-              <p className="mt-1 text-xs text-rose-600">
+              <p className="form-error">
                 Invalid passport format.
               </p>
             )}
@@ -614,7 +615,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
 
           {/* GSTIN */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               GSTIN
             </label>
             <input
@@ -622,10 +623,10 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               value={formData.gstin || ""}
               maxLength={GSTIN_LEN}
               onChange={(e) => setGstin(e.target.value)}
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
             />
             {!isGstinValid && (
-              <p className="mt-1 text-xs text-rose-600">
+              <p className="form-error">
                 GSTIN must be 15 characters (A–Z, 0–9).
               </p>
             )}
@@ -633,7 +634,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
 
           {/* Aadhaar */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Aadhaar Number
             </label>
             <input
@@ -642,10 +643,10 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               maxLength={AADHAAR_LEN}
               value={formData.aadhaarNo || ""}
               onChange={(e) => setAadhaar(e.target.value)}
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
             />
             {!isAadhaarValid && (
-              <p className="mt-1 text-xs text-rose-600">
+              <p className="form-error">
                 Enter exactly 12 digits.
               </p>
             )}
@@ -653,7 +654,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
 
           {/* Visa */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="form-label">
               Visa Number
             </label>
             <input
@@ -662,22 +663,23 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, visaNo: e.target.value })
               }
-              className="w-full border border-gray-300 px-3 py-2"
+              className="form-input"
             />
           </div>
         </div>
+        </div>
 
-        <div className="border border-gray-200">
+        <div className="form-section border border-gray-200">
           <button
             type="button"
             onClick={toggleBankSection}
             className="flex w-full items-center justify-between px-4 py-3 text-left"
           >
             <div>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 Bank Account
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {isLinkingAccount
                   ? "Bank details will be linked when you save this customer."
                   : "Add bank account details for this customer."}
@@ -691,23 +693,23 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
           </button>
 
           {isLinkingAccount && (
-            <div className="space-y-4 border-t border-gray-200 bg-gray-50 px-4 py-4">
+            <div className="space-y-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 px-4 py-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="form-label">
                   Bank Name
                 </label>
                 <input
                   type="text"
                   value={accountForm.bankName}
                   onChange={(e) => setAccountField("bankName", e.target.value)}
-                  className="w-full border border-gray-300 px-3 py-2"
+                  className="form-input"
                   placeholder="Enter bank name (optional)"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="form-grid">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     Account Number
                   </label>
                   <input
@@ -716,13 +718,13 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                     onChange={(e) =>
                       setAccountField("accountNo", e.target.value)
                     }
-                    className="w-full border border-gray-300 px-3 py-2"
+                    className="form-input"
                     placeholder="Enter account number"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     IFSC Code
                   </label>
                   <input
@@ -731,16 +733,16 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                     onChange={(e) =>
                       setAccountField("ifscCode", e.target.value)
                     }
-                    className="w-full border border-gray-300 px-3 py-2 uppercase"
+                    className="form-input uppercase"
                     placeholder="Enter IFSC code"
                     maxLength={11}
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="form-grid">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     Branch Name
                   </label>
                   <input
@@ -749,27 +751,27 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                     onChange={(e) =>
                       setAccountField("branchName", e.target.value)
                     }
-                    className="w-full border border-gray-300 px-3 py-2"
+                    className="form-input"
                     placeholder="Enter branch name (optional)"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="form-label">
                     UPI ID
                   </label>
                   <input
                     type="text"
                     value={accountForm.upiId}
                     onChange={(e) => setAccountField("upiId", e.target.value)}
-                    className="w-full border border-gray-300 px-3 py-2"
+                    className="form-input"
                     placeholder="Enter UPI ID"
                   />
                 </div>
               </div>
 
               {!isAccountDetailsValid && (
-                <p className="text-xs text-rose-600">
+                <p className="form-error">
                   Provide either UPI ID or Bank A/C No. and IFSC Code.
                 </p>
               )}
@@ -787,7 +789,7 @@ const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
           )}
         </div>
 
-        <div className="flex items-center justify-end space-x-3 pt-4">
+        <div className="form-footer">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>

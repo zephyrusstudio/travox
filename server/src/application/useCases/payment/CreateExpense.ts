@@ -3,6 +3,7 @@ import { IPaymentRepository } from '../../repositories/IPaymentRepository';
 import { IVendorRepository } from '../../repositories/IVendorRepository';
 import { Payment } from '../../../domain/Payment';
 import { PaymentMode } from '../../../models/FirestoreTypes';
+import { RedisService } from '../../../infrastructure/services/RedisService';
 
 interface CreateExpenseDTO {
   amount: number;
@@ -20,7 +21,8 @@ interface CreateExpenseDTO {
 export class CreateExpense {
   constructor(
     @inject('IPaymentRepository') private paymentRepo: IPaymentRepository,
-    @inject('IVendorRepository') private vendorRepo: IVendorRepository
+    @inject('IVendorRepository') private vendorRepo: IVendorRepository,
+    @inject('RedisService') private cache: RedisService
   ) {}
 
   async execute(data: CreateExpenseDTO, orgId: string, createdBy: string): Promise<Payment> {
@@ -61,6 +63,8 @@ export class CreateExpense {
 
     vendor.addExpense(data.amount);
     await this.vendorRepo.update(vendor, orgId);
+    await this.cache.invalidatePattern(`report:vendors:expenses:${orgId}:*`);
+    await this.cache.invalidatePattern(`report:center:${orgId}:*`);
 
     return savedPayment;
   }

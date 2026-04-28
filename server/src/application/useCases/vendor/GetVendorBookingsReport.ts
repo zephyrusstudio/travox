@@ -18,6 +18,7 @@ export interface VendorExpenseReport {
     amount: number;
     currency: string;
     paymentMode: string;
+    paymentType: PaymentType;
     category?: string;
     notes?: string;
     createdAt: Date;
@@ -78,11 +79,11 @@ export class GetVendorBookingsReport {
     for (let i = 0; i < allVendors.length; i++) {
       const vendor = allVendors[i];
       
-      // Filter to only include EXPENSE type payments within the date range
+      // Include vendor expense payments and inbound refunds so totals stay net.
       const vendorPayments = paymentsArrays[i].filter(p => {
         const paymentDate = p.createdAt;
         return (
-          p.paymentType === PaymentType.EXPENSE &&
+          (p.paymentType === PaymentType.EXPENSE || p.paymentType === PaymentType.REFUND_INBOUND) &&
           paymentDate >= startDate &&
           paymentDate <= endDate
         );
@@ -91,7 +92,9 @@ export class GetVendorBookingsReport {
       // Only include vendors that have payments in this period
       if (vendorPayments.length === 0) continue;
 
-      const totalPaid = vendorPayments.reduce((sum, p) => sum + p.amount, 0);
+      const totalPaid = vendorPayments.reduce((sum, p) => (
+        sum + (p.paymentType === PaymentType.EXPENSE ? p.amount : -p.amount)
+      ), 0);
 
       reports.push({
         vendor: {
@@ -104,9 +107,10 @@ export class GetVendorBookingsReport {
         payments: vendorPayments.map(p => ({
           id: p.id,
           bookingId: p.bookingId,
-          amount: p.amount,
+          amount: p.paymentType === PaymentType.EXPENSE ? p.amount : -p.amount,
           currency: p.currency,
           paymentMode: p.paymentMode,
+          paymentType: p.paymentType,
           category: p.category,
           notes: p.notes,
           createdAt: p.createdAt

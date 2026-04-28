@@ -35,7 +35,10 @@ interface ReportRunnerProps {
 interface EntityListResponse {
   status: string;
   data: Array<{ id: string; name: string }>;
+  count?: number;
 }
+
+type EntityListItem = EntityListResponse["data"][number];
 
 const getDefaultDateRange = () => {
   const end = new Date();
@@ -81,6 +84,37 @@ const formatCellValue = (column: ReportColumn, row: ReportRow): string => {
   return String(raw);
 };
 
+const sortEntitiesByName = (items: EntityListItem[]): EntityListItem[] =>
+  [...items].sort((left, right) =>
+    left.name.localeCompare(right.name, "en-IN", { sensitivity: "base" }) ||
+    left.id.localeCompare(right.id)
+  );
+
+const fetchAllEntities = async (url: string): Promise<EntityListItem[]> => {
+  const limit = 500;
+  let offset = 0;
+  let count: number | undefined;
+  const items: EntityListItem[] = [];
+
+  do {
+    const response = await apiRequest<EntityListResponse>({
+      method: "GET",
+      url,
+      params: { limit, offset },
+    });
+    const page = response.data ?? [];
+    items.push(...page);
+    count = typeof response.count === "number" ? response.count : count;
+    offset += page.length;
+
+    if (page.length === 0) {
+      break;
+    }
+  } while (count === undefined ? page.length === limit : offset < count);
+
+  return sortEntitiesByName(items);
+};
+
 const ReportRunner: React.FC<ReportRunnerProps> = ({ reportId }) => {
   const [catalogItem, setCatalogItem] = React.useState<ReportCatalogItem | null>(null);
   const [columns, setColumns] = React.useState<ReportColumn[]>([]);
@@ -122,20 +156,12 @@ const ReportRunner: React.FC<ReportRunnerProps> = ({ reportId }) => {
   }, [reportId]);
 
   const loadEntities = React.useCallback(async () => {
-    const [customerResponse, vendorResponse] = await Promise.all([
-      apiRequest<EntityListResponse>({
-        method: "GET",
-        url: "/customers",
-        params: { limit: 500 },
-      }),
-      apiRequest<EntityListResponse>({
-        method: "GET",
-        url: "/vendors",
-        params: { limit: 500 },
-      }),
+    const [customerItems, vendorItems] = await Promise.all([
+      fetchAllEntities("/customers"),
+      fetchAllEntities("/vendors"),
     ]);
-    setCustomers(customerResponse.data ?? []);
-    setVendors(vendorResponse.data ?? []);
+    setCustomers(customerItems);
+    setVendors(vendorItems);
   }, []);
 
   const runReport = React.useCallback(async () => {

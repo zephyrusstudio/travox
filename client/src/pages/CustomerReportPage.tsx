@@ -4,7 +4,7 @@ import Layout from "../components/ui/Layout";
 
 const CustomerReportPage: React.FC = () => {
   return (
-    <Layout currentPage="customers">
+    <Layout currentPage="customers-report">
       <CustomerReport />
     </Layout>
   );

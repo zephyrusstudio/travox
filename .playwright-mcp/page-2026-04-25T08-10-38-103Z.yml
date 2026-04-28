@@ -1,0 +1,13 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - img [ref=e6]
+    - img [ref=e8]
+  - heading "Device Not Supported" [level=1] [ref=e10]
+  - paragraph [ref=e11]: This application is optimized for desktop and tablet devices. Please access from a larger screen for the best experience.
+  - generic [ref=e12]:
+    - paragraph [ref=e13]: "Supported Devices:"
+    - list [ref=e14]:
+      - listitem [ref=e15]: • Laptops or Desktops
+      - listitem [ref=e16]: • Tablets (iPad, Galaxy Tab, etc.)
+  - button "Continue" [ref=e17] [cursor=pointer]
+  - paragraph [ref=e18]: "Warning: Some features may not work properly on mobile devices"

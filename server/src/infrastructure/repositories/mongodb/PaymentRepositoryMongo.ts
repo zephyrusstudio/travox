@@ -63,7 +63,7 @@ export class PaymentRepositoryMongo implements IPaymentRepository {
   }
 
   async findById(id: string, orgId: string): Promise<Payment | null> {
-    const doc = await PaymentModel.findOne({ _id: id, orgId });
+    const doc = await PaymentModel.findOne({ _id: id, orgId, isDeleted: false });
     if (!doc) return null;
     return this.toDomain(doc);
   }
@@ -113,6 +113,27 @@ export class PaymentRepositoryMongo implements IPaymentRepository {
       vendorId, 
       isDeleted: false 
     }).sort({ createdAt: -1 });
+    return docs.map(doc => this.toDomain(doc));
+  }
+
+  async findRefundsByOriginalPaymentId(
+    refundOfPaymentId: string,
+    orgId: string,
+    refundType?: PaymentType
+  ): Promise<Payment[]> {
+    const filter: any = {
+      orgId,
+      refundOfPaymentId,
+      isDeleted: false
+    };
+
+    if (refundType) {
+      filter.paymentType = refundType;
+    } else {
+      filter.paymentType = { $in: [PaymentType.REFUND_INBOUND, PaymentType.REFUND_OUTBOUND] };
+    }
+
+    const docs = await PaymentModel.find(filter).sort({ createdAt: -1 });
     return docs.map(doc => this.toDomain(doc));
   }
 

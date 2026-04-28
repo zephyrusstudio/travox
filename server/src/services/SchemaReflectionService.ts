@@ -130,6 +130,17 @@ IMPORTANT RULES:
 8. For hotel vouchers: focus on guest names, hotel details, check-in/out dates
 9. For train tickets: focus on PNR, passenger names, train details, journey dates
 10. Always include sequence numbers for proper ordering
+11. Never invent missing values. Omit uncertain fields and explain uncertainty in notes.
+12. Treat hotel/accommodation vouchers as HOTEL segments using checkIn/checkOut fields.
+13. Preserve exact visible passenger names, reference numbers, service numbers, dates, and amounts.
+14. Do not confuse phone numbers, GST/tax IDs, account IDs, or page numbers with booking amount or PNR.
+15. A passenger token like "NAME+5" means one visible passenger plus unnamed companions. Extract only "NAME"; do not invent the companions.
+16. If a flight/train/bus line has only one date and no explicit arrival date, put that date in depAt and leave arrAt empty.
+17. For sales/customer-detail receipts, row DATE is invoice/credit date only. Never use row DATE for depAt/arrAt when memo/description has a travel date.
+17a. Travel date examples: "23RD MAR" means 2026-03-23 when the report period is in 2026; "24TH FEB" means 2026-02-24. Do not combine memo day with invoice row month.
+17b. In invoice-table memo/description cells, parse stacked lines as passenger, route, travel date, class. Example: "ARPAN NAYEK+1 / APDJ TO SDAH / 23RD MAR / SL" means passenger ARPAN NAYEK, depCode APDJ, arrCode SDAH, depAt 2026-03-23, classCode SL.
+18. Ignore Credit Memo, Refund, and TICKET CANCELLED rows when building active passengers and itinerary segments.
+19. If invoice totals and credit memo/refund totals both exist, use the final net TOTAL as totalAmount. Otherwise use the booking/invoice total.
 
 SEX FIELD INFERENCE:
 - Deduce passenger sex from name prefixes:

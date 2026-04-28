@@ -1,8 +1,11 @@
 import { createClient } from 'redis';
 import logger from './logger';
 
+const redisUrl = process.env.REDIS_URL;
+const redisEnabled = process.env.REDIS_ENABLED !== 'false' && (process.env.NODE_ENV === 'production' || Boolean(redisUrl));
+
 const redisClient = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379',
+  url: redisUrl || 'redis://localhost:6379',
   socket: {
     reconnectStrategy: (retries: number) => {
       if (retries > 10) {
@@ -21,6 +24,11 @@ redisClient.on('reconnecting', () => logger.warn('Redis Client Reconnecting'));
 
 // Connect to Redis
 (async () => {
+  if (!redisEnabled) {
+    logger.warn('Redis disabled: set REDIS_URL or REDIS_ENABLED=true to enable cache locally');
+    return;
+  }
+
   try {
     await redisClient.connect();
   } catch (error) {
@@ -28,4 +36,4 @@ redisClient.on('reconnecting', () => logger.warn('Redis Client Reconnecting'));
   }
 })();
 
-export { redisClient };
+export { redisClient, redisEnabled };

@@ -1025,7 +1025,12 @@ const BookingManagement: React.FC = () => {
         return response;
       } catch (error) {
         const apiError = error as ApiError;
-        errorToast(apiError.message);
+        if (
+          apiError.status !== 409 ||
+          !apiError.message.startsWith("Duplicate booking warning")
+        ) {
+          errorToast(apiError.message);
+        }
         throw apiError;
       }
     },

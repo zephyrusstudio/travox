@@ -1,7 +1,7 @@
 // src/lib/http.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
-import { errorToast } from "./toasts";
+import { errorToast, warnToast } from "./toasts";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
 const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY || "travox-at";
@@ -18,6 +18,26 @@ export const dispatchSessionExpired = () => {
 const persistAccessToken = (token: string) => {
   localStorage?.setItem(TOKEN_KEY, token);
   sessionStorage?.setItem(TOKEN_KEY, token);
+};
+
+const getStoredAccessToken = () =>
+  localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY);
+
+const getBearerToken = (headers: AxiosRequestConfig["headers"]): string | null => {
+  const value =
+    (headers as Record<string, unknown> | undefined)?.Authorization ??
+    (headers as Record<string, unknown> | undefined)?.authorization;
+
+  if (typeof value !== "string" || !value.startsWith("Bearer ")) {
+    return null;
+  }
+
+  return value.slice("Bearer ".length);
+};
+
+const setBearerToken = (config: AxiosRequestConfig, token: string) => {
+  config.headers = config.headers ?? {};
+  (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
 };
 
 const clearStoredAuth = () => {
@@ -73,11 +93,10 @@ const refreshAccessToken = async (): Promise<string | null> => {
 // Note: The server also accepts the token from the travox-at cookie (sent automatically by browser)
 // but we include Authorization header as well for compatibility
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY);
+  const token = getStoredAccessToken();
   
   if (token) {
-    config.headers = config.headers ?? {};
-    config.headers.Authorization = `Bearer ${token}`;
+    setBearerToken(config, token);
   }
   return config;
 });
@@ -96,21 +115,21 @@ api.interceptors.response.use(
       requestConfig.url !== REFRESH_ENDPOINT
     ) {
       requestConfig._retry = true;
+      const requestToken = getBearerToken(requestConfig.headers) ?? getStoredAccessToken();
 
       return refreshAccessToken().then((newToken) => {
-        if (!newToken) {
+        const latestToken = getStoredAccessToken();
+        const retryToken =
+          newToken || (latestToken && latestToken !== requestToken ? latestToken : null);
+
+        if (!retryToken) {
           handleLogout();
           return Promise.reject(error);
         }
 
-        requestConfig.headers = requestConfig.headers ?? {};
-        requestConfig.headers.Authorization = `Bearer ${newToken}`;
+        setBearerToken(requestConfig, retryToken);
         return api(requestConfig);
       });
-    }
-
-    if (error.response?.status === 401 && requestConfig?.url === REFRESH_ENDPOINT) {
-      handleLogout();
     }
 
     return Promise.reject(error);
@@ -163,7 +182,14 @@ export async function apiRequest<T = any>(cfg: AxiosRequestConfig): Promise<T> {
   } catch (error: any) {
     const parsedError = parseApiError(error);
     console.log(parsedError.message);
-    errorToast(parsedError.message);
+    if (
+      parsedError.status === 409 &&
+      parsedError.message.startsWith("Duplicate booking warning")
+    ) {
+      warnToast(parsedError.message);
+    } else {
+      errorToast(parsedError.message);
+    }
     throw parsedError;
   }
 }

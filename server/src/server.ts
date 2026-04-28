@@ -10,13 +10,34 @@ import { dateSerializerMiddleware } from "./middleware/dateSerializer";
 import { errorHandler } from "./middleware/errorHandler";
 import { loggerMiddleware } from "./middleware/loggerMiddleware";
 
+const defaultCorsOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+];
+
+const getAllowedCorsOrigins = () => {
+  const configuredOrigins = process.env.CORS_ORIGIN?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  return configuredOrigins?.length ? configuredOrigins : defaultCorsOrigins;
+};
+
 export async function startServer() {
   const app = express();
+  const allowedOrigins = getAllowedCorsOrigins();
 
   // CORS middleware
   app.use(
     cors({
-      origin: process.env.CORS_ORIGIN?.split(",") || "http://localhost:5173",
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+
+        callback(new Error(`CORS origin not allowed: ${origin}`));
+      },
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "x-refresh-token"],

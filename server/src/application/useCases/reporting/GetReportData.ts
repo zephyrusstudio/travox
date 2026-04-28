@@ -30,9 +30,19 @@ interface BaseDataset {
   customersById: Map<string, Customer>;
   vendorsById: Map<string, Vendor>;
   receivables: Payment[];
+  receivablesByBookingId: Map<string, Payment[]>;
   outboundRefunds: Payment[];
+  outboundRefundsByBookingId: Map<string, Payment[]>;
   expenses: Payment[];
   inboundRefunds: Payment[];
+}
+
+interface BookingFinancials {
+  paidAmount: number;
+  dueAmount: number;
+  recordedReceivableTotal: number;
+  recordedRefundTotal: number;
+  missingPaymentAmount: number;
 }
 
 const REPORT_CACHE_TTL_SECONDS = 300;
@@ -192,39 +202,95 @@ export class GetReportData {
       customersById: new Map(customers.map((customer) => [customer.id, customer])),
       vendorsById: new Map(vendors.map((vendor) => [vendor.id, vendor])),
       receivables,
+      receivablesByBookingId: this.groupPaymentsByBookingId(receivables),
       outboundRefunds,
+      outboundRefundsByBookingId: this.groupPaymentsByBookingId(outboundRefunds),
       expenses,
       inboundRefunds,
+    };
+  }
+
+  private groupPaymentsByBookingId(payments: Payment[]): Map<string, Payment[]> {
+    const grouped = new Map<string, Payment[]>();
+    for (const payment of payments) {
+      if (!payment.bookingId) {
+        continue;
+      }
+      const existing = grouped.get(payment.bookingId) || [];
+      existing.push(payment);
+      grouped.set(payment.bookingId, existing);
+    }
+    return grouped;
+  }
+
+  private getBookingFinancials(booking: Booking, dataset: BaseDataset): BookingFinancials {
+    if (booking.status === BookingStatus.CANCELLED || booking.status === BookingStatus.REFUNDED) {
+      return {
+        paidAmount: booking.status === BookingStatus.REFUNDED ? 0 : this.round(Math.max(0, Number(booking.paidAmount || 0))),
+        dueAmount: 0,
+        recordedReceivableTotal: 0,
+        recordedRefundTotal: 0,
+        missingPaymentAmount: 0,
+      };
+    }
+
+    const receivables = dataset.receivablesByBookingId.get(booking.id) || [];
+    const outboundRefunds = dataset.outboundRefundsByBookingId.get(booking.id) || [];
+    const recordedReceivableTotal = this.round(receivables.reduce((sum, payment) => sum + payment.amount, 0));
+    const recordedRefundTotal = this.round(outboundRefunds.reduce((sum, payment) => sum + payment.amount, 0));
+    const storedPaidAmount = Math.max(0, Number(booking.paidAmount || 0));
+    const grossPaidFromStored = storedPaidAmount > recordedReceivableTotal
+      ? storedPaidAmount + recordedRefundTotal
+      : storedPaidAmount;
+    const grossPaidAmount = this.round(Math.max(recordedReceivableTotal, grossPaidFromStored));
+    const paidAmount = this.round(Math.max(0, grossPaidAmount - recordedRefundTotal));
+    const dueAmount = this.round(Math.max(0, booking.totalAmount - grossPaidAmount));
+    const missingPaymentAmount = this.round(Math.max(0, grossPaidAmount - recordedReceivableTotal));
+
+    return {
+      paidAmount,
+      dueAmount,
+      recordedReceivableTotal,
+      recordedRefundTotal,
+      missingPaymentAmount,
     };
   }
 
   private buildSalesByCustomerDetail(dataset: BaseDataset, filters: ReportQueryFilters): ReportResult {
     const events = this.getFilteredCustomerEvents(dataset, filters, {
       includeInvoices: true,
-      includePayments: filters.includePaymentDetails,
+      includePayments: true,
       includeRefunds: filters.includeRefunds,
       includeDateFilter: true,
       usePendingOnlyFilter: true,
     });
 
+    const paymentTypeSelected = filters.transactionTypes.some((type) => type.toUpperCase() === 'PAYMENT');
+    const rowEvents = filters.includePaymentDetails || paymentTypeSelected
+      ? events
+      : events.filter((event) => event.sourceType !== 'RECEIVABLE');
+
     const rows: ReportRow[] = [];
-    const grouped = this.groupCustomerEvents(events);
+    const grouped = this.groupCustomerEvents(rowEvents);
 
     let invoiceTotal = 0;
     let paymentTotal = 0;
     let creditTotal = 0;
 
+    for (const event of events) {
+      if (event.transactionCode === 'INVOICE') {
+        invoiceTotal += event.amount;
+      } else if (event.transactionCode === 'PAYMENT') {
+        paymentTotal += event.amount;
+      } else {
+        creditTotal += event.amount;
+      }
+    }
+
     grouped.forEach((groupEvents) => {
       let runningBalance = 0;
       for (const event of groupEvents) {
         runningBalance += event.signedAmount;
-        if (event.transactionCode === 'INVOICE') {
-          invoiceTotal += event.amount;
-        } else if (event.transactionCode === 'PAYMENT') {
-          paymentTotal += event.amount;
-        } else {
-          creditTotal += event.amount;
-        }
 
         rows.push({
           date: event.date.toISOString(),
@@ -586,7 +652,7 @@ export class GetReportData {
       .filter((booking) => this.isInvoiceEligibleBooking(booking))
       .filter((booking) => this.isWithinInterval(booking.bookingDate, filters.startDate, filters.endDate))
       .filter((booking) => (filters.customerIds.length ? filters.customerIds.includes(booking.customerId) : true))
-      .filter((booking) => (filters.pendingOnly ? booking.dueAmount > 0 : true))
+      .filter((booking) => (filters.pendingOnly ? this.getBookingFinancials(booking, dataset).dueAmount > 0 : true))
       .filter((booking) => {
         if (!filters.serviceTypes.length) {
           return true;
@@ -596,6 +662,7 @@ export class GetReportData {
       })
       .map((booking) => {
         const customer = dataset.customersById.get(booking.customerId);
+        const financials = this.getBookingFinancials(booking, dataset);
         return {
           date: booking.bookingDate.toISOString(),
           invoiceRef: booking.pnrNo || booking.id,
@@ -603,8 +670,8 @@ export class GetReportData {
           productService: this.resolveProductServiceLabel(booking),
           bookingStatus: booking.status,
           totalAmount: booking.totalAmount,
-          paidAmount: booking.paidAmount,
-          dueAmount: booking.dueAmount,
+          paidAmount: financials.paidAmount,
+          dueAmount: financials.dueAmount,
           travelStart: booking.travelStartAt ? booking.travelStartAt.toISOString() : '',
         };
       });
@@ -653,8 +720,9 @@ export class GetReportData {
       };
       existing.invoiceCount += 1;
       existing.totalInvoiced += booking.totalAmount;
-      existing.totalPaid += booking.paidAmount;
-      existing.totalDue += booking.dueAmount;
+      const financials = this.getBookingFinancials(booking, dataset);
+      existing.totalPaid += financials.paidAmount;
+      existing.totalDue += financials.dueAmount;
       byMonth.set(monthKey, existing);
     }
 
@@ -999,12 +1067,13 @@ export class GetReportData {
 
   private buildOutstandingPayments(dataset: BaseDataset, filters: ReportQueryFilters): ReportResult {
     const rows = dataset.bookings
-      .filter((booking) => booking.dueAmount > 0)
+      .filter((booking) => this.getBookingFinancials(booking, dataset).dueAmount > 0)
       .filter((booking) => this.isInvoiceEligibleBooking(booking))
       .filter((booking) => this.isWithinInterval(booking.bookingDate, filters.startDate, filters.endDate))
       .filter((booking) => (filters.customerIds.length ? filters.customerIds.includes(booking.customerId) : true))
       .map((booking) => {
         const customer = dataset.customersById.get(booking.customerId);
+        const financials = this.getBookingFinancials(booking, dataset);
         return {
           bookingDate: booking.bookingDate.toISOString(),
           bookingRef: booking.pnrNo || booking.id,
@@ -1012,8 +1081,8 @@ export class GetReportData {
           productService: this.resolveProductServiceLabel(booking),
           status: booking.status,
           totalAmount: booking.totalAmount,
-          paidAmount: booking.paidAmount,
-          dueAmount: booking.dueAmount,
+          paidAmount: financials.paidAmount,
+          dueAmount: financials.dueAmount,
           travelStart: booking.travelStartAt ? booking.travelStartAt.toISOString() : '',
         };
       });
@@ -1212,13 +1281,14 @@ export class GetReportData {
       .filter((booking) => (filters.customerIds.length ? filters.customerIds.includes(booking.customerId) : true))
       .filter((booking) => {
         if (filters.pendingOnly) {
-          return booking.dueAmount > 0;
+          return this.getBookingFinancials(booking, dataset).dueAmount > 0;
         }
         return true;
       })
       .map((booking) => {
         const customer = dataset.customersById.get(booking.customerId);
         const vendor = booking.vendorId ? dataset.vendorsById.get(booking.vendorId) : undefined;
+        const financials = this.getBookingFinancials(booking, dataset);
         return {
           bookingDate: booking.bookingDate.toISOString(),
           bookingRef: booking.pnrNo || booking.id,
@@ -1228,8 +1298,8 @@ export class GetReportData {
           status: booking.status,
           paxCount: booking.paxCount,
           totalAmount: booking.totalAmount,
-          paidAmount: booking.paidAmount,
-          dueAmount: booking.dueAmount,
+          paidAmount: financials.paidAmount,
+          dueAmount: financials.dueAmount,
           travelStart: booking.travelStartAt ? booking.travelStartAt.toISOString() : '',
           travelEnd: booking.travelEndAt ? booking.travelEndAt.toISOString() : '',
         };
@@ -1320,7 +1390,7 @@ export class GetReportData {
 
     const pendingBookingIds = new Set(
       dataset.bookings
-        .filter((booking) => booking.dueAmount > 0)
+        .filter((booking) => this.getBookingFinancials(booking, dataset).dueAmount > 0)
         .map((booking) => booking.id)
     );
 
@@ -1364,7 +1434,7 @@ export class GetReportData {
       if (options.usePendingOnlyFilter && filters.pendingOnly) {
         if (event.sourceType === 'BOOKING') {
           const booking = event.bookingId ? dataset.bookingsById.get(event.bookingId) : undefined;
-          if (!booking || booking.dueAmount <= 0) {
+          if (!booking || this.getBookingFinancials(booking, dataset).dueAmount <= 0) {
             return false;
           }
         } else if (event.bookingId && !pendingBookingIds.has(event.bookingId)) {
@@ -1401,6 +1471,7 @@ export class GetReportData {
       const customer = dataset.customersById.get(booking.customerId);
       const qty = booking.paxCount > 0 ? booking.paxCount : undefined;
       const unitPrice = qty && qty > 0 ? this.round(booking.totalAmount / qty) : undefined;
+      const financials = this.getBookingFinancials(booking, dataset);
 
       events.push({
         id: `booking:${booking.id}`,
@@ -1422,6 +1493,28 @@ export class GetReportData {
         amount: booking.totalAmount,
         signedAmount: booking.totalAmount,
       });
+
+      if (financials.missingPaymentAmount > 0) {
+        events.push({
+          id: `booking-paid:${booking.id}`,
+          sourceId: booking.id,
+          sourceType: 'RECEIVABLE',
+          customerId: booking.customerId,
+          customerName: customer?.name || 'Unknown Customer',
+          date: booking.bookingDate,
+          createdAt: booking.createdAt,
+          transactionType: 'Payment',
+          transactionCode: 'PAYMENT',
+          refNo: booking.pnrNo || booking.id,
+          bookingId: booking.id,
+          bookingRef: booking.pnrNo || booking.id,
+          productService: this.resolveProductServiceLabel(booking),
+          memo: 'Recorded advance/payment on booking',
+          amount: financials.missingPaymentAmount,
+          signedAmount: -financials.missingPaymentAmount,
+          notes: 'Derived from booking paid amount because no matching payment row exists',
+        });
+      }
     }
 
     for (const payment of dataset.receivables) {

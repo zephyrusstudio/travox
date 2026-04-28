@@ -31,7 +31,7 @@ type ApiCustomer = {
 interface CreateRefundDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: RefundFormData) => void;
+  onSubmit: (data: RefundFormData) => Promise<boolean>;
   payments: ApiPayment[];
   bookings: ApiBooking[];
   customers: ApiCustomer[];
@@ -85,6 +85,7 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
   existingRefunds,
 }) => {
   const [formData, setFormData] = useState<RefundFormData>(getInitialFormData());
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const customersMap = useMemo(() => {
     const map = new Map<string, ApiCustomer>();
@@ -126,10 +127,17 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
-    handleClose();
+    setIsSubmitting(true);
+    try {
+      const created = await onSubmit(formData);
+      if (created) {
+        handleClose();
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -151,6 +159,7 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
               required
               value={formData.payment_id}
               onChange={(e) => handlePaymentSelect(e.target.value)}
+              disabled={isSubmitting}
               className="form-select"
             >
               <option value="">Select a payment to refund</option>
@@ -186,6 +195,7 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
                 type="date"
                 required
                 value={formData.refund_date}
+                disabled={isSubmitting}
                 onChange={(e) => setFormData({ ...formData, refund_date: e.target.value })}
                 className="form-input"
               />
@@ -198,6 +208,7 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
               <select
                 required
                 value={formData.refund_mode}
+                disabled={isSubmitting}
                 onChange={(e) => setFormData({ ...formData, refund_mode: e.target.value })}
                 className="form-select"
               >
@@ -218,15 +229,13 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
               min="0"
               step="1"
               value={formData.refund_amount}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value);
-                setFormData({ ...formData, refund_amount: value ? Math.ceil(value) : 0 });
-              }}
+              readOnly
+              disabled={isSubmitting}
               className="form-input"
             />
             {selectedPayment && (
               <p className="form-help">
-                Original payment: ₹{selectedPayment.amount.toLocaleString()}
+                Refund is processed for the full original payment: ₹{selectedPayment.amount.toLocaleString()}
               </p>
             )}
           </div>
@@ -238,6 +247,7 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
             <textarea
               rows={3}
               value={formData.refund_reason}
+              disabled={isSubmitting}
               onChange={(e) => setFormData({ ...formData, refund_reason: e.target.value })}
               placeholder="Explain why the refund is being processed (optional)..."
               className="form-textarea"
@@ -246,13 +256,14 @@ const CreateRefundDialog: React.FC<CreateRefundDialogProps> = ({
         </div>
 
         <div className="form-footer">
-          <Button type="button" variant="outline" onClick={handleClose}>
+          <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button 
             type="submit" 
             icon={RefreshCw}
-            disabled={!canSubmit}
+            disabled={!canSubmit || isSubmitting}
+            loading={isSubmitting}
           >
             Process Refund
           </Button>

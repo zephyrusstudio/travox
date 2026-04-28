@@ -1,0 +1,6 @@
+ux-revamp-plan.md
+client/README.md
+client/eslint.config.js
+client/postcss.config.js
+client/tailwind.config.js
+client/vite.config.ts

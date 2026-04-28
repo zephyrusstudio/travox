@@ -1,5 +1,5 @@
 import { injectable } from 'tsyringe';
-import { redisClient } from '../../config/redis';
+import { redisClient, redisEnabled } from '../../config/redis';
 import logger from '../../config/logger';
 
 /**
@@ -65,10 +65,19 @@ export class RedisService {
     errors: 0
   };
 
+  private isAvailable(): boolean {
+    return redisEnabled && redisClient.isReady;
+  }
+
   /**
    * Get value from cache
    */
   async get<T>(key: string): Promise<T | null> {
+    if (!this.isAvailable()) {
+      this.metrics.misses++;
+      return null;
+    }
+
     try {
       const value = await redisClient.get(key);
       
@@ -90,6 +99,10 @@ export class RedisService {
    * Set value in cache with TTL (in seconds)
    */
   async set(key: string, value: any, ttl: number = 300): Promise<void> {
+    if (!this.isAvailable()) {
+      return;
+    }
+
     try {
       await redisClient.setEx(key, ttl, JSON.stringify(value));
       this.metrics.sets++;
@@ -103,6 +116,10 @@ export class RedisService {
    * Delete a single key
    */
   async delete(key: string): Promise<void> {
+    if (!this.isAvailable()) {
+      return;
+    }
+
     try {
       await redisClient.del(key);
       this.metrics.deletes++;
@@ -116,6 +133,10 @@ export class RedisService {
    * Delete all keys matching a pattern
    */
   async invalidatePattern(pattern: string): Promise<void> {
+    if (!this.isAvailable()) {
+      return;
+    }
+
     try {
       const keys = await redisClient.keys(pattern);
       if (keys.length > 0) {
@@ -163,6 +184,9 @@ export class RedisService {
    */
   async deleteMany(keys: string[]): Promise<void> {
     if (keys.length === 0) return;
+    if (!this.isAvailable()) {
+      return;
+    }
     
     try {
       await redisClient.del(keys);
@@ -180,6 +204,9 @@ export class RedisService {
    */
   async invalidatePatterns(patterns: string[]): Promise<void> {
     if (patterns.length === 0) return;
+    if (!this.isAvailable()) {
+      return;
+    }
     
     try {
       const allKeys: string[] = [];
@@ -207,6 +234,10 @@ export class RedisService {
    * Check if a key exists in cache (useful for pre-validation)
    */
   async exists(key: string): Promise<boolean> {
+    if (!this.isAvailable()) {
+      return false;
+    }
+
     try {
       const result = await redisClient.exists(key);
       return result === 1;
@@ -221,6 +252,10 @@ export class RedisService {
    * Get remaining TTL for a key (useful for debugging cache issues)
    */
   async getTTL(key: string): Promise<number> {
+    if (!this.isAvailable()) {
+      return -2;
+    }
+
     try {
       return await redisClient.ttl(key);
     } catch (error) {

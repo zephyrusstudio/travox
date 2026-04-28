@@ -218,7 +218,7 @@ const PaymentManagement: React.FC = () => {
       const res = await apiRequest<any>({
         method: "GET",
         url: "/customers",
-        params: { unmask: true },
+        params: { limit: 5000, unmask: true },
       });
       const items = Array.isArray(res?.data) ? res.data : [];
       const mapped = items
@@ -254,7 +254,7 @@ const PaymentManagement: React.FC = () => {
       const res = await apiRequest<any>({
         method: "GET",
         url: "/bookings",
-        params: { limit: 200, unmask: true },
+        params: { limit: 5000, unmask: true },
       });
       const items = Array.isArray(res?.data) ? res.data : [];
       const mapped = items

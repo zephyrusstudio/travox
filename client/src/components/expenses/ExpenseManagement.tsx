@@ -118,7 +118,7 @@ const ExpenseManagement: React.FC = () => {
       const res = await apiRequest<any>({
         method: "GET",
         url: "/vendors",
-        params: { unmask: true },
+        params: { limit: 5000, unmask: true },
       });
       const items = Array.isArray(res?.data) ? res.data : [];
       const mapped: VendorOption[] = items

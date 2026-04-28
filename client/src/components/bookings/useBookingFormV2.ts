@@ -348,11 +348,10 @@ export function useBookingFormV2({
       try {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('format', 'true'); // Request pre-formatted booking payload
 
         const response = await apiRequest<OCRUploadResponse>({
           method: 'POST',
-          url: '/scan',
+          url: '/scan?format=true',
           data: formData,
           headers: { 'Content-Type': 'multipart/form-data' },
         });

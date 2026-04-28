@@ -96,38 +96,16 @@ export class GetCustomerPendingPaymentsReport {
     // Fetch bookings within the date range
     const bookings = await this.bookingRepo.findByDateRange(startDate, endDate, orgId);
 
-    // Filter out cancelled/refunded bookings, and optionally filter by pending payments
-    const filteredBookings = bookings.filter(booking => {
-      // Always exclude cancelled and refunded
-      if (booking.status === BookingStatus.CANCELLED || booking.status === BookingStatus.REFUNDED) {
-        return false;
-      }
-      // If pendingOnly, only include bookings with due amount > 0
-      if (pendingOnly && booking.dueAmount <= 0) {
-        return false;
-      }
-      return true;
-    });
+    // Filter out cancelled/refunded bookings before loading payment history.
+    const activeBookings = bookings.filter(booking => (
+      booking.status !== BookingStatus.CANCELLED &&
+      booking.status !== BookingStatus.REFUNDED
+    ));
 
-    // Group bookings by customer ID
-    const bookingsByCustomer = new Map<string, Booking[]>();
-    for (const booking of filteredBookings) {
-      const existing = bookingsByCustomer.get(booking.customerId) || [];
-      existing.push(booking);
-      bookingsByCustomer.set(booking.customerId, existing);
-    }
-
-    // Get unique customer IDs
-    const customerIds = Array.from(bookingsByCustomer.keys());
-    const bookingIds = filteredBookings.map(b => b.id);
-
-    if (customerIds.length === 0) {
-      return [];
-    }
-
-    const relevantPayments = bookingIds.length
+    const activeBookingIds = activeBookings.map(b => b.id);
+    const relevantPayments = activeBookingIds.length
       ? await this.paymentRepo.findByBookingIds(
-          bookingIds,
+          activeBookingIds,
           orgId,
           [PaymentType.RECEIVABLE, PaymentType.REFUND_OUTBOUND]
         )
@@ -141,6 +119,27 @@ export class GetCustomerPendingPaymentsReport {
       paymentsByBooking.set(payment.bookingId, existing);
     }
 
+    const filteredBookings = activeBookings.filter(booking => {
+      if (!pendingOnly) return true;
+      const financials = this.getBookingFinancials(booking, paymentsByBooking.get(booking.id) || []);
+      return financials.dueAmount > 0;
+    });
+
+    // Group bookings by customer ID
+    const bookingsByCustomer = new Map<string, Booking[]>();
+    for (const booking of filteredBookings) {
+      const existing = bookingsByCustomer.get(booking.customerId) || [];
+      existing.push(booking);
+      bookingsByCustomer.set(booking.customerId, existing);
+    }
+
+    // Get unique customer IDs
+    const customerIds = Array.from(bookingsByCustomer.keys());
+
+    if (customerIds.length === 0) {
+      return [];
+    }
+
     // Fetch all customers in parallel (will use cached data where available)
     const customerPromises = customerIds.map(id => this.customerRepo.findById(id, orgId));
     const customers = await Promise.all(customerPromises);
@@ -152,21 +151,11 @@ export class GetCustomerPendingPaymentsReport {
       if (!customer) continue;
 
       const customerBookings = bookingsByCustomer.get(customer.id) || [];
-      const totalAmount = customerBookings.reduce((sum, b) => sum + b.totalAmount, 0);
-      const totalPaid = customerBookings.reduce((sum, b) => sum + b.paidAmount, 0);
-      const totalDue = customerBookings.reduce((sum, b) => sum + b.dueAmount, 0);
-
-      reports.push({
-        customer: {
-          id: customer.id,
-          name: customer.name,
-          phone: customer.phone,
-          email: customer.email
-        },
-        bookings: customerBookings.map(b => {
+      const bookingReports = customerBookings.map(b => {
           const bookingPayments = (paymentsByBooking.get(b.id) || []).sort(
             (left, right) => right.createdAt.getTime() - left.createdAt.getTime()
           );
+          const financials = this.getBookingFinancials(b, bookingPayments);
 
           const paymentModeAccumulator = new Map<string, { paymentMode: string; amount: number; count: number }>();
           for (const payment of bookingPayments) {
@@ -200,8 +189,8 @@ export class GetCustomerPendingPaymentsReport {
             primaryPaxName: b.primaryPaxName,
             bookingDate: b.bookingDate,
             totalAmount: b.totalAmount,
-            paidAmount: b.paidAmount,
-            dueAmount: b.dueAmount,
+            paidAmount: financials.paidAmount,
+            dueAmount: financials.dueAmount,
             status: b.status,
             travelStartAt: b.travelStartAt,
             travelEndAt: b.travelEndAt,
@@ -209,7 +198,20 @@ export class GetCustomerPendingPaymentsReport {
             paymentCount: payments.filter(p => p.direction === 'IN').length,
             paymentModeBreakdown: Array.from(paymentModeAccumulator.values())
           };
-        }),
+        });
+
+      const totalAmount = bookingReports.reduce((sum, b) => sum + b.totalAmount, 0);
+      const totalPaid = bookingReports.reduce((sum, b) => sum + b.paidAmount, 0);
+      const totalDue = bookingReports.reduce((sum, b) => sum + b.dueAmount, 0);
+
+      reports.push({
+        customer: {
+          id: customer.id,
+          name: customer.name,
+          phone: customer.phone,
+          email: customer.email
+        },
+        bookings: bookingReports,
         totalAmount,
         totalPaid,
         totalDue,
@@ -228,5 +230,37 @@ export class GetCustomerPendingPaymentsReport {
     await this.cache.set(cacheKey, reports, REPORT_CACHE_TTL);
 
     return reports;
+  }
+
+  private getBookingFinancials(booking: Booking, payments: Awaited<ReturnType<IPaymentRepository['findByBookingIds']>>): {
+    paidAmount: number;
+    dueAmount: number;
+  } {
+    if (booking.status === BookingStatus.CANCELLED || booking.status === BookingStatus.REFUNDED) {
+      return {
+        paidAmount: booking.status === BookingStatus.REFUNDED ? 0 : this.round(Math.max(0, Number(booking.paidAmount || 0))),
+        dueAmount: 0,
+      };
+    }
+
+    const receivableTotal = payments
+      .filter(payment => payment.paymentType === PaymentType.RECEIVABLE)
+      .reduce((sum, payment) => sum + payment.amount, 0);
+    const refundTotal = payments
+      .filter(payment => payment.paymentType === PaymentType.REFUND_OUTBOUND)
+      .reduce((sum, payment) => sum + payment.amount, 0);
+    const storedPaidAmount = Math.max(0, Number(booking.paidAmount || 0));
+    const grossPaidFromStored = storedPaidAmount > receivableTotal
+      ? storedPaidAmount + refundTotal
+      : storedPaidAmount;
+    const grossPaidAmount = this.round(Math.max(receivableTotal, grossPaidFromStored));
+    const paidAmount = this.round(Math.max(0, grossPaidAmount - refundTotal));
+    const dueAmount = this.round(Math.max(0, booking.totalAmount - grossPaidAmount));
+
+    return { paidAmount, dueAmount };
+  }
+
+  private round(value: number): number {
+    return Number(value.toFixed(2));
   }
 }

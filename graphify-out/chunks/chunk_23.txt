@@ -1,0 +1,4 @@
+server/src/services/GeminiOCRService.ts
+server/src/services/SchemaReflectionService.ts
+server/src/utils/csvParser.ts
+server/test/client/README.md

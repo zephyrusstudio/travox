@@ -1,0 +1,30 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - generic [ref=e7]:
+      - img [ref=e8]
+      - text: Travox
+    - heading "Travel operations, streamlined with one secure sign-in." [level=1] [ref=e10]:
+      - text: Travel operations,
+      - text: streamlined with one secure sign-in.
+    - paragraph [ref=e11]: Access bookings, customers, vendors, payments, and reports instantly with your Google account.
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - img [ref=e15]
+        - paragraph [ref=e18]: Role-based secure access for owners and admins.
+      - generic [ref=e19]:
+        - img [ref=e21]
+        - paragraph [ref=e24]: Fast session handling with automatic refresh.
+  - generic [ref=e26]:
+    - heading "Welcome back" [level=2] [ref=e27]
+    - paragraph [ref=e28]: Continue with Google to access your Travox workspace.
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - img [ref=e31]
+        - paragraph [ref=e34]: One-click authentication. No passwords. No setup friction.
+      - generic [ref=e37]:
+        - button "Continue with Google. Opens in new tab" [ref=e39] [cursor=pointer]:
+          - generic [ref=e41]:
+            - img [ref=e43]
+            - generic [ref=e50]: Continue with Google
+        - iframe
+    - paragraph [ref=e51]: By continuing, you agree to the Terms of Service and Privacy Policy.

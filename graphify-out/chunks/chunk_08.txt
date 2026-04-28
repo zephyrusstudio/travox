@@ -1,0 +1,1 @@
+client/public/brand/travox-mark-dark.png

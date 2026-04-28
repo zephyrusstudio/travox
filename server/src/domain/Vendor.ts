@@ -70,7 +70,7 @@ export class Vendor {
   }
 
   deductExpense(amount: number): void {
-    this.totalExpense -= amount;
+    this.totalExpense = Math.max(0, this.totalExpense - amount);
     this.updatedAt = new Date();
   }
 

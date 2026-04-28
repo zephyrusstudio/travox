@@ -3,8 +3,9 @@ import { IPaymentRepository } from '../../repositories/IPaymentRepository';
 import { IBookingRepository } from '../../repositories/IBookingRepository';
 import { ICustomerRepository } from '../../repositories/ICustomerRepository';
 import { Payment } from '../../../domain/Payment';
-import { PaymentMode } from '../../../models/FirestoreTypes';
+import { BookingStatus, PaymentMode, PaymentType } from '../../../models/FirestoreTypes';
 import { RedisService } from '../../../infrastructure/services/RedisService';
+import { Booking } from '../../../domain/Booking';
 
 interface CreateReceivableDTO {
   bookingId: string;
@@ -47,11 +48,17 @@ export class CreateReceivable {
       throw new Error('Booking not found');
     }
 
-    // CRITICAL: Validate payment won't exceed due amount to prevent overpayments
-    if (data.amount > booking.dueAmount) {
+    if (booking.status === BookingStatus.CANCELLED || booking.status === BookingStatus.REFUNDED) {
+      throw new Error(`Cannot record payment for a ${booking.status.toLowerCase()} booking`);
+    }
+
+    const financials = await this.getBookingFinancials(booking, orgId);
+
+    // CRITICAL: Validate against reconciled due amount, not a stale denormalized field.
+    if (data.amount > financials.dueAmount) {
       throw new Error(
-        `Payment amount (${data.amount}) exceeds booking due amount (${booking.dueAmount}). ` +
-        `Total: ${booking.totalAmount}, Paid: ${booking.paidAmount}, Due: ${booking.dueAmount}`
+        `Payment amount (${data.amount}) exceeds booking due amount (${financials.dueAmount}). ` +
+        `Total: ${booking.totalAmount}, Paid: ${financials.paidAmount}, Due: ${financials.dueAmount}`
       );
     }
 
@@ -89,7 +96,9 @@ export class CreateReceivable {
     // Save payment
     const savedPayment = await this.paymentRepo.create(payment, orgId);
 
-    // Update booking paid amount
+    // Update booking from reconciled state so old/stale due values self-heal.
+    booking.paidAmount = financials.paidAmount;
+    booking.dueAmount = financials.dueAmount;
     booking.addPayment(data.amount, createdBy);
     await this.bookingRepo.update(booking, orgId);
 
@@ -102,5 +111,31 @@ export class CreateReceivable {
     await this.cache.invalidatePattern(`report:center:${orgId}:*`);
 
     return savedPayment;
+  }
+
+  private async getBookingFinancials(booking: Booking, orgId: string): Promise<{
+    paidAmount: number;
+    dueAmount: number;
+  }> {
+    const payments = await this.paymentRepo.findByBookingId(booking.id, orgId);
+    const receivableTotal = payments
+      .filter(payment => payment.paymentType === PaymentType.RECEIVABLE)
+      .reduce((sum, payment) => sum + payment.amount, 0);
+    const refundTotal = payments
+      .filter(payment => payment.paymentType === PaymentType.REFUND_OUTBOUND)
+      .reduce((sum, payment) => sum + payment.amount, 0);
+    const storedPaidAmount = Math.max(0, Number(booking.paidAmount || 0));
+    const grossPaidFromStored = storedPaidAmount > receivableTotal
+      ? storedPaidAmount + refundTotal
+      : storedPaidAmount;
+    const grossPaidAmount = this.round(Math.max(receivableTotal, grossPaidFromStored));
+    const paidAmount = this.round(Math.max(0, grossPaidAmount - refundTotal));
+    const dueAmount = this.round(Math.max(0, booking.totalAmount - grossPaidAmount));
+
+    return { paidAmount, dueAmount };
+  }
+
+  private round(value: number): number {
+    return Number(value.toFixed(2));
   }
 }

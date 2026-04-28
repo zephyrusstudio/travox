@@ -1,0 +1,83 @@
+Total messages: 2 (Errors: 2, Warnings: 0)
+Returning 62 messages for level "error"
+
+[ERROR] Failed to load resource: the server responded with a status of 403 () @ https://accounts.google.com/gsi/button?theme=outline&size=large&shape=pill&text=continue_with&width=320&is_fedcm_supported=true&client_id=277785594096-l843j9n9n4tq20l3u0dq6mglhkeod5km.apps.googleusercontent.com&iframe_id=gsi_369841_247947&cas=DKo%2BYUJehHN9AFnEi55wm0DfUH2wKBqK%2FObDGFraZ5o:0
+[ERROR] [GSI_LOGGER]: The given origin is not allowed for the given client ID. @ https://ssl.gstatic.com/_/gsi/_/js/k=gsi.gsi.en_GB.ASSVlW0X6dc.O/am=AAAAJAhgCgg/d=1/rs=AF0KOtWL0ignnyll2mBZ4pUyaegfG0t-ew/m=credential_button_library:85
+[ERROR] Failed to load resource: the server responded with a status of 403 () @ https://accounts.google.com/gsi/button?theme=outline&size=large&shape=pill&text=continue_with&width=320&is_fedcm_supported=true&client_id=277785594096-l843j9n9n4tq20l3u0dq6mglhkeod5km.apps.googleusercontent.com&iframe_id=gsi_442399_807647&cas=euulkNsZRKz%2FJInaqWQEOlFatrkrM97cAJaJAI2bNAo:0
+[ERROR] [GSI_LOGGER]: The given origin is not allowed for the given client ID. @ https://ssl.gstatic.com/_/gsi/_/js/k=gsi.gsi.en_GB.ASSVlW0X6dc.O/am=AAAAJAhgCwg/d=1/rs=AF0KOtUC_ju8X6XBEeiusT-3k-_4EKti2g/m=credential_button_library:85
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/customers?unmask=true&limit=10&offset=0:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/customers?unmask=true&limit=10&offset=0:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/customers?unmask=true&limit=10&offset=0:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/vendors?unmask=true&limit=10&offset=0:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/bookings?limit=10&offset=0&unmask=true:0
+[ERROR] Failed to fetch stats: ApiError: Network Error
+    at P1 (http://127.0.0.1:5173/assets/index-CdMTBr_8.js:383:2690)
+    at _1 (http://127.0.0.1:5173/assets/index-CdMTBr_8.js:383:2906)
+    at async http://127.0.0.1:5173/assets/BookingsPage-CASbkp1q.js:6:49783 @ http://127.0.0.1:5173/assets/BookingsPage-CASbkp1q.js:5
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/bookings/stats:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/customers:0
+[ERROR] Failed to fetch vendors: ApiError: Network Error
+    at P1 (http://127.0.0.1:5173/assets/index-CdMTBr_8.js:383:2690)
+    at _1 (http://127.0.0.1:5173/assets/index-CdMTBr_8.js:383:2906)
+    at async http://127.0.0.1:5173/assets/BookingsPage-CASbkp1q.js:6:50364 @ http://127.0.0.1:5173/assets/BookingsPage-CASbkp1q.js:5
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/vendors:0
+[ERROR] Failed to fetch customers: Network Error @ http://127.0.0.1:5173/assets/PaymentsPage-DZPT_ZzJ.js:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/customers?unmask=true:0
+[ERROR] Failed to fetch bookings: Network Error @ http://127.0.0.1:5173/assets/PaymentsPage-DZPT_ZzJ.js:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/bookings?limit=200&unmask=true:0
+[ERROR] Failed to fetch payments: Network Error @ http://127.0.0.1:5173/assets/PaymentsPage-DZPT_ZzJ.js:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/payments?type=RECEIVABLE&limit=10&offset=0:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/vendors?unmask=true:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/accounts:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/payments?type=EXPENSE&limit=10&offset=0:0
+[ERROR] Failed to fetch refunds: Network Error @ http://127.0.0.1:5173/assets/RefundsPage-ByWQ08Fr.js:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/payments?type=REFUND_OUTBOUND&limit=10&offset=0:0
+[ERROR] Error fetching auxiliary data: ApiError: Network Error
+    at P1 (http://127.0.0.1:5173/assets/index-CdMTBr_8.js:383:2690)
+    at _1 (http://127.0.0.1:5173/assets/index-CdMTBr_8.js:383:2906)
+    at async Promise.all (index 0)
+    at async http://127.0.0.1:5173/assets/RefundsPage-ByWQ08Fr.js:1:5328 @ http://127.0.0.1:5173/assets/RefundsPage-ByWQ08Fr.js:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/bookings?limit=200&unmask=true:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/customers?unmask=true:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/payments?type=RECEIVABLE&limit=200:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/reports/catalog:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/customers/report?interval=2025-12-25,2026-04-25&pendingOnly=false:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/vendors/report?interval=2025-12-25,2026-04-25:0
+[ERROR] Error fetching audit logs: ApiError: Network Error
+    at P1 (http://127.0.0.1:5173/assets/index-CdMTBr_8.js:383:2690)
+    at _1 (http://127.0.0.1:5173/assets/index-CdMTBr_8.js:383:2906)
+    at async Object.getAuditLogs (http://127.0.0.1:5173/assets/AuditLogsPage-Sy7vxy1V.js:6:1581)
+    at async http://127.0.0.1:5173/assets/AuditLogsPage-Sy7vxy1V.js:6:9635 @ http://127.0.0.1:5173/assets/AuditLogsPage-Sy7vxy1V.js:5
+[ERROR] Failed to fetch audit logs: ApiError: Network Error
+    at P1 (http://127.0.0.1:5173/assets/index-CdMTBr_8.js:383:2690)
+    at _1 (http://127.0.0.1:5173/assets/index-CdMTBr_8.js:383:2906)
+    at async Object.getAuditLogs (http://127.0.0.1:5173/assets/AuditLogsPage-Sy7vxy1V.js:6:1581)
+    at async http://127.0.0.1:5173/assets/AuditLogsPage-Sy7vxy1V.js:6:9635 @ http://127.0.0.1:5173/assets/AuditLogsPage-Sy7vxy1V.js:5
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/audit-logs?limit=10&offset=0:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/users?limit=10&offset=0:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/reports/catalog:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/customers?limit=500:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/vendors?limit=500:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/reports/customer-ledger?interval=2026-01-25,2026-04-25&search=&sortBy=date&sortOrder=desc&includeZeroBalance=true:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/customers?unmask=true&limit=10&offset=0:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/customers?unmask=true&limit=10&offset=0:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/customers?unmask=true&limit=10&offset=0:0
+[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/customers?unmask=true&limit=10&offset=0:0
+[ERROR] Access to XMLHttpRequest at 'http://localhost:3000/customers?unmask=true&limit=10&offset=0' from origin 'http://127.0.0.1:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'http://localhost:5173' that is not equal to the supplied origin. @ http://127.0.0.1:5173/customers:0
+[ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:3000/customers?unmask=true&limit=10&offset=0:0
+[ERROR] Failed to load resource: the server responded with a status of 403 () @ https://accounts.google.com/gsi/button?theme=outline&size=large&shape=pill&text=continue_with&width=320&is_fedcm_supported=true&client_id=277785594096-l843j9n9n4tq20l3u0dq6mglhkeod5km.apps.googleusercontent.com&iframe_id=gsi_622140_671843&cas=QrTIJ0NLoQLnO1j9TPpYoBdqQGvzk2VWf5aR9Q4JIkM:0
+[ERROR] [GSI_LOGGER]: The given origin is not allowed for the given client ID. @ https://ssl.gstatic.com/_/gsi/_/js/k=gsi.gsi.en_GB.ASSVlW0X6dc.O/am=AAAAJAhgCwg/d=1/rs=AF0KOtUC_ju8X6XBEeiusT-3k-_4EKti2g/m=credential_button_library:85
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/customers?unmask=true&limit=10&offset=0:0
+[ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/auth/refresh:0
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/customers?unmask=true&limit=10&offset=0:0
+[ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/auth/refresh:0
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/customers/report?interval=2025-12-25,2026-04-25&pendingOnly=false:0
+[ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/auth/refresh:0
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/customers/report?interval=2025-12-25,2026-04-25&pendingOnly=false:0
+[ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/auth/refresh:0
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/vendors/report?interval=2025-12-25,2026-04-25:0
+[ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/auth/refresh:0
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/customers?unmask=true&limit=10&offset=0:0
+[ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/auth/refresh:0
+[ERROR] Failed to load resource: the server responded with a status of 403 () @ https://accounts.google.com/gsi/button?theme=outline&size=large&shape=pill&text=continue_with&width=320&is_fedcm_supported=true&client_id=277785594096-l843j9n9n4tq20l3u0dq6mglhkeod5km.apps.googleusercontent.com&iframe_id=gsi_601829_740218&cas=us6aawoijtg6ZozM%2F8GJHkGkuupSTSAnpJqQZ3EIfPc:0
+[ERROR] [GSI_LOGGER]: The given origin is not allowed for the given client ID. @ https://ssl.gstatic.com/_/gsi/_/js/k=gsi.gsi.en_GB.ASSVlW0X6dc.O/am=AAAAJAhgCwg/d=1/rs=AF0KOtUC_ju8X6XBEeiusT-3k-_4EKti2g/m=credential_button_library:85

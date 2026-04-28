@@ -4,7 +4,7 @@ import Layout from "../components/ui/Layout";
 
 const VendorReportPage: React.FC = () => {
   return (
-    <Layout currentPage="vendors">
+    <Layout currentPage="vendors-report">
       <VendorReport />
     </Layout>
   );

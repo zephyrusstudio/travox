@@ -1,0 +1,18 @@
+[   12590ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/customers?unmask=true&limit=10&offset=0:0
+[   12592ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/auth/refresh:0
+[   12592ms] [LOG] Invalid or expired session ID @ http://localhost:5173/assets/index-CdMTBr_8.js:382
+[  126037ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/customers?unmask=true&limit=10&offset=0:0
+[  126039ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/auth/refresh:0
+[  126039ms] [LOG] Invalid or expired session ID @ http://127.0.0.1:5173/assets/index-CdMTBr_8.js:382
+[  229513ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/customers/report?interval=2025-12-25,2026-04-25&pendingOnly=false:0
+[  229515ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/auth/refresh:0
+[  229516ms] [LOG] Invalid or expired session ID @ http://127.0.0.1:5173/assets/index-DzZow-E7.js:382
+[  242861ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/customers/report?interval=2025-12-25,2026-04-25&pendingOnly=false:0
+[  242862ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/auth/refresh:0
+[  242862ms] [LOG] Invalid or expired session ID @ http://127.0.0.1:5173/assets/index-DzZow-E7.js:382
+[  243811ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/vendors/report?interval=2025-12-25,2026-04-25:0
+[  243811ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/auth/refresh:0
+[  243812ms] [LOG] Invalid or expired session ID @ http://127.0.0.1:5173/assets/index-DzZow-E7.js:382
+[  244770ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/customers?unmask=true&limit=10&offset=0:0
+[  244770ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/auth/refresh:0
+[  244771ms] [LOG] Invalid or expired session ID @ http://127.0.0.1:5173/assets/index-DzZow-E7.js:382

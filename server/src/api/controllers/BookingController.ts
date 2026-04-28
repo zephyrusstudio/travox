@@ -19,7 +19,8 @@ export class BookingController {
         data: booking.toApiResponse(unmask)
       });
     } catch (error: any) {
-      res.status(400).json({
+      const statusCode = String(error?.message || '').startsWith('Duplicate booking warning') ? 409 : 400;
+      res.status(statusCode).json({
         status: 'error',
         data: { message: error.message }
       });

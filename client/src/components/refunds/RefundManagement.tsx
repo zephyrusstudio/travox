@@ -5,7 +5,7 @@ import { PageHeader, StatCard } from "../../design-system/patterns";
 import { SearchField } from "../../design-system/primitives";
 import { useSearch } from "../../hooks/useSearch";
 import { ApiError, apiRequest } from "../../utils/apiConnector";
-import { successToast } from "../../utils/toasts";
+import { errorToast, successToast } from "../../utils/toasts";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Card, { CardContent } from "../ui/Card";
@@ -53,9 +53,14 @@ type ApiCustomer = {
   accountId?: string;
 };
 
+type ApiPayment = Payment & {
+  id?: string;
+};
+
 const RefundManagement: React.FC = () => {
   const [refunds, setRefunds] = useState<RefundRow[]>([]);
-  const [receivablePayments, setReceivablePayments] = useState<Payment[]>([]);
+  const [allRefunds, setAllRefunds] = useState<RefundRow[]>([]);
+  const [receivablePayments, setReceivablePayments] = useState<ApiPayment[]>([]);
   const [bookings, setBookings] = useState<ApiBooking[]>([]);
   const [customers, setCustomers] = useState<ApiCustomer[]>([]);
   
@@ -118,10 +123,11 @@ const RefundManagement: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoadingData(true);
     try {
-      const [bookingsRes, customersRes, paymentsRes] = await Promise.all([
-        apiRequest<any>({ method: "GET", url: "/bookings", params: { limit: 200, unmask: true } }),
-        apiRequest<any>({ method: "GET", url: "/customers", params: { unmask: true } }),
-        apiRequest<any>({ method: "GET", url: "/payments", params: { type: "RECEIVABLE", limit: 200 } }),
+      const [bookingsRes, customersRes, paymentsRes, allRefundsRes] = await Promise.all([
+        apiRequest<any>({ method: "GET", url: "/bookings", params: { limit: 5000, unmask: true } }),
+        apiRequest<any>({ method: "GET", url: "/customers", params: { limit: 5000, unmask: true } }),
+        apiRequest<any>({ method: "GET", url: "/payments", params: { type: "RECEIVABLE", limit: 5000 } }),
+        apiRequest<any>({ method: "GET", url: "/payments", params: { type: "REFUND_OUTBOUND", limit: 5000 } }),
       ]);
       
       setBookings(bookingsRes?.data || []);
@@ -138,12 +144,16 @@ const RefundManagement: React.FC = () => {
       setCustomers(mappedCustomers);
       
       setReceivablePayments(paymentsRes?.data || []);
+      const mappedRefunds = (Array.isArray(allRefundsRes?.data) ? allRefundsRes.data : [])
+        .map(mapRefundRecord)
+        .filter((item: any): item is RefundRow => Boolean(item));
+      setAllRefunds(mappedRefunds);
     } catch (error) {
       console.error('Error fetching auxiliary data:', error);
     } finally {
       setLoadingData(false);
     }
-  }, []);
+  }, [mapRefundRecord]);
 
   useEffect(() => {
     fetchRefunds();
@@ -211,7 +221,20 @@ const RefundManagement: React.FC = () => {
     });
   }, [searchTerm, mappedSearchResults, refunds, bookingsMap]);
 
-  const handleSubmit = async (data: RefundFormData) => {
+  const refundedPaymentIds = useMemo(
+    () => new Set(allRefunds.map(refund => refund.payment_id).filter(Boolean)),
+    [allRefunds]
+  );
+
+  const eligibleReceivablePayments = useMemo(
+    () => receivablePayments.filter((payment) => {
+      const paymentId = payment.payment_id || payment.id;
+      return paymentId && !refundedPaymentIds.has(String(paymentId));
+    }),
+    [receivablePayments, refundedPaymentIds]
+  );
+
+  const handleSubmit = async (data: RefundFormData): Promise<boolean> => {
     try {
       await apiRequest({
         method: 'POST',
@@ -223,11 +246,12 @@ const RefundManagement: React.FC = () => {
       });
       successToast("Refund processed successfully");
       invalidateCache();
-      fetchRefunds();
-      fetchData();
-      setIsModalOpen(false);
+      await Promise.all([fetchRefunds(), fetchData()]);
+      return true;
     } catch (error) {
-      console.error('Error creating refund:', error);
+      const err = error as ApiError;
+      errorToast(err?.message || "Failed to process refund");
+      return false;
     }
   };
 
@@ -262,7 +286,7 @@ const RefundManagement: React.FC = () => {
             >
               Refresh
             </Button>
-            <Button onClick={() => setIsModalOpen(true)} icon={Plus}>
+            <Button onClick={() => setIsModalOpen(true)} icon={Plus} disabled={loadingData}>
               Process Refund
             </Button>
           </>
@@ -279,7 +303,7 @@ const RefundManagement: React.FC = () => {
           label="Visible Refund Value"
           value={`₹${filteredRefunds.reduce((sum, item) => sum + item.refund_amount, 0).toLocaleString("en-IN")}`}
         />
-        <StatCard label="Eligible Receivable Payments" value={receivablePayments.length.toString()} />
+        <StatCard label="Eligible Receivable Payments" value={eligibleReceivablePayments.length.toString()} />
       </div>
 
       {/* Search */}
@@ -391,10 +415,10 @@ const RefundManagement: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
-        payments={receivablePayments}
+        payments={eligibleReceivablePayments}
         bookings={bookings}
         customers={customers}
-        existingRefunds={refunds}
+        existingRefunds={allRefunds}
       />
     </div>
   );

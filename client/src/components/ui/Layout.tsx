@@ -87,6 +87,8 @@ const routeNameMap: Record<string, string> = {
   logs: "Audit Logs",
   users: "User Access",
   reports: "Reporting Center",
+  "customers-report": "Customer Report",
+  "vendors-report": "Vendor Report",
   report: "Report",
   legacy: "Legacy",
   dashboard: "Dashboard",
@@ -126,6 +128,14 @@ const quickActionsByPage: Record<string, { id: string; label: string; to: string
     { id: "report.center", label: "Reporting Center", to: "/reports" },
     { id: "customer.report", label: "Customer Report", to: "/customers/report" },
     { id: "vendor.report", label: "Vendor Report", to: "/vendors/report" },
+  ],
+  "customers-report": [
+    { id: "customers.open", label: "Customers", to: "/customers" },
+    { id: "reports.open", label: "Reporting Center", to: "/reports" },
+  ],
+  "vendors-report": [
+    { id: "vendors.open", label: "Vendors", to: "/vendors" },
+    { id: "reports.open", label: "Reporting Center", to: "/reports" },
   ],
 };
 

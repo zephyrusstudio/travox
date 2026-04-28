@@ -60,6 +60,7 @@ interface CreateBookingDTO {
   advanceAmount?: number;
   status?: BookingStatus;
   vendorId?: string;
+  allowDuplicate?: boolean;
 }
 
 @injectable()
@@ -113,6 +114,10 @@ export class CreateBooking {
 
     if (paidAmount > data.totalAmount) {
       throw new Error('Paid amount cannot exceed total amount');
+    }
+
+    if (!data.allowDuplicate) {
+      await this.assertNoDuplicateBooking(data, orgId);
     }
 
     // --- Domain Object Creation ---
@@ -215,5 +220,111 @@ export class CreateBooking {
       default:
         throw new Error(`Unsupported mode of journey: ${segment.modeOfJourney}`);
     }
+  }
+
+  private async assertNoDuplicateBooking(data: CreateBookingDTO, orgId: string): Promise<void> {
+    const normalizedPnr = this.normalizeText(data.pnrNo);
+    if (normalizedPnr) {
+      const existingByPnr = await this.bookingRepo.findByPNR(normalizedPnr, orgId);
+      if (existingByPnr && this.isDuplicateCandidate(existingByPnr)) {
+        throw new Error(this.duplicateMessage(existingByPnr));
+      }
+    }
+
+    const incomingSignature = this.buildIncomingSignature(data);
+    if (!incomingSignature) {
+      return;
+    }
+
+    const customerBookings = await this.bookingRepo.findByCustomerId(data.customerId, orgId);
+    const matched = customerBookings.find((booking) => (
+      this.isDuplicateCandidate(booking) &&
+      this.buildExistingSignature(booking) === incomingSignature
+    ));
+
+    if (matched) {
+      throw new Error(this.duplicateMessage(matched));
+    }
+  }
+
+  private isDuplicateCandidate(booking: Booking): boolean {
+    return (
+      !booking.isDeleted &&
+      booking.status !== BookingStatus.CANCELLED &&
+      booking.status !== BookingStatus.REFUNDED
+    );
+  }
+
+  private duplicateMessage(existing: Booking): string {
+    const ref = existing.pnrNo || existing.id;
+    return `Duplicate booking warning: ticket ${ref} already exists. Uploading the same ticket again would double bill this customer. Use the existing booking instead.`;
+  }
+
+  private buildIncomingSignature(data: CreateBookingDTO): string | null {
+    const firstPax = this.normalizeText(data.pax[0]?.paxName);
+    const firstSegment = data.itineraries?.flatMap((itinerary) => itinerary.segments || [])[0];
+    const route = this.segmentRouteSignature(firstSegment);
+    const travelDate = this.dateKey(firstSegment?.depAt || firstSegment?.checkIn || data.bookingDate);
+    const bookingDate = this.dateKey(data.bookingDate);
+    const amount = this.amountKey(data.totalAmount);
+    const mode = this.normalizeText(data.modeOfJourney || firstSegment?.modeOfJourney);
+
+    if (!firstPax || amount === null || (!route && !travelDate)) {
+      return null;
+    }
+
+    return [firstPax, amount, mode, bookingDate, travelDate, route].join('|');
+  }
+
+  private buildExistingSignature(booking: Booking): string | null {
+    const firstSegment = booking.itineraries.flatMap((itinerary) => itinerary.segments || [])[0];
+    const firstPax = this.normalizeText(booking.primaryPaxName || booking.pax[0]?.paxName);
+    const route = this.segmentRouteSignature(firstSegment);
+    const travelDate = this.dateKey(firstSegment?.depAt || firstSegment?.checkIn || booking.travelStartAt);
+    const bookingDate = this.dateKey(booking.bookingDate);
+    const amount = this.amountKey(booking.totalAmount);
+    const mode = this.normalizeText(booking.modeOfJourney || firstSegment?.modeOfJourney);
+
+    if (!firstPax || amount === null || (!route && !travelDate)) {
+      return null;
+    }
+
+    return [firstPax, amount, mode, bookingDate, travelDate, route].join('|');
+  }
+
+  private segmentRouteSignature(segment?: SegmentDTO | BookingSegment): string {
+    if (!segment) {
+      return '';
+    }
+
+    return [
+      this.normalizeText(segment.serviceNumber),
+      this.normalizeText(segment.depCode || segment.boardingPoint || segment.hotelName),
+      this.normalizeText(segment.arrCode || segment.dropPoint || segment.hotelAddress),
+      this.normalizeText(segment.classCode || segment.roomType),
+    ].join('>');
+  }
+
+  private amountKey(value: unknown): string | null {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) {
+      return null;
+    }
+    return String(Math.round(numeric));
+  }
+
+  private dateKey(value?: Date | string): string {
+    if (!value) {
+      return '';
+    }
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+    return date.toISOString().slice(0, 10);
+  }
+
+  private normalizeText(value?: string): string {
+    return String(value || '').trim().replace(/\s+/g, ' ').toUpperCase();
   }
 }

@@ -5,11 +5,65 @@ import { BookingPax } from '../../../domain/BookingPax';
 import { BookingItinerary } from '../../../domain/BookingItinerary';
 import { BookingSegment } from '../../../domain/BookingSegment';
 import { BookingModel } from '../../../models/mongoose/BookingModel';
-import { BookingStatus, PAXType, ModeOfJourney } from '../../../models/FirestoreTypes';
+import { BookingStatus, PAXType, ModeOfJourney, PaymentType } from '../../../models/FirestoreTypes';
+import { PaymentModel } from '../../../models/mongoose/PaymentModel';
 import { BookingSearchParams, BookingFilterParams } from '../../../application/useCases/booking/GetBookings';
 
 @injectable()
 export class BookingRepositoryMongo implements IBookingRepository {
+  private escapeRegex(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private round(value: number): number {
+    return Number(value.toFixed(2));
+  }
+
+  private async reconcileFinancials(bookings: Booking[], orgId: string): Promise<Booking[]> {
+    const bookingIds = bookings.map(booking => booking.id).filter(Boolean);
+    if (!bookingIds.length) {
+      return bookings;
+    }
+
+    const payments = await PaymentModel.find({
+      orgId,
+      bookingId: { $in: bookingIds },
+      paymentType: { $in: [PaymentType.RECEIVABLE, PaymentType.REFUND_OUTBOUND] },
+      isDeleted: false
+    });
+
+    const grouped = new Map<string, { receivableTotal: number; refundTotal: number }>();
+    for (const payment of payments) {
+      if (!payment.bookingId) continue;
+      const totals = grouped.get(payment.bookingId) || { receivableTotal: 0, refundTotal: 0 };
+      if (payment.paymentType === PaymentType.RECEIVABLE) {
+        totals.receivableTotal += payment.amount;
+      } else if (payment.paymentType === PaymentType.REFUND_OUTBOUND) {
+        totals.refundTotal += payment.amount;
+      }
+      grouped.set(payment.bookingId, totals);
+    }
+
+    for (const booking of bookings) {
+      if (booking.status === BookingStatus.CANCELLED || booking.status === BookingStatus.REFUNDED) {
+        booking.paidAmount = booking.status === BookingStatus.REFUNDED ? 0 : this.round(Math.max(0, booking.paidAmount || 0));
+        booking.dueAmount = 0;
+        continue;
+      }
+
+      const totals = grouped.get(booking.id) || { receivableTotal: 0, refundTotal: 0 };
+      const storedPaidAmount = Math.max(0, Number(booking.paidAmount || 0));
+      const grossPaidFromStored = storedPaidAmount > totals.receivableTotal
+        ? storedPaidAmount + totals.refundTotal
+        : storedPaidAmount;
+      const grossPaidAmount = this.round(Math.max(totals.receivableTotal, grossPaidFromStored));
+
+      booking.paidAmount = this.round(Math.max(0, grossPaidAmount - totals.refundTotal));
+      booking.dueAmount = this.round(Math.max(0, booking.totalAmount - grossPaidAmount));
+    }
+
+    return bookings;
+  }
 
   private toDomain(doc: any): Booking {
     const pax = (doc.pax || []).map((p: any) => new BookingPax(
@@ -187,7 +241,8 @@ export class BookingRepositoryMongo implements IBookingRepository {
   async findById(id: string, orgId: string): Promise<Booking | null> {
     const doc = await BookingModel.findOne({ _id: id, orgId });
     if (!doc) return null;
-    return this.toDomain(doc);
+    const [booking] = await this.reconcileFinancials([this.toDomain(doc)], orgId);
+    return booking;
   }
 
   async findByCustomerId(customerId: string, orgId: string): Promise<Booking[]> {
@@ -196,17 +251,21 @@ export class BookingRepositoryMongo implements IBookingRepository {
       customerId, 
       isDeleted: false 
     }).sort({ createdAt: -1 });
-    return docs.map(doc => this.toDomain(doc));
+    return this.reconcileFinancials(docs.map(doc => this.toDomain(doc)), orgId);
   }
 
   async findByPNR(pnr: string, orgId: string): Promise<Booking | null> {
+    const normalizedPnr = pnr.trim();
+    if (!normalizedPnr) return null;
+
     const doc = await BookingModel.findOne({ 
       orgId, 
-      pnrNo: pnr, 
+      pnrNo: { $regex: `^${this.escapeRegex(normalizedPnr)}$`, $options: 'i' },
       isDeleted: false 
     });
     if (!doc) return null;
-    return this.toDomain(doc);
+    const [booking] = await this.reconcileFinancials([this.toDomain(doc)], orgId);
+    return booking;
   }
 
   async findByStatus(status: BookingStatus, orgId: string): Promise<Booking[]> {
@@ -215,7 +274,7 @@ export class BookingRepositoryMongo implements IBookingRepository {
       status, 
       isDeleted: false 
     }).sort({ createdAt: -1 });
-    return docs.map(doc => this.toDomain(doc));
+    return this.reconcileFinancials(docs.map(doc => this.toDomain(doc)), orgId);
   }
 
   async findByDateRange(startDate: Date, endDate: Date, orgId: string): Promise<Booking[]> {
@@ -224,7 +283,7 @@ export class BookingRepositoryMongo implements IBookingRepository {
       bookingDate: { $gte: startDate, $lte: endDate },
       isDeleted: false
     }).sort({ createdAt: -1 });
-    return docs.map(doc => this.toDomain(doc));
+    return this.reconcileFinancials(docs.map(doc => this.toDomain(doc)), orgId);
   }
 
   async findAll(orgId: string, limit?: number, offset?: number): Promise<Booking[]> {
@@ -240,7 +299,7 @@ export class BookingRepositoryMongo implements IBookingRepository {
     }
 
     const docs = await query.exec();
-    return docs.map(doc => this.toDomain(doc));
+    return this.reconcileFinancials(docs.map(doc => this.toDomain(doc)), orgId);
   }
 
   async countAll(orgId: string): Promise<number> {
@@ -312,7 +371,7 @@ export class BookingRepositoryMongo implements IBookingRepository {
       isDeleted: false
     }).sort({ createdAt: -1 });
     
-    return docs.map(doc => this.toDomain(doc));
+    return this.reconcileFinancials(docs.map(doc => this.toDomain(doc)), orgId);
   }
 
   async getBookingsByTravelDates(startDate: Date, endDate: Date, orgId: string): Promise<Booking[]> {
@@ -322,7 +381,7 @@ export class BookingRepositoryMongo implements IBookingRepository {
       isDeleted: false
     }).sort({ createdAt: -1 });
     
-    return docs.map(doc => this.toDomain(doc));
+    return this.reconcileFinancials(docs.map(doc => this.toDomain(doc)), orgId);
   }
 
   async getRevenueStats(orgId: string, startDate?: Date, endDate?: Date): Promise<any> {
@@ -342,7 +401,7 @@ export class BookingRepositoryMongo implements IBookingRepository {
     }
 
     const docs = await BookingModel.find(matchStage);
-    const bookings = docs.map(doc => this.toDomain(doc));
+    const bookings = await this.reconcileFinancials(docs.map(doc => this.toDomain(doc)), orgId);
     
     const totalRevenue = bookings.reduce((sum, b) => sum + b.paidAmount, 0);
     const totalAmount = bookings.reduce((sum, b) => sum + b.totalAmount, 0);
@@ -370,7 +429,7 @@ export class BookingRepositoryMongo implements IBookingRepository {
     pendingAmount: number;
   }> {
     const docs = await BookingModel.find({ orgId, isDeleted: false });
-    const allBookings = docs.map(doc => this.toDomain(doc));
+    const allBookings = await this.reconcileFinancials(docs.map(doc => this.toDomain(doc)), orgId);
     
     const confirmedStatuses = [
       BookingStatus.CONFIRMED,
@@ -404,9 +463,10 @@ export class BookingRepositoryMongo implements IBookingRepository {
       throw new Error('Booking not found or not authorized');
     }
 
+    const dueAmount = Math.max(0, doc.totalAmount - paidAmount);
     await BookingModel.findOneAndUpdate(
       { _id: bookingId, orgId },
-      { paidAmount, updatedBy, updatedAt: new Date() }
+      { paidAmount, dueAmount, updatedBy, updatedAt: new Date() }
     );
     
     return true;
@@ -421,7 +481,7 @@ export class BookingRepositoryMongo implements IBookingRepository {
       status: { $in: [BookingStatus.CONFIRMED, BookingStatus.TICKETED, BookingStatus.IN_PROGRESS] }
     }).sort({ createdAt: -1 });
 
-    const bookings = docs.map(doc => this.toDomain(doc));
+    const bookings = await this.reconcileFinancials(docs.map(doc => this.toDomain(doc)), orgId);
     return bookings.filter(booking => booking.dueAmount > 0);
   }
 
@@ -441,7 +501,7 @@ export class BookingRepositoryMongo implements IBookingRepository {
     }
 
     let docs = await BookingModel.find(query).sort({ createdAt: -1 });
-    let bookings = docs.map(doc => this.toDomain(doc));
+    let bookings = await this.reconcileFinancials(docs.map(doc => this.toDomain(doc)), orgId);
 
     if (params.packageName) {
       const searchTerm = params.packageName.toLowerCase();
@@ -485,7 +545,7 @@ export class BookingRepositoryMongo implements IBookingRepository {
 
   async filter(params: BookingFilterParams, orgId: string): Promise<Booking[]> {
     const docs = await BookingModel.find({ orgId, isDeleted: false }).sort({ createdAt: -1 });
-    let bookings = docs.map(doc => this.toDomain(doc));
+    let bookings = await this.reconcileFinancials(docs.map(doc => this.toDomain(doc)), orgId);
 
     if (params.status) {
       bookings = bookings.filter(b => b.status === params.status);

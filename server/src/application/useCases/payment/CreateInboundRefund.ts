@@ -3,6 +3,7 @@ import { IPaymentRepository } from '../../repositories/IPaymentRepository';
 import { IVendorRepository } from '../../repositories/IVendorRepository';
 import { Payment } from '../../../domain/Payment';
 import { RedisService } from '../../../infrastructure/services/RedisService';
+import { PaymentType } from '../../../models/FirestoreTypes';
 
 interface CreateInboundRefundDTO {
   refundOfPaymentId: string; 
@@ -25,8 +26,17 @@ export class CreateInboundRefund {
     await this.paymentRepo.invalidateCacheForPayment(data.refundOfPaymentId, orgId);
     
     const originalPayment = await this.paymentRepo.findById(data.refundOfPaymentId, orgId);
-    if (!originalPayment || originalPayment.paymentType !== 'EXPENSE') {
+    if (!originalPayment || originalPayment.paymentType !== PaymentType.EXPENSE || originalPayment.isDeleted) {
       throw new Error('Original expense payment not found');
+    }
+
+    const existingRefunds = await this.paymentRepo.findRefundsByOriginalPaymentId(
+      data.refundOfPaymentId,
+      orgId,
+      PaymentType.REFUND_INBOUND
+    );
+    if (existingRefunds.length > 0) {
+      throw new Error('This expense payment has already been refunded');
     }
 
     const vendorId = originalPayment.vendorId;

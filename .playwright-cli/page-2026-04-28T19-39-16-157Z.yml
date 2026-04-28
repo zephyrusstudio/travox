@@ -1,0 +1,254 @@
+- generic [ref=e2]:
+  - generic [ref=e13]:
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - button "Travox Logo" [ref=e16] [cursor=pointer]:
+          - img "Travox" [ref=e17]
+        - button "Open command palette" [ref=e19] [cursor=pointer]:
+          - img [ref=e20]
+      - navigation [ref=e22]:
+        - generic [ref=e23]:
+          - paragraph [ref=e24]: Operations
+          - generic [ref=e25]:
+            - link "Customers" [ref=e26] [cursor=pointer]:
+              - /url: /customers
+              - img [ref=e27]
+              - generic [ref=e32]: Customers
+            - link "Vendors" [ref=e33] [cursor=pointer]:
+              - /url: /vendors
+              - img [ref=e34]
+              - generic [ref=e38]: Vendors
+            - link "Bookings" [ref=e39] [cursor=pointer]:
+              - /url: /bookings
+              - img [ref=e40]
+              - generic [ref=e42]: Bookings
+        - generic [ref=e43]:
+          - paragraph [ref=e44]: Finance
+          - generic [ref=e45]:
+            - link "Payments" [ref=e46] [cursor=pointer]:
+              - /url: /payments
+              - img [ref=e47]
+              - generic [ref=e49]: Payments
+            - link "Expenses" [ref=e50] [cursor=pointer]:
+              - /url: /expenses
+              - img [ref=e51]
+              - generic [ref=e54]: Expenses
+            - link "Refunds" [ref=e55] [cursor=pointer]:
+              - /url: /refunds
+              - img [ref=e56]
+              - generic [ref=e61]: Refunds
+        - generic [ref=e62]:
+          - paragraph [ref=e63]: Reporting
+          - generic [ref=e64]:
+            - link "Reporting Center" [ref=e65] [cursor=pointer]:
+              - /url: /reports
+              - img [ref=e66]
+              - generic [ref=e69]: Reporting Center
+            - link "Customer Report" [ref=e70] [cursor=pointer]:
+              - /url: /customers/report
+              - img [ref=e71]
+              - generic [ref=e74]: Customer Report
+            - link "Vendor Report" [ref=e75] [cursor=pointer]:
+              - /url: /vendors/report
+              - img [ref=e76]
+              - generic [ref=e79]: Vendor Report
+        - generic [ref=e80]:
+          - paragraph [ref=e81]: Administration
+          - generic [ref=e82]:
+            - link "Audit Logs" [ref=e83] [cursor=pointer]:
+              - /url: /logs
+              - img [ref=e84]
+              - generic [ref=e87]: Audit Logs
+            - link "User Access" [ref=e88] [cursor=pointer]:
+              - /url: /users
+              - img [ref=e89]
+              - generic [ref=e91]: User Access
+      - generic [ref=e93]:
+        - generic [ref=e94]:
+          - generic [ref=e95]: TD
+          - generic [ref=e96]:
+            - paragraph [ref=e97]: Tamal Das
+            - paragraph [ref=e98]: Owner
+        - button "Logout" [ref=e99] [cursor=pointer]:
+          - img [ref=e100]
+    - main [ref=e104]:
+      - generic [ref=e105]:
+        - generic [ref=e106]:
+          - navigation "Breadcrumb" [ref=e107]:
+            - list [ref=e108]:
+              - listitem [ref=e109]:
+                - generic [ref=e110]: Bookings
+          - heading "Bookings" [level=1] [ref=e111]
+        - generic [ref=e112]:
+          - button "New Booking" [ref=e113] [cursor=pointer]
+          - button "New Customer" [ref=e114] [cursor=pointer]
+      - generic [ref=e115]:
+        - generic [ref=e117]:
+          - generic [ref=e118]:
+            - heading "Booking Management" [level=1] [ref=e119]
+            - paragraph [ref=e120]: Manage bookings, OCR-prefill records, and status-driven reservation workflows.
+          - generic [ref=e121]:
+            - button "Refresh" [ref=e122] [cursor=pointer]:
+              - img [ref=e123]
+              - generic [ref=e128]: Refresh
+            - button "Create Booking" [ref=e129] [cursor=pointer]:
+              - img [ref=e130]
+              - generic [ref=e131]: Create Booking
+        - generic [ref=e132]:
+          - generic [ref=e133]:
+            - paragraph [ref=e134]: Total Bookings
+            - paragraph [ref=e135]: "3"
+          - generic [ref=e136]:
+            - paragraph [ref=e137]: Confirmed
+            - paragraph [ref=e138]: "3"
+          - generic [ref=e139]:
+            - paragraph [ref=e140]: Revenue
+            - paragraph [ref=e141]: ₹30,000
+          - generic [ref=e142]:
+            - paragraph [ref=e143]: Pending
+            - paragraph [ref=e144]: ₹1,49,031
+        - generic [ref=e145]:
+          - generic [ref=e147]:
+            - img
+            - textbox [ref=e148]:
+              - /placeholder: Search bookings by package, customer, or amount
+          - button "Filters" [ref=e150] [cursor=pointer]:
+            - img [ref=e151]
+            - generic [ref=e153]: Filters
+        - generic [ref=e674]:
+          - generic [ref=e675]:
+            - paragraph [ref=e676]: Showing 1 to 3 of 3 results
+            - generic [ref=e677]:
+              - generic [ref=e678]: Items per page
+              - combobox "Items per page" [ref=e679]:
+                - option "5"
+                - option "10" [selected]
+                - option "20"
+                - option "50"
+                - option "100"
+          - generic [ref=e680]:
+            - button "Previous" [disabled] [ref=e681]:
+              - img [ref=e682]
+              - text: Previous
+            - generic [ref=e684]: Page 1 of 1
+            - button "Next" [disabled] [ref=e685]:
+              - text: Next
+              - img [ref=e686]
+        - generic [ref=e170]:
+          - generic [ref=e171]:
+            - generic [ref=e688]: Showing 3 bookings
+            - generic [ref=e173]: "Tip: use filters to narrow by status, payment state, date, or due amount."
+          - table [ref=e690]:
+            - rowgroup [ref=e691]:
+              - row "Package Customer Booking Date Travel Start Travel End Pax Amount Status Actions" [ref=e692]:
+                - columnheader "Package" [ref=e693]
+                - columnheader "Customer" [ref=e694]
+                - columnheader "Booking Date" [ref=e695]
+                - columnheader "Travel Start" [ref=e696]
+                - columnheader "Travel End" [ref=e697]
+                - columnheader "Pax" [ref=e698]
+                - columnheader "Amount" [ref=e699]
+                - columnheader "Status" [ref=e700]
+                - columnheader "Actions" [ref=e701]
+            - rowgroup [ref=e702]:
+              - 'row "E2E OCR 2 SUVONJIT Ramesh Das 29 Apr 2026 19/04/2026 05:30 - 1 person ₹82,950 Paid: ₹0 Due: ₹82,950 TICKETED View Edit Delete" [ref=e703]':
+                - cell "E2E OCR 2 SUVONJIT" [ref=e704]:
+                  - paragraph [ref=e706]: E2E OCR 2 SUVONJIT
+                - cell "Ramesh Das" [ref=e707]:
+                  - paragraph [ref=e708]: Ramesh Das
+                - cell "29 Apr 2026" [ref=e709]:
+                  - paragraph [ref=e710]: 29 Apr 2026
+                - cell "19/04/2026 05:30" [ref=e711]:
+                  - paragraph [ref=e712]: 19/04/2026 05:30
+                - cell "-" [ref=e713]:
+                  - paragraph [ref=e714]: "-"
+                - cell "1 person" [ref=e715]
+                - 'cell "₹82,950 Paid: ₹0 Due: ₹82,950" [ref=e716]':
+                  - generic [ref=e717]:
+                    - paragraph [ref=e718]: ₹82,950
+                    - paragraph [ref=e719]: "Paid: ₹0"
+                    - paragraph [ref=e720]: "Due: ₹82,950"
+                - cell "TICKETED" [ref=e721]:
+                  - generic [ref=e722]: TICKETED
+                - cell "View Edit Delete" [ref=e723]:
+                  - generic [ref=e724]:
+                    - button "View" [ref=e725] [cursor=pointer]:
+                      - img [ref=e726]
+                      - generic [ref=e729]: View
+                    - button "Edit" [ref=e730] [cursor=pointer]:
+                      - img [ref=e731]
+                      - generic [ref=e734]: Edit
+                    - button "Delete" [ref=e735] [cursor=pointer]:
+                      - img [ref=e736]
+                      - generic [ref=e739]: Delete
+              - 'row "E2E OCR 1 A0254017538 PNR: A0254017538 Ramesh Das 29 Dec 2025 08/01/2026 13:40 08/01/2026 15:25 1 person ₹6,081 Paid: ₹0 Due: ₹6,081 TICKETED View Edit Delete" [ref=e740]':
+                - 'cell "E2E OCR 1 A0254017538 PNR: A0254017538" [ref=e741]':
+                  - generic [ref=e742]:
+                    - paragraph [ref=e743]: E2E OCR 1 A0254017538
+                    - paragraph [ref=e744]: "PNR: A0254017538"
+                - cell "Ramesh Das" [ref=e745]:
+                  - paragraph [ref=e746]: Ramesh Das
+                - cell "29 Dec 2025" [ref=e747]:
+                  - paragraph [ref=e748]: 29 Dec 2025
+                - cell "08/01/2026 13:40" [ref=e749]:
+                  - paragraph [ref=e750]: 08/01/2026 13:40
+                - cell "08/01/2026 15:25" [ref=e751]:
+                  - paragraph [ref=e752]: 08/01/2026 15:25
+                - cell "1 person" [ref=e753]
+                - 'cell "₹6,081 Paid: ₹0 Due: ₹6,081" [ref=e754]':
+                  - generic [ref=e755]:
+                    - paragraph [ref=e756]: ₹6,081
+                    - paragraph [ref=e757]: "Paid: ₹0"
+                    - paragraph [ref=e758]: "Due: ₹6,081"
+                - cell "TICKETED" [ref=e759]:
+                  - generic [ref=e760]: TICKETED
+                - cell "View Edit Delete" [ref=e761]:
+                  - generic [ref=e762]:
+                    - button "View" [ref=e763] [cursor=pointer]:
+                      - img [ref=e764]
+                      - generic [ref=e767]: View
+                    - button "Edit" [ref=e768] [cursor=pointer]:
+                      - img [ref=e769]
+                      - generic [ref=e772]: Edit
+                    - button "Delete" [ref=e773] [cursor=pointer]:
+                      - img [ref=e774]
+                      - generic [ref=e777]: Delete
+              - 'row "Goa Tour PNR: ABC123 Ramesh Das 23 Mar 2026 - - 1 person ₹90,000 Paid: ₹30,000 Due: ₹60,000 TICKETED View Edit Delete" [ref=e778]':
+                - 'cell "Goa Tour PNR: ABC123" [ref=e779]':
+                  - generic [ref=e780]:
+                    - paragraph [ref=e781]: Goa Tour
+                    - paragraph [ref=e782]: "PNR: ABC123"
+                - cell "Ramesh Das" [ref=e783]:
+                  - paragraph [ref=e784]: Ramesh Das
+                - cell "23 Mar 2026" [ref=e785]:
+                  - paragraph [ref=e786]: 23 Mar 2026
+                - cell "-" [ref=e787]:
+                  - paragraph [ref=e788]: "-"
+                - cell "-" [ref=e789]:
+                  - paragraph [ref=e790]: "-"
+                - cell "1 person" [ref=e791]
+                - 'cell "₹90,000 Paid: ₹30,000 Due: ₹60,000" [ref=e792]':
+                  - generic [ref=e793]:
+                    - paragraph [ref=e794]: ₹90,000
+                    - paragraph [ref=e795]: "Paid: ₹30,000"
+                    - paragraph [ref=e796]: "Due: ₹60,000"
+                - cell "TICKETED" [ref=e797]:
+                  - generic [ref=e798]: TICKETED
+                - cell "View Edit Delete" [ref=e799]:
+                  - generic [ref=e800]:
+                    - button "View" [ref=e801] [cursor=pointer]:
+                      - img [ref=e802]
+                      - generic [ref=e805]: View
+                    - button "Edit" [ref=e806] [cursor=pointer]:
+                      - img [ref=e807]
+                      - generic [ref=e810]: Edit
+                    - button "Delete" [ref=e811] [cursor=pointer]:
+                      - img [ref=e812]
+                      - generic [ref=e815]: Delete
+  - generic [ref=e819]:
+    - img [ref=e821]
+    - generic [ref=e824]:
+      - paragraph [ref=e825]: Success
+      - paragraph [ref=e826]: Booking added
+    - button "Dismiss notification" [ref=e827] [cursor=pointer]:
+      - img [ref=e828]

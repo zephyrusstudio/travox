@@ -4,6 +4,7 @@ import { ICustomerRepository } from '../../repositories/ICustomerRepository';
 import { IBookingRepository } from '../../repositories/IBookingRepository';
 import { Payment } from '../../../domain/Payment';
 import { RedisService } from '../../../infrastructure/services/RedisService';
+import { PaymentType } from '../../../models/FirestoreTypes';
 
 interface CreateOutboundRefundDTO {
   refundOfPaymentId: string;
@@ -27,8 +28,17 @@ export class CreateOutboundRefund {
     await this.paymentRepo.invalidateCacheForPayment(data.refundOfPaymentId, orgId);
     
     const originalPayment = await this.paymentRepo.findById(data.refundOfPaymentId, orgId);
-    if (!originalPayment) {
+    if (!originalPayment || originalPayment.paymentType !== PaymentType.RECEIVABLE || originalPayment.isDeleted) {
       throw new Error('Original receivable payment not found');
+    }
+
+    const existingRefunds = await this.paymentRepo.findRefundsByOriginalPaymentId(
+      data.refundOfPaymentId,
+      orgId,
+      PaymentType.REFUND_OUTBOUND
+    );
+    if (existingRefunds.length > 0) {
+      throw new Error('This receivable payment has already been refunded');
     }
 
     const customerId = originalPayment.customerId;

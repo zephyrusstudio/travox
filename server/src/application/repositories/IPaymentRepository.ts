@@ -8,6 +8,7 @@ export interface IPaymentRepository {
   findByBookingIds(bookingIds: string[], orgId: string, paymentTypes?: PaymentType[]): Promise<Payment[]>;
   findByCustomerId(customerId: string, orgId: string): Promise<Payment[]>;
   findByVendorId(vendorId: string, orgId: string): Promise<Payment[]>;
+  findRefundsByOriginalPaymentId(refundOfPaymentId: string, orgId: string, refundType?: PaymentType): Promise<Payment[]>;
   findByType(paymentType: PaymentType, orgId: string): Promise<Payment[]>;
   update(payment: Payment, orgId: string): Promise<Payment>;
   delete(id: string, orgId: string): Promise<boolean>;

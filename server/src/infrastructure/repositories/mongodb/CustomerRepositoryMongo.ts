@@ -213,7 +213,9 @@ export class CustomerRepositoryMongo implements ICustomerRepository {
   }
 
   async getActiveCustomers(orgId: string, limit?: number, offset?: number): Promise<Customer[]> {
-    let query = CustomerModel.find({ orgId, isDeleted: false });
+    let query = CustomerModel.find({ orgId, isDeleted: false })
+      .sort({ name: 1, _id: 1 })
+      .collation({ locale: 'en', strength: 2 });
 
     if (offset) {
       query = query.skip(offset);

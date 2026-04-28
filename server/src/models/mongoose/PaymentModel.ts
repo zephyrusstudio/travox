@@ -85,6 +85,7 @@ PaymentSchema.index({ orgId: 1, bookingId: 1, isDeleted: 1 });
 PaymentSchema.index({ orgId: 1, customerId: 1, isDeleted: 1 });
 PaymentSchema.index({ orgId: 1, vendorId: 1, isDeleted: 1 });
 PaymentSchema.index({ orgId: 1, paymentType: 1, isDeleted: 1 });
+PaymentSchema.index({ orgId: 1, refundOfPaymentId: 1, paymentType: 1, isDeleted: 1 });
 PaymentSchema.index({ orgId: 1, createdAt: -1 });
 
 export const PaymentModel = mongoose.model<IPayment>('Payment', PaymentSchema);

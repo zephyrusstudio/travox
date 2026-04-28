@@ -75,6 +75,11 @@ export class OCRController {
     }
   };
 
+  private wantsFormattedBooking(req: Request): boolean {
+    const raw = req.query.format ?? req.body?.format;
+    return raw === true || raw === 'true' || raw === '1';
+  }
+
   /**
    * Extract booking data from Google Drive file by ID
    */
@@ -164,7 +169,7 @@ export class OCRController {
       }, 'OCR extraction completed for file');
 
       // Optionally convert to booking format
-      const format = req.query.format === 'true';
+      const format = this.wantsFormattedBooking(req);
       
       let bookingData = null;
       if (format) {
@@ -263,7 +268,7 @@ export class OCRController {
       }, 'OCR extraction completed for uploaded file');
 
       // Optionally convert to booking format
-      const format = req.query.format === 'true';
+      const format = this.wantsFormattedBooking(req);
       
       let bookingData = null;
       if (format) {

@@ -2,6 +2,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { BookingStatus, ModeOfJourney, PAXType, Sex } from '../models/FirestoreTypes';
 import { SchemaReflectionService } from './SchemaReflectionService';
 
+const DEFAULT_GEMINI_MODEL = 'gemma-3-12b-it';
+
 export interface OCRExtractedBooking {
   // Basic booking info
   packageName?: string;
@@ -72,9 +74,11 @@ export interface OCRExtractedBooking {
 
 export class GeminiOCRService {
   private genAI: GoogleGenerativeAI;
+  private modelName: string;
   
-  constructor(apiKey: string) {
+  constructor(apiKey: string, modelName: string = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL) {
     this.genAI = new GoogleGenerativeAI(apiKey);
+    this.modelName = modelName;
   }
 
   async extractBookingData(
@@ -83,8 +87,6 @@ export class GeminiOCRService {
     fileName: string
   ): Promise<OCRExtractedBooking> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemma-3-12b-it' });
-      
       const systemPrompt = this.buildSystemPrompt();
       
       const imagePart = {
@@ -106,11 +108,24 @@ Focus on extracting:
 5. Pricing and payment information
 6. Vendor/supplier information
 
+Accuracy rules:
+- Read only the visible document text. Do not infer passenger, hotel, route, PNR, or amount from the filename.
+- Preserve passenger names exactly as printed. Do not split, translate, or "correct" names.
+- A passenger token like "NAME+5" means one visible passenger plus unnamed companions. Extract only "NAME"; do not invent the companions.
+- If a field is not printed or is ambiguous, omit it instead of guessing.
+- For accommodation/hotel vouchers, use modeOfJourney HOTEL and put stay dates in checkIn/checkOut, not depAt/arrAt.
+- If a travel segment has only one date and no time, prefer depAt for the date and leave arrAt empty unless an arrival date is printed.
+- For sales/customer-detail receipts, row DATE is invoice/credit date only. Never use row DATE for depAt/arrAt when memo/description has a travel date.
+- Travel date examples: "23RD MAR" means 2026-03-23 when the report period is in 2026; "24TH FEB" means 2026-02-24. Do not combine the memo day with the invoice row month.
+- In invoice-table memo/description cells, parse stacked lines as passenger, route, travel date, class. Example: "ARPAN NAYEK+1 / APDJ TO SDAH / 23RD MAR / SL" means passenger ARPAN NAYEK, depCode APDJ, arrCode SDAH, depAt 2026-03-23, classCode SL.
+- Ignore Credit Memo, Refund, and TICKET CANCELLED rows when building active passengers and itinerary segments.
+- If a receipt contains invoice totals plus credit memo/refund totals, use the final net TOTAL as totalAmount. Otherwise use the booking/invoice total.
+- Only set pnrNo when the document labels a value as PNR, booking reference, reservation number, confirmation number, or voucher number.
+- Ignore totals unrelated to booking price, such as tax footers, page numbers, phone numbers, account IDs, and serial numbers.
+
 If any information is unclear or missing, indicate this in the notes field. Provide your confidence level based on the document quality and completeness.`;
 
-      const result = await model.generateContent([prompt, imagePart]);
-      const response = await result.response;
-      const text = response.text();
+      const text = await this.generateText(prompt, imagePart);
       
       // Clean and parse the JSON response
       const cleanedText = this.cleanJsonResponse(text);
@@ -125,6 +140,43 @@ If any information is unclear or missing, indicate this in the notes field. Prov
     }
   }
 
+  private async generateText(prompt: string, imagePart: any): Promise<string> {
+    const supportsJsonMode = !this.modelName.startsWith('gemma-');
+    const model = this.genAI.getGenerativeModel({
+      model: this.modelName,
+      generationConfig: supportsJsonMode
+        ? {
+            temperature: 0,
+            responseMimeType: 'application/json',
+          }
+        : {
+            temperature: 0,
+          },
+    });
+
+    try {
+      const result = await model.generateContent([prompt, imagePart]);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      if (supportsJsonMode && message.includes('JSON mode is not enabled')) {
+        const fallbackModel = this.genAI.getGenerativeModel({
+          model: this.modelName,
+          generationConfig: {
+            temperature: 0,
+          },
+        });
+        const result = await fallbackModel.generateContent([prompt, imagePart]);
+        const response = await result.response;
+        return response.text();
+      }
+
+      throw error;
+    }
+  }
+
   private buildSystemPrompt(): string {
     // Use dynamic schema generation that automatically reflects domain model changes
     return SchemaReflectionService.generateSystemPrompt();
@@ -132,7 +184,7 @@ If any information is unclear or missing, indicate this in the notes field. Prov
 
   private cleanJsonResponse(text: string): string {
     // Remove markdown code blocks if present
-    let cleaned = text.replace(/```json\s*/, '').replace(/```\s*$/, '');
+    let cleaned = text.replace(/```(?:json)?/gi, '').replace(/```/g, '');
     
     // Remove any leading/trailing whitespace
     cleaned = cleaned.trim();
@@ -146,6 +198,95 @@ If any information is unclear or missing, indicate this in the notes field. Prov
     }
     
     return cleaned;
+  }
+
+  private normalizeAmount(value: any): number | undefined {
+    if (value === undefined || value === null || value === '') return undefined;
+
+    if (typeof value === 'number') {
+      return Number.isFinite(value) && value > 0 ? value : undefined;
+    }
+
+    const numeric = Number(String(value).replace(/[^\d.-]/g, ''));
+    return Number.isFinite(numeric) && numeric > 0 ? numeric : undefined;
+  }
+
+  private normalizeDate(value: any): string | undefined {
+    if (!value) return undefined;
+
+    const raw = String(value).trim();
+    if (!raw) return undefined;
+
+    if (/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?(\.\d{3})?Z?)?$/.test(raw)) {
+      return raw;
+    }
+
+    const dmy = raw.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})(?:[,\s]+(\d{1,2}):(\d{2})(?:\s*([AP]M))?)?/i);
+    if (dmy) {
+      const [, day, month, year, hour, minute, meridiem] = dmy;
+      const fullYear = year.length === 2 ? `20${year}` : year;
+      let normalizedHour = hour ? Number(hour) : undefined;
+      if (normalizedHour !== undefined && meridiem) {
+        const upper = meridiem.toUpperCase();
+        if (upper === 'PM' && normalizedHour < 12) normalizedHour += 12;
+        if (upper === 'AM' && normalizedHour === 12) normalizedHour = 0;
+      }
+
+      const date = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      if (normalizedHour === undefined || !minute) return date;
+      return `${date}T${String(normalizedHour).padStart(2, '0')}:${minute}:00`;
+    }
+
+    return undefined;
+  }
+
+  private normalizePaxType(value: any): PAXType {
+    const normalized = String(value || '').trim().toUpperCase();
+    if (['CHD', 'CHILD', 'CNN'].includes(normalized)) return PAXType.CHD;
+    if (['INF', 'INFANT'].includes(normalized)) return PAXType.INF;
+    return PAXType.ADT;
+  }
+
+  private normalizePaxName(value: any): string {
+    return String(value || '')
+      .replace(/\s*\+\s*\d+\s*$/u, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private normalizeSex(value: any): Sex | undefined {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (['male', 'm', 'mr', 'shri', 'sri'].includes(normalized)) return Sex.MALE;
+    if (['female', 'f', 'mrs', 'miss', 'ms', 'smt', 'kumari'].includes(normalized)) return Sex.FEMALE;
+    if (['transgender', 't', 'mx'].includes(normalized)) return Sex.TRANSGENDER;
+    return undefined;
+  }
+
+  private normalizeModeOfJourney(value: any): ModeOfJourney {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (['flight', 'air', 'airline', 'air ticket', 'plane'].includes(normalized)) return ModeOfJourney.FLIGHT;
+    if (['train', 'rail', 'railway', 'railway ticket'].includes(normalized)) return ModeOfJourney.TRAIN;
+    if (['bus', 'coach'].includes(normalized)) return ModeOfJourney.BUS;
+    if (['hotel', 'accommodation', 'stay', 'room', 'voucher'].includes(normalized)) return ModeOfJourney.HOTEL;
+    if (['cab', 'car', 'taxi', 'transfer'].includes(normalized)) return ModeOfJourney.CAB;
+    return Object.values(ModeOfJourney).includes(value) ? value : ModeOfJourney.OTHER;
+  }
+
+  private buildSegmentKey(segment: any): string {
+    return [
+      segment.modeOfJourney,
+      segment.carrierCode,
+      segment.serviceNumber,
+      segment.depCode,
+      segment.arrCode,
+      segment.depAt,
+      segment.arrAt,
+      segment.hotelName,
+      segment.checkIn,
+      segment.checkOut,
+    ]
+      .map((value) => String(value || '').trim().toUpperCase())
+      .join('|');
   }
 
   private validateAndNormalizeData(data: any): OCRExtractedBooking {
@@ -168,6 +309,10 @@ If any information is unclear or missing, indicate this in the notes field. Prov
       }
     }
 
+    data.bookingDate = this.normalizeDate(data.bookingDate) || data.bookingDate;
+    data.totalAmount = this.normalizeAmount(data.totalAmount);
+    data.modeOfJourney = data.modeOfJourney ? this.normalizeModeOfJourney(data.modeOfJourney) : data.modeOfJourney;
+
     // Ensure required arrays exist
     if (!Array.isArray(data.pax)) {
       data.pax = [];
@@ -179,15 +324,22 @@ If any information is unclear or missing, indicate this in the notes field. Prov
       data.extractedFields = [];
     }
 
-    // Validate PAX types and apply defaults
-    data.pax.forEach((pax: any, index: number) => {
-      if (!pax.paxName) {
-        throw new Error(`PAX ${index + 1} missing required paxName`);
-      }
-      if (pax.paxType && !Object.values(PAXType).includes(pax.paxType)) {
-        pax.paxType = PAXType.ADT; // Default to adult
-      }
-    });
+    const seenPaxNames = new Set<string>();
+    data.pax = data.pax
+      .map((pax: any) => ({
+        ...pax,
+        paxName: this.normalizePaxName(pax.paxName),
+        paxType: this.normalizePaxType(pax.paxType),
+        sex: this.normalizeSex(pax.sex),
+        dob: this.normalizeDate(pax.dob),
+      }))
+      .filter((pax: any) => {
+        if (!pax.paxName) return false;
+        const key = pax.paxName.toUpperCase();
+        if (seenPaxNames.has(key)) return false;
+        seenPaxNames.add(key);
+        return true;
+      });
 
     // Validate itineraries and segments with defaults
     data.itineraries.forEach((itinerary: any, iIndex: number) => {
@@ -207,14 +359,44 @@ If any information is unclear or missing, indicate this in the notes field. Prov
           segment.seqNo = sIndex + 1;
         }
         if (!segment.modeOfJourney || !Object.values(ModeOfJourney).includes(segment.modeOfJourney)) {
-          segment.modeOfJourney = ModeOfJourney.OTHER;
+          segment.modeOfJourney = this.normalizeModeOfJourney(segment.modeOfJourney);
         }
+        segment.depAt = this.normalizeDate(segment.depAt);
+        segment.arrAt = this.normalizeDate(segment.arrAt);
+        segment.checkIn = this.normalizeDate(segment.checkIn);
+        segment.checkOut = this.normalizeDate(segment.checkOut);
+
+        if (
+          segment.modeOfJourney !== ModeOfJourney.HOTEL &&
+          !segment.depAt &&
+          typeof segment.arrAt === 'string' &&
+          /^\d{4}-\d{2}-\d{2}T00:00:00$/.test(segment.arrAt)
+        ) {
+          segment.depAt = segment.arrAt;
+          delete segment.arrAt;
+        }
+      });
+
+      const seenSegments = new Set<string>();
+      itinerary.segments = itinerary.segments.filter((segment: any) => {
+        const key = this.buildSegmentKey(segment);
+        if (seenSegments.has(key)) return false;
+        seenSegments.add(key);
+        return true;
+      });
+      itinerary.segments.forEach((segment: any, sIndex: number) => {
+        segment.seqNo = sIndex + 1;
       });
     });
 
     // Set default confidence if not provided
     if (!data.extractionConfidence) {
       data.extractionConfidence = 'MEDIUM';
+    }
+
+    if (data.pax.length === 0 || data.itineraries.length === 0) {
+      data.extractionConfidence = data.extractionConfidence === 'HIGH' ? 'MEDIUM' : data.extractionConfidence;
+      data.notes = `${data.notes || ''}\nExtraction incomplete: missing passenger or itinerary data.`.trim();
     }
 
     // Add schema version for tracking
@@ -225,7 +407,7 @@ If any information is unclear or missing, indicate this in the notes field. Prov
 
   async testConnection(): Promise<boolean> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemma-3-12b-it' });
+      const model = this.genAI.getGenerativeModel({ model: this.modelName });
       const result = await model.generateContent('Test connection');
       return !!result.response;
     } catch (error) {

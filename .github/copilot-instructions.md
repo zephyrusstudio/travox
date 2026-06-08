@@ -1,11 +1,3 @@
-<claude-mem-context>
-# Memory Context
-
-# $CMEM travox 2026-04-29 4:02am GMT+5:30
-
-No previous sessions found.
-</claude-mem-context>
-
 <!-- SGNK:BEGIN -->
 Before doing anything, read `.sgnk/LATEST-KEY.md` for prior-session context (it
 references the matching `.sgnk/snapshots/<id>/manifest.json`). Follow the REPLAY

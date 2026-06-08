@@ -1,10 +1,7 @@
-<claude-mem-context>
-# Memory Context
-
-# $CMEM travox 2026-04-29 4:02am GMT+5:30
-
-No previous sessions found.
-</claude-mem-context>
+---
+description: SGNK continuity — read prior-session handoff
+alwaysApply: true
+---
 
 <!-- SGNK:BEGIN -->
 Before doing anything, read `.sgnk/LATEST-KEY.md` for prior-session context (it

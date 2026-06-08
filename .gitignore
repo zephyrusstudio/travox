@@ -10,3 +10,6 @@
 /tmp-ocr/
 /Group 1321314854.png
 /travox-logo.png
+
+# SGNK continuity snapshots (local working memory)
+.sgnk/
